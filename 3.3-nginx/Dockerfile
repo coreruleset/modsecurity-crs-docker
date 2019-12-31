@@ -1,4 +1,5 @@
-FROM owasp/modsecurity:3.0-nginx
+FROM owasp/modsecurity:3
+
 LABEL maintainer="Chaim Sanders <chaim.sanders@gmail.com>"
 
 ARG COMMIT=v3.3/dev
@@ -9,18 +10,24 @@ ENV PARANOIA=1
 ENV ANOMALYIN=5
 ENV ANOMALYOUT=4
 
-RUN apt-get update && \
-  apt-get -y install python git ca-certificates iproute2 && \
-  mkdir /opt/owasp-modsecurity-crs-3.2 && \
-  cd /opt/owasp-modsecurity-crs-3.2 && \
-  git init && \
-  git remote add origin https://github.com/${REPO} && \
-  git fetch --depth 1 origin ${BRANCH} && \
-  git checkout ${COMMIT} && \
-  mv crs-setup.conf.example crs-setup.conf && \
-  ln -sv /opt/owasp-modsecurity-crs-3.2 /etc/modsecurity.d/owasp-crs && \
-  printf "include /etc/modsecurity.d/owasp-crs/crs-setup.conf\ninclude /etc/modsecurity.d/owasp-crs/rules/*.conf" >> /etc/modsecurity.d/include.conf && \
-  sed -i -e 's/SecRuleEngine DetectionOnly/SecRuleEngine On/g' /etc/modsecurity.d/modsecurity.conf
+RUN apt-get update \
+ && apt-get -y install \
+      ca-certificates \
+      git \
+      iproute2 \
+      python \
+ && mkdir /opt/owasp-crs \
+ && cd /opt/owasp-crs \
+ && git init \
+ && git remote add origin https://github.com/${REPO} \
+ && git fetch --depth 1 origin ${BRANCH} \
+ && git checkout ${COMMIT} \
+ && mv -v crs-setup.conf.example crs-setup.conf \
+ && ln -sv /opt/owasp-crs /etc/modsecurity.d/ \
+ && echo 'include /etc/modsecurity.d/owasp-crs/crs-setup.conf' > /etc/modsecurity.d/include.conf \
+ && echo 'include /etc/modsecurity.d/owasp-crs/rules/*.conf'  >> /etc/modsecurity.d/include.conf \
+ && sed -i /etc/modsecurity.d/modsecurity.conf \
+      -e 's/SecRuleEngine DetectionOnly/SecRuleEngine On/g'
 
 COPY docker-entrypoint.sh /
 
