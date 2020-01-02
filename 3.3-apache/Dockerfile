@@ -24,13 +24,13 @@ RUN apt-get update \
  && git checkout ${COMMIT} \
  && mv -v crs-setup.conf.example crs-setup.conf \
  && ln -sv /opt/owasp-crs /etc/modsecurity.d/ \
- && echo 'include /etc/modsecurity.d/owasp-crs/crs-setup.conf' > /etc/modsecurity.d/include.conf \
- && echo 'include /etc/modsecurity.d/owasp-crs/rules/*.conf'  >> /etc/modsecurity.d/include.conf \
+ && echo 'Include /etc/modsecurity.d/owasp-crs/crs-setup.conf' > /etc/modsecurity.d/include.conf \
+ && echo 'Include /etc/modsecurity.d/owasp-crs/rules/*.conf'  >> /etc/modsecurity.d/include.conf \
  && sed -i /etc/modsecurity.d/modsecurity.conf \
       -e 's/SecRuleEngine DetectionOnly/SecRuleEngine On/g'
 
-COPY httpd-logging-before-modsec.conf  /usr/local/apache2/conf/extra/httpd-logging-before-modsec.conf
-COPY httpd-logging-after-modsec.conf   /usr/local/apache2/conf/extra/httpd-logging-after-modsec.conf
+COPY httpd-logging-before-modsec.conf /usr/local/apache2/conf/extra/
+COPY httpd-logging-after-modsec.conf  /usr/local/apache2/conf/extra/
 COPY docker-entrypoint.sh /
 
 EXPOSE 80
