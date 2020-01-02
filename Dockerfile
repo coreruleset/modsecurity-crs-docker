@@ -1,29 +1,34 @@
-FROM owasp/modsecurity:2.9-apache-ubuntu
-MAINTAINER Chaim Sanders chaim.sanders@gmail.com
+FROM owasp/modsecurity:2
+
+LABEL maintainer="Chaim Sanders <chaim.sanders@gmail.com>"
 
 ARG COMMIT=v3.3/dev
 ARG REPO=SpiderLabs/owasp-modsecurity-crs
+
 ENV PARANOIA=1
 ENV ANOMALYIN=5
 ENV ANOMALYOUT=4
 
-RUN apt-get update && \
-    apt-get -y install python git ca-certificates iproute2
+RUN apt-get update \
+ && apt-get -y install \
+      ca-certificates \
+      git \
+      iproute2 \
+      python \
+ && git clone -b ${COMMIT} --depth 1 https://github.com/${REPO}.git /opt/owasp-crs \
+ && ln -sv /opt/owasp-crs /etc/modsecurity.d/owasp-crs \
+ && cd /opt/owasp-crs \
+ && mv -v crs-setup.conf.example crs-setup.conf \
+ && cd /etc/modsecurity.d \
+ && echo 'Include modsecurity.d/owasp-crs/crs-setup.conf' > include.conf \
+ && echo 'Include modsecurity.d/owasp-crs/rules/*.conf'  >> include.conf \
+ && sed -i /etc/modsecurity.d/modsecurity.conf \
+      -e 's/SecRuleEngine DetectionOnly/SecRuleEngine On/g' \
+ && a2enmod \
+      proxy \
+      proxy_http
 
-RUN cd /opt && \
-  git clone https://github.com/${REPO}.git owasp-modsecurity-crs-3.2 && \
-  cd owasp-modsecurity-crs-3.2 && \
-  git checkout -qf ${COMMIT}
-
-RUN cd /opt && \
-  cp -R /opt/owasp-modsecurity-crs-3.2/ /etc/apache2/modsecurity.d/owasp-crs/ && \
-  mv /etc/apache2/modsecurity.d/owasp-crs/crs-setup.conf.example /etc/apache2/modsecurity.d/owasp-crs/crs-setup.conf && \
-  cd /etc/apache2/modsecurity.d && \
-  printf "include modsecurity.d/owasp-crs/crs-setup.conf\ninclude modsecurity.d/owasp-crs/rules/*.conf" > include.conf && \
-  sed -i -e 's/SecRuleEngine DetectionOnly/SecRuleEngine On/g' /etc/apache2/modsecurity.d/modsecurity.conf && \
-  a2enmod proxy proxy_http
-
-COPY proxy.conf           /etc/apache2/modsecurity.d/proxy.conf
+COPY proxy.conf /etc/modsecurity.d/proxy.conf
 COPY docker-entrypoint.sh /
 
 EXPOSE 80
