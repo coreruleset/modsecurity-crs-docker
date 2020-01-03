@@ -18,14 +18,18 @@ jobs:
 
     - name: Log in to Docker Hub
       run: docker login
-           -u ${{ secrets.dockerhub_user }}
-           -p ${{ secrets.dockerhub_token }}
+           -u "${{ secrets.dockerhub_user }}"
+           -p "${{ secrets.dockerhub_token }}"
 
     - name: Build ${{ matrix.image }}
       run: docker build ${{ matrix.image }}
            --tag owasp/modsecurity-crs:${{ matrix.image }}
-           --tag owasp/modsecurity-crs:$(echo ${{ matrix.image }} | sed 's/-.*//')
            --tag owasp/modsecurity-crs:$(echo ${{ matrix.image }} | sed 's/.*-//')
+
+    - name: Set default tag for ${{ matrix.image }}
+      if: endsWith(matrix.image, '-apache')
+      run: docker tag owasp/modsecurity-crs:${{ matrix.image }}
+                      owasp/modsecurity-crs:$(echo ${{ matrix.image }} | sed 's/-.*//')
 
     - name: Push ${{ matrix.image }}
       run: docker push owasp/modsecurity-crs
