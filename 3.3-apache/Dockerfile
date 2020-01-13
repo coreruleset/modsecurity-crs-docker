@@ -15,7 +15,6 @@ RUN apt-get update \
       ca-certificates \
       git \
       iproute2 \
-      python \
  && mkdir /opt/owasp-crs \
  && cd /opt/owasp-crs \
  && git init \
