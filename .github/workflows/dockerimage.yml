@@ -22,7 +22,7 @@ jobs:
            -p "${{ secrets.dockerhub_token }}"
 
     - name: Build ${{ matrix.image }}
-      run: docker build ${{ matrix.image }}
+      run: docker build src -f ${{ matrix.image }}/Dockerfile
            --tag owasp/modsecurity-crs:${{ matrix.image }}
            --tag owasp/modsecurity-crs:$(echo ${{ matrix.image }} | sed 's/.*-//')
 
