@@ -1,4 +1,19 @@
-# Example
+# ModSecurity Core Rule Set Docker Image
+
+[![dockeri.co](http://dockeri.co/image/owasp/modsecurity-crs)](https://hub.docker.com/r/owasp/modsecurity-crs/)
+
+[![Build Status](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2FCRS-support%2Fmodsecurity-crs-docker%2Fbadge%3Fref%3Dmaster&style=flat)](https://actions-badge.atrox.dev/CRS-support/modsecurity-crs-docker/goto?ref=master
+) [![GitHub issues](https://img.shields.io/github/issues-raw/CRS-support/modsecurity-crs-docker.svg)](https://github.com/CRS-support/modsecurity-crs-docker/issues
+) [![GitHub PRs](https://img.shields.io/github/issues-pr-raw/CRS-support/modsecurity-crs-docker.svg)](https://github.com/CRS-support/modsecurity-crs-docker/pulls
+) [![License](https://img.shields.io/github/license/CRS-support/modsecurity-crs-docker.svg)](https://github.com/CRS-support/modsecurity-crs-docker/blob/master/LICENSE)
+
+## What is the Core Rule Set
+
+The Core Rule Set (CRS) is a set of generic attack detection rules for use with ModSecurity or compatible web application firewalls.
+ModSecurity is an open source, cross platform web application firewall (WAF) engine for Apache, IIS and Nginx.
+
+## Example
+
 ```
 docker build -t owasp/modsecurity-crs .
 docker run -p 80:80 -ti -e PARANOIA=4 --rm owasp/modsecurity-crs
@@ -10,7 +25,7 @@ or
 docker build -t owasp/modsecurity-crs .
 docker run -p 80:80 -ti -e PARANOIA=4 -e PROXY=1 --rm owasp/modsecurity-crs
 ```
-# Environment Variables
+## Environment Variables
 
 The following environment variables are available to configure the CRS container:
 
@@ -37,7 +52,7 @@ The following environment variables are available to configure the CRS container
 | MAX_FILE_SIZE | An integer indicating the max_file_size (Default: unlimited) |
 | COMBINED_FILE_SIZES | An integer indicating the combined_file_sizes (Default: unlimited) |
 
-# Notes regarding reverse proxy
+## Notes regarding reverse proxy
 
 In order to more easily test drive the CRS ruleset, we include support for an technique called [Reverse Proxy](https://en.wikipedia.org/wiki/Reverse_proxy). Using this technique, you keep your pre-existing web server online at a non-standard host and port, and then configure the CRS container to accept public traffic. The CRS container then proxies the traffic to your pre-existing webserver. This way, you can test out CRS with any web server. Some notes:
 
@@ -46,16 +61,15 @@ In order to more easily test drive the CRS ruleset, we include support for an te
 * Do not use 127.0.0.1 as an UPSTREAM address. The loopback interface inside the docker container is not the same interface as the one on docker host.
 * Note that traffic coming through this proxy will look like it's coming from the wrong address. You may want to configure your pre-existing webserver to use the `X-Forwarded-For` HTTP header to populate the remote address field for traffic from the proxy.
 
-# ModSecurity CRS Tuning
+## ModSecurity CRS Tuning
 
 There are two possible ways to pass ModSecurity CRS tuning rules to the container:
 
-* To map the ModSecurity tuning file(s) via volumes into the container during the run command 
+* To map the ModSecurity tuning file(s) via volumes into the container during the run command
 * To copy the ModSecurity tuning file(s) into the created container and then start the container
-  
-  
-## Map ModSecurity tuning file via volume
-  
+
+### Map ModSecurity tuning file via volume
+
 ```
 docker run -dti --rm \
    -p 80:80 \
@@ -63,24 +77,24 @@ docker run -dti --rm \
    -v /path/to/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf:/etc/modsecurity.d/owasp-crs/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf \
    owasp/modsecurity-crs
 ```
-  
-## Copy ModSecurity tuning file into created container
-  
+
+### Copy ModSecurity tuning file into created container
+
 This example can be helpful when no volume mounts are possible (some CI pipelines).
-  
+
 ```
 docker create -ti --name modseccrs \
    -p 80:80 \
    owasp/modsecurity-crs
-  
+
 docker cp /path/to/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf \
    modseccrs:/etc/modsecurity.d/owasp-crs/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf
-  
+
 docker start modseccrs
 ```
-  
-# Full docker run example with all possible environment variables
-  
+
+## Full docker run example with all possible environment variables
+
 ```
 docker run -dti 80:80 --rm \
    -e PARANOIA=1 \
