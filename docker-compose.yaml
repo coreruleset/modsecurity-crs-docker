@@ -27,8 +27,8 @@ services:
       # Paranoia Level
       - PARANOIA=1
       # Inbound and Outbound Anomaly Score Threshold
-      - ANOMALYIN=5
-      - ANOMALYOUT=4
+      - ANOMALY_INBOUND=5
+      - ANOMALY_OUTBOUND=4
       # Executing Paranoia Level
       # - EXECUTING_PARANOIA=2
 
