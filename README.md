@@ -36,8 +36,8 @@ The following environment variables are available to configure the CRS container
 | UPSTREAM | The IP Address (and optional port) of the upstream server when proxy mode is enabled. (Default: the container's default router, port 81) (Examples: 192.0.2.2 or 192.0.2.2:80) |
 | EXECUTING_PARANOIA | An integer indicating the executing_paranoia_level (Default: paranoia level) |
 | ENFORCE_BODYPROC_URLENCODED | A boolean indicating the enforce_bodyproc_urlencoded (Default: 0) |
-| ANOMALYIN | An integer indicating the inbound_anomaly_score_threshold (Default: 5) |
-| ANOMALYOUT | An integer indicating the outbound_anomaly_score_threshold (Default: 4) |
+| ANOMALY_INBOUND | An integer indicating the inbound_anomaly_score_threshold (Default: 5) |
+| ANOMALY_OUTBOUND | An integer indicating the outbound_anomaly_score_threshold (Default: 4) |
 | ALLOWED_METHODS | A string indicating the allowed_methods (Default: GET HEAD POST OPTIONS) |
 | ALLOWED_REQUEST_CONTENT_TYPE | A string indicating the allowed_request_content_type (Default: application/x-www-form-urlencoded\|multipart/form-data\|text/xml\|application/xml\|application/soap+xml\|application/x-amf\|application/json\|application/octet-stream\|application/csp-report\|application/xss-auditor-report\|text/plain) |
 | ALLOWED_REQUEST_CONTENT_TYPE_CHARSET | A string indicating the allowed_request_content_type_charset (Default: utf-8\|iso-8859-1\|iso-8859-15\|windows-1252) |
@@ -51,6 +51,21 @@ The following environment variables are available to configure the CRS container
 | TOTAL_ARG_LENGTH | An integer indicating the total_arg_length (Default: unlimited) |
 | MAX_FILE_SIZE | An integer indicating the max_file_size (Default: unlimited) |
 | COMBINED_FILE_SIZES | An integer indicating the combined_file_sizes (Default: unlimited) |
+| TIMEOUT | Apache integer value indicating the number of seconds before receiving and sending time out (Default: 60) |
+| LOGLEVEL | Apache string value controlling the number of messages logged to the error_log, Apache (Default: warn) |
+| ERRORLOG | Apache string value indicating the location of the error log file (Default: '/proc/self/fd/2') |
+| PORT | Apache integer value indicating the port where Apache is listening to (Default: 80) |
+| USER | Apache string value indicating the name (or #number) of the user to run httpd as (Default: daemon) |
+| GROUP | Apache string value indicating the name (or #number) of the group to run httpd as (Default: daemon) |
+| SERVERADMIN | Apache string value indicating the address where problems with the server should be e-mailed (Default: root@localhost) |
+| SERVERNAME | Apache string value indicating the server name (Default: localhost) |
+| MODSEC_RULE_ENGINE | ModSecurity string value enabling ModSecurity itself (Default: on) |
+| MODSEC_REQ_BODY_ACCESS | ModSecurity string value allowing ModSecurity to access request bodies (Default: on) |
+| MODSEC_REQ_BODY_LIMIT | ModSecurity integer value indicating the maximum request body size  accepted for buffering (Default: 13107200) |
+| MODSEC_RESP_BODY_ACCESS | ModSecurity string value allowing ModSecurity to access response bodies (Default: on) |
+| MODSEC_RESP_BODY_LIMIT | ModSecurity integer value indicating the maximum response body size  accepted for buffering (Default: 524288) |
+| MODSEC_PCRE_MATCH_LIMIT | ModSecurity integer value indicating the limit for the number of internal executions in the PCRE function (Default: 1000) |
+| MODSEC_PCRE_MATCH_LIMIT_RECURSION | ModSecurity integer value indicating the limit for the depth of recursion when calling PCRE function (Default: 1000) |
 
 ## Notes regarding reverse proxy
 
@@ -100,8 +115,8 @@ docker run -dti 80:80 --rm \
    -e PARANOIA=1 \
    -e EXECUTING_PARANOIA=2 \
    -e ENFORCE_BODYPROC_URLENCODED=1 \
-   -e ANOMALYIN=10 \
-   -e ANOMALYOUT=5 \
+   -e ANOMALY_INBOUND=10 \
+   -e ANOMALY_OUTBOUND=5 \
    -e ALLOWED_METHODS="GET POST PUT" \
    -e ALLOWED_REQUEST_CONTENT_TYPE="text/xml|application/xml|text/plain" \
    -e ALLOWED_REQUEST_CONTENT_TYPE_CHARSET="utf-8|iso-8859-1" \
@@ -116,6 +131,21 @@ docker run -dti 80:80 --rm \
    -e MAX_FILE_SIZE=100000 \
    -e COMBINED_FILE_SIZES=1000000 \
    -e PROXY=1 \
-   -e 192.0.2.2:80 \
+   -e TIMEOUT=60 \
+   -e LOGLEVEL=warn \
+   -e ERRORLOG='/proc/self/fd/2' \
+   -e USER=daemon \
+   -e GROUP=daemon \
+   -e SERVERADMIN=root@localhost \
+   -e SERVERNAME=localhost \
+   -e PORT=80 \
+   -e MODSEC_RULE_ENGINE=on \
+   -e MODSEC_REQ_BODY_ACCESS=on \
+   -e MODSEC_REQ_BODY_LIMIT=13107200 \
+   -e MODSEC_REQ_BODY_NOFILES_LIMIT=131072 \
+   -e MODSEC_RESP_BODY_ACCESS=on \
+   -e MODSEC_RESP_BODY_LIMIT=524288 \
+   -e MODSEC_PCRE_MATCH_LIMIT=1000 \
+   -e MODSEC_PCRE_MATCH_LIMIT_RECURSION=1000
    owasp/modsecurity-crs
 ```

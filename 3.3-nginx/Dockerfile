@@ -7,8 +7,8 @@ ARG BRANCH=v3.3/dev
 ARG REPO=SpiderLabs/owasp-modsecurity-crs
 ENV WEBSERVER=Nginx
 ENV PARANOIA=1
-ENV ANOMALYIN=5
-ENV ANOMALYOUT=4
+ENV ANOMALY_INBOUND=5
+ENV ANOMALY_OUTBOUND=4
 
 RUN apt-get update \
  && apt-get -y install \

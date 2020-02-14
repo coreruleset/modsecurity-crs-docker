@@ -5,10 +5,27 @@ LABEL maintainer="Chaim Sanders <chaim.sanders@gmail.com>"
 ARG COMMIT=v3.3/dev
 ARG BRANCH=v3.3/dev
 ARG REPO=SpiderLabs/owasp-modsecurity-crs
-ENV WEBSERVER=Apache
-ENV PARANOIA=1
-ENV ANOMALYIN=5
-ENV ANOMALYOUT=4
+
+ENV WEBSERVER=Apache \
+    PARANOIA=1 \
+    ANOMALY_INBOUND=5 \
+    ANOMALY_OUTBOUND=4 \
+    TIMEOUT=60 \
+    LOGLEVEL=warn \
+    ERRORLOG='/proc/self/fd/2' \
+    USER=daemon \
+    GROUP=daemon \
+    SERVERADMIN=root@localhost \
+    SERVERNAME=localhost \
+    PORT=80 \
+    MODSEC_RULE_ENGINE=on \
+    MODSEC_REQ_BODY_ACCESS=on \
+    MODSEC_REQ_BODY_LIMIT=13107200 \
+    MODSEC_REQ_BODY_NOFILES_LIMIT=131072 \
+    MODSEC_RESP_BODY_ACCESS=on \
+    MODSEC_RESP_BODY_LIMIT=524288 \
+    MODSEC_PCRE_MATCH_LIMIT=1000 \
+    MODSEC_PCRE_MATCH_LIMIT_RECURSION=1000
 
 RUN apt-get update \
  && apt-get -y install \
@@ -28,11 +45,11 @@ RUN apt-get update \
  && sed -i /etc/modsecurity.d/modsecurity.conf \
       -e 's/SecRuleEngine DetectionOnly/SecRuleEngine On/g'
 
-COPY httpd-logging-before-modsec.conf /usr/local/apache2/conf/extra/
-COPY httpd-logging-after-modsec.conf  /usr/local/apache2/conf/extra/
+COPY httpd-*.conf /usr/local/apache2/conf/extra/
+COPY modsecurity.conf /etc/modsecurity.d/
 COPY docker-entrypoint.sh /
 
-EXPOSE 80
+EXPOSE ${PORT}
 EXPOSE 443
 
 ENTRYPOINT ["/docker-entrypoint.sh"]

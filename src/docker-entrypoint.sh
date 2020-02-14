@@ -16,7 +16,7 @@ if [ -n "$ENFORCE_BODYPROC_URLENCODED" ]; then
 fi 
 
 # Inbound and Outbound Anomaly Score
-sed -z -E -i 's/#SecAction.{6}id:900110.*tx\.outbound_anomaly_score_threshold=4\"/SecAction \\\n  \"id:900110, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:tx.inbound_anomaly_score_threshold='"$ANOMALYIN"',  \\\n   setvar:tx.outbound_anomaly_score_threshold='"$ANOMALYOUT"'\"/' /etc/modsecurity.d/owasp-crs/crs-setup.conf 
+sed -z -E -i 's/#SecAction.{6}id:900110.*tx\.outbound_anomaly_score_threshold=4\"/SecAction \\\n  \"id:900110, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:tx.inbound_anomaly_score_threshold='"$ANOMALY_INBOUND"',  \\\n   setvar:tx.outbound_anomaly_score_threshold='"$ANOMALY_OUTBOUND"'\"/' /etc/modsecurity.d/owasp-crs/crs-setup.conf 
 
 # HTTP methods that a client is allowed to use.
 if [ -n "$ALLOWED_METHODS" ]; then
