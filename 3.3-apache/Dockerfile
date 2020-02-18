@@ -6,11 +6,10 @@ ARG COMMIT=v3.3/dev
 ARG BRANCH=v3.3/dev
 ARG REPO=SpiderLabs/owasp-modsecurity-crs
 
-ENV WEBSERVER=Apache \
-    PARANOIA=1 \
+ENV PARANOIA=1 \
     ANOMALY_INBOUND=5 \
     ANOMALY_OUTBOUND=4 \
-    TIMEOUT=60 \
+    APACHE_TIMEOUT=60 \
     LOGLEVEL=warn \
     ERRORLOG='/proc/self/fd/2' \
     USER=daemon \
@@ -23,9 +22,14 @@ ENV WEBSERVER=Apache \
     MODSEC_REQ_BODY_LIMIT=13107200 \
     MODSEC_REQ_BODY_NOFILES_LIMIT=131072 \
     MODSEC_RESP_BODY_ACCESS=on \
-    MODSEC_RESP_BODY_LIMIT=524288 \
-    MODSEC_PCRE_MATCH_LIMIT=1000 \
-    MODSEC_PCRE_MATCH_LIMIT_RECURSION=1000
+    MODSEC_RESP_BODY_LIMIT=1048576 \
+    MODSEC_PCRE_MATCH_LIMIT=100000 \
+    MODSEC_PCRE_MATCH_LIMIT_RECURSION=100000
+
+COPY src/etc/modsecurity.d/*.conf /etc/modsecurity.d/
+COPY src/opt/modsecurity/activate-rules.sh /opt/modsecurity/
+COPY 3.3-apache/conf/extra/*.conf /usr/local/apache2/conf/extra/
+COPY 3.3-apache/docker-entrypoint.sh /
 
 RUN apt-get update \
  && apt-get -y install \
@@ -40,17 +44,7 @@ RUN apt-get update \
  && git checkout ${COMMIT} \
  && mv -v crs-setup.conf.example crs-setup.conf \
  && ln -sv /opt/owasp-crs /etc/modsecurity.d/ \
- && echo 'Include /etc/modsecurity.d/owasp-crs/crs-setup.conf' > /etc/modsecurity.d/include.conf \
- && echo 'Include /etc/modsecurity.d/owasp-crs/rules/*.conf'  >> /etc/modsecurity.d/include.conf \
- && sed -i /etc/modsecurity.d/modsecurity.conf \
-      -e 's/SecRuleEngine DetectionOnly/SecRuleEngine On/g'
-
-COPY httpd-*.conf /usr/local/apache2/conf/extra/
-COPY modsecurity.conf /etc/modsecurity.d/
-COPY docker-entrypoint.sh /
-
-EXPOSE ${PORT}
-EXPOSE 443
+ && sed -i -E 's/(Listen) [0-9]+/\1 ${PORT}/g' /usr/local/apache2/conf/httpd.conf
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["apachectl", "-D", "FOREGROUND"]

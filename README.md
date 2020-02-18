@@ -25,6 +25,10 @@ or
 docker build -t owasp/modsecurity-crs .
 docker run -p 80:80 -ti -e PARANOIA=4 -e PROXY=1 --rm owasp/modsecurity-crs
 ```
+
+## Apache
+The Apache webserver is configured via the `httpd-modsecurity.conf` file overriding directives from the base file.
+
 ## Environment Variables
 
 The following environment variables are available to configure the CRS container:
@@ -51,7 +55,7 @@ The following environment variables are available to configure the CRS container
 | TOTAL_ARG_LENGTH | An integer indicating the total_arg_length (Default: unlimited) |
 | MAX_FILE_SIZE | An integer indicating the max_file_size (Default: unlimited) |
 | COMBINED_FILE_SIZES | An integer indicating the combined_file_sizes (Default: unlimited) |
-| TIMEOUT | Apache integer value indicating the number of seconds before receiving and sending time out (Default: 60) |
+| APACHE_TIMEOUT | Apache integer value indicating the number of seconds before receiving and sending time out (Default: 60) |
 | LOGLEVEL | Apache string value controlling the number of messages logged to the error_log, Apache (Default: warn) |
 | ERRORLOG | Apache string value indicating the location of the error log file (Default: '/proc/self/fd/2') |
 | PORT | Apache integer value indicating the port where Apache is listening to (Default: 80) |
@@ -131,7 +135,7 @@ docker run -dti 80:80 --rm \
    -e MAX_FILE_SIZE=100000 \
    -e COMBINED_FILE_SIZES=1000000 \
    -e PROXY=1 \
-   -e TIMEOUT=60 \
+   -e APACHE_TIMEOUT=60 \
    -e LOGLEVEL=warn \
    -e ERRORLOG='/proc/self/fd/2' \
    -e USER=daemon \
