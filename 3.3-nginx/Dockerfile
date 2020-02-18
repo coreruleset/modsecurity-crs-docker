@@ -5,7 +5,6 @@ LABEL maintainer="Chaim Sanders <chaim.sanders@gmail.com>"
 ARG COMMIT=v3.3/dev
 ARG BRANCH=v3.3/dev
 ARG REPO=SpiderLabs/owasp-modsecurity-crs
-ENV WEBSERVER=Nginx
 ENV PARANOIA=1
 ENV ANOMALY_INBOUND=5
 ENV ANOMALY_OUTBOUND=4
@@ -28,7 +27,8 @@ RUN apt-get update \
  && sed -i /etc/modsecurity.d/modsecurity.conf \
       -e 's/SecRuleEngine DetectionOnly/SecRuleEngine On/g'
 
-COPY docker-entrypoint.sh /
+COPY 3.3-nginx/docker-entrypoint.sh /
+COPY src/opt/modsecurity/activate-rules.sh /opt/modsecurity/
 
 EXPOSE 80
 

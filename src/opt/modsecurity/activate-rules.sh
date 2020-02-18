@@ -1,6 +1,4 @@
-#!/bin/bash
-
-set -e
+#!/bin/bash -e
 
 # Paranoia Level
 sed -z -E -i 's/#SecAction.{7}id:900000.*tx\.paranoia_level=1\"/SecAction \\\n  \"id:900000, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:tx.paranoia_level='"$PARANOIA"'\"/' /etc/modsecurity.d/owasp-crs/crs-setup.conf 
@@ -81,19 +79,4 @@ fi
 # Block request if the total size of all combined uploaded files is too high
 if [ -n "$COMBINED_FILE_SIZES" ]; then
   sed -z -E -i 's/#SecAction.{6}id:900350.*tx\.combined_file_sizes=1048576\"/SecAction \\\n  \"id:900350, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:tx.combined_file_sizes='"$COMBINED_FILE_SIZES"'\"/' /etc/modsecurity.d/owasp-crs/crs-setup.conf
-fi 
-
-if [ "$WEBSERVER" = "Apache" ]; then
-  if [ "$PROXY" = "1" ]; then
-    WEBSERVER_ARGUMENTS='-D crs_proxy'
-    if [ -z "$UPSTREAM" ]; then
-      UPSTREAM="$(/sbin/ip route | grep ^default | perl -pe 's/^.*?via ([\d.]+).*/$1/g'):81"
-      export UPSTREAM
-    fi
-  fi
-elif [ "$WEBSERVER" = "Nginx" ]; then
-  WEBSERVER_ARGUMENTS=''
 fi
-
-
-exec "$@" $WEBSERVER_ARGUMENTS
