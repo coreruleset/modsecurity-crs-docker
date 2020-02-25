@@ -56,13 +56,14 @@ The following environment variables are available to configure the CRS container
 | MAX_FILE_SIZE | An integer indicating the max_file_size (Default: unlimited) |
 | COMBINED_FILE_SIZES | An integer indicating the combined_file_sizes (Default: unlimited) |
 | APACHE_TIMEOUT | Apache integer value indicating the number of seconds before receiving and sending time out (Default: 60) |
-| LOGLEVEL | Apache string value controlling the number of messages logged to the error_log, Apache (Default: warn) |
-| ERRORLOG | Apache string value indicating the location of the error log file (Default: '/proc/self/fd/2') |
-| PORT | Apache integer value indicating the port where Apache is listening to (Default: 80) |
-| USER | Apache string value indicating the name (or #number) of the user to run httpd as (Default: daemon) |
+| NGINX_KEEPALIVE_TIMEOUT | Nginx integer value indicating the number of seconds a keep-alive client connection will stay open on the server side (Default: 60) |
+| LOGLEVEL | A string value controlling the number of messages logged to the error_log (Default: warn) |
+| ERRORLOG | A string value indicating the location of the error log file (Default: '/proc/self/fd/2') |
+| PORT | An integer value indicating the port where the webserver is listening to (Default: 80) |
+| USER | A string value indicating the name (or #number) of the user to run httpd as (Default: daemon) |
 | GROUP | Apache string value indicating the name (or #number) of the group to run httpd as (Default: daemon) |
-| SERVERADMIN | Apache string value indicating the address where problems with the server should be e-mailed (Default: root@localhost) |
-| SERVERNAME | Apache string value indicating the server name (Default: localhost) |
+| SERVERADMIN | A string value indicating the address where problems with the server should be e-mailed (Default: root@localhost) |
+| SERVERNAME | A string value indicating the server name (Default: localhost) |
 | MODSEC_RULE_ENGINE | ModSecurity string value enabling ModSecurity itself (Default: on) |
 | MODSEC_REQ_BODY_ACCESS | ModSecurity string value allowing ModSecurity to access request bodies (Default: on) |
 | MODSEC_REQ_BODY_LIMIT | ModSecurity integer value indicating the maximum request body size  accepted for buffering (Default: 13107200) |
