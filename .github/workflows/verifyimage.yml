@@ -1,0 +1,27 @@
+name: Verify Images
+on:
+  pull_request:
+    branches:
+    - master
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image:
+        - 3.3-apache
+        - 3.3-nginx
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
+
+    - name: Build ${{ matrix.image }}
+      run: docker build . -f ${{ matrix.image }}/Dockerfile --tag test
+
+    - name: Run ${{ matrix.image }}
+      run: docker run -d --name ${{ matrix.image }} test
+
+    - name: Verify ${{ matrix.image }}
+      run: |
+        [ $(docker inspect ${{ matrix.image }} --format='{{.State.Running}}') = 'true' ]
