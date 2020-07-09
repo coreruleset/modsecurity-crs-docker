@@ -28,8 +28,8 @@ ENV PARANOIA=1 \
 
 COPY src/etc/modsecurity.d/*.conf /etc/modsecurity.d/
 COPY src/opt/modsecurity/activate-rules.sh /opt/modsecurity/
-COPY 3.3-apache/conf/extra/*.conf /usr/local/apache2/conf/extra/
-COPY 3.3-apache/docker-entrypoint.sh /
+COPY 3.4-apache/conf/extra/*.conf /usr/local/apache2/conf/extra/
+COPY 3.4-apache/docker-entrypoint.sh /
 
 RUN apt-get update \
  && apt-get -y install \
