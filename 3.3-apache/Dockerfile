@@ -4,7 +4,7 @@ LABEL maintainer="Chaim Sanders <chaim.sanders@gmail.com>"
 
 ARG COMMIT=v3.3/dev
 ARG BRANCH=v3.3/dev
-ARG REPO=SpiderLabs/owasp-modsecurity-crs
+ARG REPO=coreruleset/coreruleset
 
 ENV PARANOIA=1 \
     ANOMALY_INBOUND=5 \
