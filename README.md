@@ -58,6 +58,7 @@ The following environment variables are available to configure the CRS container
 | UPSTREAM | The IP Address (and optional port) of the upstream server when proxy mode is enabled. (Default: the container's default router, port 81) (Examples: 192.0.2.2 or 192.0.2.2:80) |
 | EXECUTING_PARANOIA | An integer indicating the executing_paranoia_level (Default: paranoia level) |
 | ENFORCE_BODYPROC_URLENCODED | A boolean indicating the enforce_bodyproc_urlencoded (Default: 0) |
+| VALIDATE_UTF8_ENCODING | A boolean indicating the crs_validate_utf8_encoding (Default: 0) |
 | ANOMALY_INBOUND | An integer indicating the inbound_anomaly_score_threshold (Default: 5) |
 | ANOMALY_OUTBOUND | An integer indicating the outbound_anomaly_score_threshold (Default: 4) |
 | ALLOWED_METHODS | A string indicating the allowed_methods (Default: GET HEAD POST OPTIONS) |
@@ -169,6 +170,7 @@ docker run -dti 80:80 --rm \
    -e MODSEC_RESP_BODY_ACCESS=on \
    -e MODSEC_RESP_BODY_LIMIT=524288 \
    -e MODSEC_PCRE_MATCH_LIMIT=1000 \
-   -e MODSEC_PCRE_MATCH_LIMIT_RECURSION=1000
+   -e MODSEC_PCRE_MATCH_LIMIT_RECURSION=1000 \
+   -e VALIDATE_UTF8_ENCODING=1 
    owasp/modsecurity-crs
 ```

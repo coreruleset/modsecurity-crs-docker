@@ -80,3 +80,8 @@ fi
 if [ -n "$COMBINED_FILE_SIZES" ]; then
   sed -z -E -i 's/#SecAction.{6}id:900350.*tx\.combined_file_sizes=1048576\"/SecAction \\\n  \"id:900350, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:tx.combined_file_sizes='"$COMBINED_FILE_SIZES"'\"/' /etc/modsecurity.d/owasp-crs/crs-setup.conf
 fi
+
+# Activate UTF8 validation
+if [ -n "$VALIDATE_UTF8_ENCODING" ]; then
+  sed -z -E -i 's/#SecAction.{6}id:900950.*tx\.crs_validate_utf8_encoding=1\"/SecAction \\\n  \"id:900950, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:tx.crs_validate_utf8_encoding=1\"/' /etc/modsecurity.d/owasp-crs/crs-setup.conf
+fi
