@@ -26,7 +26,6 @@ ENV PARANOIA=1 \
     MODSEC_PCRE_MATCH_LIMIT_RECURSION=100000
 
 COPY 3.3-nginx/docker-entrypoint.sh /
-COPY 3.3-nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf
 COPY 3.3-nginx/nginx.conf /etc/nginx/nginx.conf
 COPY src/opt/modsecurity/activate-rules.sh /opt/modsecurity/
 COPY src/etc/modsecurity.d/*.conf /etc/modsecurity.d/
