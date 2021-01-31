@@ -7,21 +7,21 @@ jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
+      # Remember to match these with the buildimage.yml action
       matrix:
-        image:
-        - 3.3-apache
-        - 3.3-nginx
+        version: ['v3.3.0']
+        server: ['apache', 'nginx']
     steps:
     - uses: actions/checkout@v1
       with:
         fetch-depth: 1
 
-    - name: Build ${{ matrix.image }}
-      run: docker build . -f ${{ matrix.image }}/Dockerfile --tag test
+    - name: Build ${{ matrix.version }}-${{ matrix.server }}
+      run: make VERSIONS=${{ matrix.version }} SERVERS=${{ matrix.server }} TAG=test
 
-    - name: Run ${{ matrix.image }}
-      run: docker run -d --name ${{ matrix.image }} test
+    - name: Run ${{ matrix.version }}-${{ matrix.server }}
+      run: docker run -d --name ${{ matrix.version }}-${{ matrix.server }} test:${{ matrix.version }}-${{ matrix.server }}
 
-    - name: Verify ${{ matrix.image }}
+    - name: Verify ${{ matrix.version }}-${{ matrix.server }}
       run: |
-        [ $(docker inspect ${{ matrix.image }} --format='{{.State.Running}}') = 'true' ]
+        [ $(docker inspect ${{ matrix.version }}-${{ matrix.server }} --format='{{.State.Running}}') = 'true' ]

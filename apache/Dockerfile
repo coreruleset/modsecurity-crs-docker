@@ -2,9 +2,7 @@ FROM owasp/modsecurity:2
 
 LABEL maintainer="Chaim Sanders <chaim.sanders@gmail.com>"
 
-ARG COMMIT=v3.3/dev
-ARG BRANCH=v3.3/dev
-ARG REPO=coreruleset/coreruleset
+ARG RELEASE=%%RELEASE%%
 
 ENV PARANOIA=1 \
     ANOMALY_INBOUND=5 \
@@ -28,23 +26,25 @@ ENV PARANOIA=1 \
 
 COPY src/etc/modsecurity.d/*.conf /etc/modsecurity.d/
 COPY src/opt/modsecurity/activate-rules.sh /opt/modsecurity/
-COPY 3.3-apache/conf/extra/*.conf /usr/local/apache2/conf/extra/
-COPY 3.3-apache/docker-entrypoint.sh /
+COPY apache/conf/extra/*.conf /usr/local/apache2/conf/extra/
+COPY apache/docker-entrypoint.sh /
 
+# Change default shell to bash
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+# hadolint ignore=DL3008,SC2016
 RUN apt-get update \
- && apt-get -y install \
+ && apt-get -y install --no-install-recommends \
       ca-certificates \
-      git \
+      curl \
       iproute2 \
  && mkdir /opt/owasp-crs \
- && cd /opt/owasp-crs \
- && git init \
- && git remote add origin https://github.com/${REPO} \
- && git fetch --depth 1 origin ${BRANCH} \
- && git checkout ${COMMIT} \
- && mv -v crs-setup.conf.example crs-setup.conf \
+ && curl -SL https://github.com/coreruleset/coreruleset/archive/${RELEASE}.tar.gz \
+ | tar -zxf - --strip-components=1 -C /opt/owasp-crs \
+ && mv -v /opt/owasp-crs/crs-setup.conf.example /opt/owasp-crs/crs-setup.conf \
  && ln -sv /opt/owasp-crs /etc/modsecurity.d/ \
- && sed -i -E 's/(Listen) [0-9]+/\1 ${PORT}/g' /usr/local/apache2/conf/httpd.conf
+ && sed -i -E 's/(Listen) [0-9]+/\1 ${PORT}/g' /usr/local/apache2/conf/httpd.conf \
+ && rm -rf /var/lib/apt/lists/*
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["apachectl", "-D", "FOREGROUND"]

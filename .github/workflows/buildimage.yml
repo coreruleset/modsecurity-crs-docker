@@ -3,14 +3,16 @@ on:
   push:
     branches:
     - master
+env:
+  DEFAULT_VERSION: 'v3.3.0'
+  DEFAULT_SERVER: 'apache'
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        image:
-        - 3.3-apache
-        - 3.3-nginx
+        version: ['v3.3.0']
+        server: ['apache', 'nginx']
     steps:
     - uses: actions/checkout@v1
       with:
@@ -21,15 +23,14 @@ jobs:
            -u "${{ secrets.dockerhub_user }}"
            -p "${{ secrets.dockerhub_token }}"
 
-    - name: Build ${{ matrix.image }}
-      run: docker build . -f ${{ matrix.image }}/Dockerfile
-           --tag owasp/modsecurity-crs:${{ matrix.image }}
-           --tag owasp/modsecurity-crs:$(echo ${{ matrix.image }} | sed 's/.*-//')
+    - name: Build ${{ matrix.version }}-${{ matrix.server }}
+      run: make VERSIONS=${{ matrix.version }} SERVERS=${{ matrix.server }}
 
-    - name: Set default tag for ${{ matrix.image }}
-      if: endsWith(matrix.image, '-apache')
-      run: docker tag owasp/modsecurity-crs:${{ matrix.image }}
-                      owasp/modsecurity-crs:$(echo ${{ matrix.image }} | sed 's/-.*//')
+    # As we build multiple versions now, we need one to be the default
+    - name: Set default tag for ${{ matrix.version }}-${{ matrix.server }}
+      if: matrix.server == env.DEFAULT_SERVER && matrix.version == env.DEFAULT_VERSION
+      run: docker tag owasp/modsecurity-crs:${{ matrix.version }}-${{ matrix.server }}
+                      owasp/modsecurity-crs:${{ matrix.server }}
 
-    - name: Push ${{ matrix.image }}
+    - name: Push ${{ matrix.version }}-${{ matrix.server }}
       run: docker push owasp/modsecurity-crs
