@@ -36,3 +36,10 @@ jobs:
 
     - name: Push ${{ matrix.version }}-${{ matrix.server }}
       run: docker push --all-tags owasp/modsecurity-crs
+
+    - name: Docker Hub Description
+      uses: peter-evans/dockerhub-description@v2
+      with:
+        username: ${{ secrets.dockerhub_user }}
+        password: ${{ secrets.dockerhub_token }}
+        repository: owasp/modsecurity-crs
