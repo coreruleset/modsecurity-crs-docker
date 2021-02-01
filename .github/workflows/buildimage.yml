@@ -3,6 +3,10 @@ on:
   push:
     branches:
     - master
+    tags: 
+    - v3.3.0
+  schedule:
+  - cron: '0 12 * * MON'  # Run every Monday
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -11,6 +15,8 @@ jobs:
         image:
         - 3.3-apache
         - 3.3-nginx
+        tag:
+        - v3.3.0
     steps:
     - uses: actions/checkout@v1
       with:
@@ -25,11 +31,13 @@ jobs:
       run: docker build . -f ${{ matrix.image }}/Dockerfile
            --tag owasp/modsecurity-crs:${{ matrix.image }}
            --tag owasp/modsecurity-crs:$(echo ${{ matrix.image }} | sed 's/.*-//')
+           --tag owasp/modsecurity-crs:${{ matrix.tag }}
 
     - name: Set default tag for ${{ matrix.image }}
       if: endsWith(matrix.image, '-apache')
       run: docker tag owasp/modsecurity-crs:${{ matrix.image }}
                       owasp/modsecurity-crs:$(echo ${{ matrix.image }} | sed 's/-.*//')
+                      owasp/modsecurity-crs:${{ matrix.tag }}
 
     - name: Push ${{ matrix.image }}
       run: docker push owasp/modsecurity-crs

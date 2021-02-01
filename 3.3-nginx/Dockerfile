@@ -2,8 +2,8 @@ FROM owasp/modsecurity:3
 
 LABEL maintainer="Chaim Sanders <chaim.sanders@gmail.com>"
 
-ARG COMMIT=v3.3/dev
-ARG BRANCH=v3.3/dev
+ARG COMMIT=tags/v3.3.0
+ARG BRANCH=tags/v3.3.0
 ARG REPO=coreruleset/coreruleset
 
 ENV PARANOIA=1 \
