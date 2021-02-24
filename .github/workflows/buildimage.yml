@@ -3,6 +3,8 @@ on:
   push:
     branches:
     - master
+  schedule:
+    - cron: '0 12 * * MON'  # Run every Monday
 env:
   DEFAULT_VERSION: 'v3.3.0'
   DEFAULT_SERVER: 'apache'
