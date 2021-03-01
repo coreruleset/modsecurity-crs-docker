@@ -2,28 +2,46 @@
 
 [![dockeri.co](http://dockeri.co/image/owasp/modsecurity-crs)](https://hub.docker.com/r/owasp/modsecurity-crs/)
 
-[![Build Status](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2FCRS-support%2Fmodsecurity-crs-docker%2Fbadge%3Fref%3Dmaster&style=flat)](https://actions-badge.atrox.dev/CRS-support/modsecurity-crs-docker/goto?ref=master
-) [![GitHub issues](https://img.shields.io/github/issues-raw/CRS-support/modsecurity-crs-docker.svg)](https://github.com/CRS-support/modsecurity-crs-docker/issues
-) [![GitHub PRs](https://img.shields.io/github/issues-pr-raw/CRS-support/modsecurity-crs-docker.svg)](https://github.com/CRS-support/modsecurity-crs-docker/pulls
-) [![License](https://img.shields.io/github/license/CRS-support/modsecurity-crs-docker.svg)](https://github.com/CRS-support/modsecurity-crs-docker/blob/master/LICENSE)
+[![Build Status](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Fcoreruleset%2Fmodsecurity-crs-docker%2Fbadge%3Fref%3Dmaster&style=flat)](https://actions-badge.atrox.dev/coreruleset/modsecurity-crs-docker/goto?ref=master
+) [![GitHub issues](https://img.shields.io/github/issues-raw/coreruleset/modsecurity-crs-docker.svg)](https://github.com/coreruleset/modsecurity-crs-docker/issues
+) [![GitHub PRs](https://img.shields.io/github/issues-pr-raw/coreruleset/modsecurity-crs-docker.svg)](https://github.com/coreruleset/modsecurity-crs-docker/pulls
+) [![License](https://img.shields.io/github/license/coreruleset/modsecurity-crs-docker.svg)](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/LICENSE)
 
 ## What is the Core Rule Set
 
 The Core Rule Set (CRS) is a set of generic attack detection rules for use with ModSecurity or compatible web application firewalls.
 ModSecurity is an open source, cross platform web application firewall (WAF) engine for Apache, IIS and Nginx.
 
-## Example
+## Building
 
-```
-docker build -t owasp/modsecurity-crs .
-docker run -p 80:80 -ti -e PARANOIA=4 --rm owasp/modsecurity-crs
+Image building requires `make`, or you can do the same by calling the `src/release.sh` helper with the version release you want and the web server, e.g:
+
+```bash
+$ ./src/release.sh "v3.3.0-apache"
+$ docker build --tag owasp/modsecurity-crs:v3.3.0-apache -f v3.3.0-apache/Dockerfile .
 ```
 
-or
+If you call `make` without arguments, will build all releases and web server combinations.
 
+Or use `make VERSIONS=v3.3.0-rc1` and it will get the proper release and build the container.
+
+You can also add your local tag, or override the build:
+
+```bash
+make VERSIONS=v3.3.0 SERVERS=nginx TAG=mytag
 ```
-docker build -t owasp/modsecurity-crs .
-docker run -p 80:80 -ti -e PARANOIA=4 -e PROXY=1 --rm owasp/modsecurity-crs
+
+## CRS Versions
+
+> Hey, I used some specific git version with the containers? What happened?
+
+You can achieve the same results just by getting any version you want, and using docker volumes. See this example:
+
+```bash
+$ git clone https://github.com/coreruleset/coreruleset.git myrules
+$ cd myrules
+$ git checkout ac2a0d1
+$ docker run -p 80:80 -ti -e PARANOIA=4 -v ./rules:/opt/owasp-crs/rules:ro --rm owasp/modsecurity-crs
 ```
 
 ## Apache
