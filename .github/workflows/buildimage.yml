@@ -35,4 +35,4 @@ jobs:
                       owasp/modsecurity-crs:${{ matrix.server }}
 
     - name: Push ${{ matrix.version }}-${{ matrix.server }}
-      run: docker push owasp/modsecurity-crs:${{ matrix.version }}-${{ matrix.server }} owasp/modsecurity-crs:${{ matrix.server }}
+      run: docker push --all-tags owasp/modsecurity-crs
