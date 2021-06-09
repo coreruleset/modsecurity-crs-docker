@@ -54,8 +54,7 @@ The following environment variables are available to configure the CRS container
 | Name     | Description|
 | -------- | ------------------------------------------------------------------- |
 | PARANOIA | An integer indicating the paranoia level (Default: 1)               |
-| PROXY    | An integer indicating if reverse proxy mode is enabled (Default: 0) |
-| UPSTREAM | The IP Address (and optional port) of the upstream server when proxy mode is enabled. (Default: the container's default router, port 81) (Examples: 192.0.2.2 or 192.0.2.2:80) |
+| BACKEND  | The backend address (and optional port) of the backend server. (Default: the container's default router, port 81) (Examples: 192.0.2.2, 192.0.2.2:80, http://172.17.0.1:8000) |
 | EXECUTING_PARANOIA | An integer indicating the executing_paranoia_level (Default: paranoia level) |
 | ENFORCE_BODYPROC_URLENCODED | A boolean indicating the enforce_bodyproc_urlencoded (Default: 0) |
 | ANOMALY_INBOUND | An integer indicating the inbound_anomaly_score_threshold (Default: 5) |
