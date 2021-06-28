@@ -12,6 +12,11 @@
 The Core Rule Set (CRS) is a set of generic attack detection rules for use with ModSecurity or compatible web application firewalls.
 ModSecurity is an open source, cross platform web application firewall (WAF) engine for Apache, IIS and Nginx.
 
+## Supported tags and respective `Dockerfile` links
+
+* `3.3.2-nginx`, `nginx` ([master/nginx/Dockerfile](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile)) – *last stable ModSecurity v3 on Nginx 1.20 official stable base image, and latest stable Core Rule Set 3.3.2 *
+* `3.3.2-apache`, `apache` ([master/apache/Dockerfile](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/apache/Dockerfile)) – *last stable ModSecurity v2 on Apache 2.4 official stable base image, and latest stable Core Rule Set 3.3.2 *
+
 ## Building
 
 Image building requires `make`, or you can do the same by calling the `src/release.sh` helper with the version release you want and the web server, e.g:

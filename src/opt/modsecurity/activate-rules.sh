@@ -88,9 +88,14 @@ fi
 
 # Add SecDefaultActions
 if [ -n "$MODSEC_DEFAULT_PHASE1_ACTION" ]; then
-  sed -z -E -i 's/^SecDefaultAction \"phase:1,log,auditlog,pass\"/SecDefaultAction "${MODSEC_DEFAULT_PHASE1_ACTION}"/' /etc/modsecurity.d/owasp-crs/crs-setup.conf
+  sed -z -E -i "s/SecDefaultAction \"phase:1,log,auditlog,pass\"/SecDefaultAction \"${MODSEC_DEFAULT_PHASE1_ACTION}\"/" /etc/modsecurity.d/owasp-crs/crs-setup.conf
 fi
 
 if [ -n "$MODSEC_DEFAULT_PHASE2_ACTION" ]; then
-  sed -z -E -i 's/^SecDefaultAction \"phase:2,log,auditlog,pass\"/SecDefaultAction "${MODSEC_DEFAULT_PHASE2_ACTION}"/' /etc/modsecurity.d/owasp-crs/crs-setup.conf
+  sed -z -E -i "s/SecDefaultAction \"phase:2,log,auditlog,pass\"/SecDefaultAction \"${MODSEC_DEFAULT_PHASE2_ACTION}\"/" /etc/modsecurity.d/owasp-crs/crs-setup.conf
+fi
+
+# Substitute MODSEC_TAG
+if [ -n "$MODSEC_TAG" ]; then
+  sed -z -E -i "s/\\$\{MODSEC_TAG\}/$MODSEC_TAG/" /etc/modsecurity.d/owasp-crs/crs-setup.conf
 fi
