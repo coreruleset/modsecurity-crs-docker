@@ -89,6 +89,8 @@ The following environment variables are available to configure the CRS container
 | MODSEC_RESP_BODY_LIMIT | ModSecurity integer value indicating the maximum response body size  accepted for buffering (Default: 524288) |
 | MODSEC_PCRE_MATCH_LIMIT | ModSecurity integer value indicating the limit for the number of internal executions in the PCRE function (Default: 1000) |
 | MODSEC_PCRE_MATCH_LIMIT_RECURSION | ModSecurity integer value indicating the limit for the depth of recursion when calling PCRE function (Default: 1000) |
+| MODSEC_DEFAULT_PHASE1_ACTION | ModSecurity string with the contents for the default action in phase 1 (Default: `'phase:1,log,auditlog,pass,tag:\'\${MODSEC_TAG}\''`) |
+| MODSEC_DEFAULT_PHASE2_ACTION | ModSecurity string with the contents for the default action in phase 2 (Default: `'phase:2,log,auditlog,pass,tag:\'\${MODSEC_TAG}\''`) |
 
 ## Notes regarding reverse proxy
 
