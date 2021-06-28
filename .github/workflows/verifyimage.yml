@@ -20,8 +20,11 @@ jobs:
       run: make VERSIONS=${{ matrix.version }} SERVERS=${{ matrix.server }} TAG=test
 
     - name: Run ${{ matrix.version }}-${{ matrix.server }}
-      run: docker run -d --name ${{ matrix.version }}-${{ matrix.server }} test:${{ matrix.version }}-${{ matrix.server }}
+      run: |
+        docker run -d --name ${{ matrix.version }}-${{ matrix.server }} test:${{ matrix.version }}-${{ matrix.server }}
+        docker logs --details ${{ matrix.version }}-${{ matrix.server }}
 
     - name: Verify ${{ matrix.version }}-${{ matrix.server }}
       run: |
+        docker inspect ${{ matrix.version }}-${{ matrix.server }}
         [ $(docker inspect ${{ matrix.version }}-${{ matrix.server }} --format='{{.State.Running}}') = 'true' ]
