@@ -17,18 +17,18 @@ ModSecurity is an open source, cross platform web application firewall (WAF) eng
 Image building requires `make`, or you can do the same by calling the `src/release.sh` helper with the version release you want and the web server, e.g:
 
 ```bash
-$ ./src/release.sh "v3.3.0-apache"
-$ docker build --tag owasp/modsecurity-crs:v3.3.0-apache -f v3.3.0-apache/Dockerfile .
+$ ./src/release.sh "v3.3.2-apache"
+$ docker build --tag owasp/modsecurity-crs:v3.3.2-apache -f v3.3.2-apache/Dockerfile .
 ```
 
 If you call `make` without arguments, will build all releases and web server combinations.
 
-Or use `make VERSIONS=v3.3.0-rc1` and it will get the proper release and build the container.
+Or use `make VERSIONS=v3.3.3-rc1` and it will get the proper release and build the container.
 
 You can also add your local tag, or override the build:
 
 ```bash
-make VERSIONS=v3.3.0 SERVERS=nginx TAG=mytag
+make VERSIONS=v3.3.2 SERVERS=nginx TAG=mytag
 ```
 
 ## CRS Versions
