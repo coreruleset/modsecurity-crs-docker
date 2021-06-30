@@ -9,7 +9,7 @@ jobs:
     strategy:
       # Remember to match these with the buildimage.yml action
       matrix:
-        version: ['v3.3.0']
+        version: ['v3.3.2']
         server: ['apache', 'nginx']
     steps:
     - uses: actions/checkout@v1

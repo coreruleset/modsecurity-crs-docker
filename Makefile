@@ -1,4 +1,4 @@
-VERSIONS = v3.3.0
+VERSIONS = v3.3.2
 SERVERS = apache nginx
 TAG = owasp/modsecurity-crs
 
