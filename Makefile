@@ -9,7 +9,7 @@ IMAGES = $(addprefix image/, $(TARGETS))
 
 all: $(TARGETS) $(IMAGES)
 
-v%: $(addsufix /Dockerfile, $(SERVERS))
+v%: $(addsuffix /Dockerfile, $(SERVERS))
 	./src/release.sh "v$*"
 
 image/%: $(TARGETS)
