@@ -5,9 +5,6 @@ on:
     - master
   schedule:
     - cron: '0 12 * * MON'  # Run every Monday
-env:
-  DEFAULT_VERSION: 'v3.3.2'
-  DEFAULT_SERVER: 'apache'
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -30,7 +27,6 @@ jobs:
 
     # As we build multiple versions now, we need one to be the default
     - name: Set default tag for ${{ matrix.version }}-${{ matrix.server }}
-      if: matrix.server == env.DEFAULT_SERVER && matrix.version == env.DEFAULT_VERSION
       run: docker tag owasp/modsecurity-crs:${{ matrix.version }}-${{ matrix.server }}
                       owasp/modsecurity-crs:${{ matrix.server }}
 
