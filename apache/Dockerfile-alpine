@@ -1,4 +1,4 @@
-FROM owasp/modsecurity:apache
+FROM owasp/modsecurity:apache-alpine
 
 LABEL maintainer="Felipe Zipitria <felipe.zipitria@owasp.org>"
 
@@ -33,18 +33,14 @@ COPY apache/docker-entrypoint.sh /
 
 # hadolint ignore=DL3008,SC2016
 RUN set -eux; \
- apt-get update; \
- apt-get -y install --no-install-recommends \
-   ca-certificates \
-   curl \
-   iproute2; \
- mkdir /opt/owasp-crs; \
- curl -SL https://github.com/coreruleset/coreruleset/archive/v${RELEASE}.tar.gz | \
- tar -zxf - --strip-components=1 -C /opt/owasp-crs; \
- mv -v /opt/owasp-crs/crs-setup.conf.example /opt/owasp-crs/crs-setup.conf; \
- ln -sv /opt/owasp-crs /etc/modsecurity.d/; \
- sed -i -E 's/(Listen) [0-9]+/\1 ${PORT}/g' /usr/local/apache2/conf/httpd.conf; \
- rm -rf /var/lib/apt/lists/*
+    apk add --no-cache \
+    ca-certificates \
+    curl \
+    iproute2; \
+    mkdir /opt/owasp-crs; \
+    curl -SL https://github.com/coreruleset/coreruleset/archive/v${RELEASE}.tar.gz \
+    | tar -zxf - --strip-components=1 -C /opt/owasp-crs; \
+    mv -v /opt/owasp-crs/crs-setup.conf.example /opt/owasp-crs/crs-setup.conf; \
+    ln -sv /opt/owasp-crs /etc/modsecurity.d/; \
+    sed -i -E 's/(Listen) [0-9]+/\1 ${PORT}/g' /usr/local/apache2/conf/httpd.conf
 
-ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["apachectl", "-D", "FOREGROUND"]

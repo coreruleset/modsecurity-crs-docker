@@ -1,30 +1,56 @@
+---
 name: Verify Images
 on:
   pull_request:
     branches:
-    - master
+      - master
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
-      # Remember to match these with the buildimage.yml action
       matrix:
-        version: ['v3.3.2']
-        server: ['apache', 'nginx']
+        crs-version:
+          - "3.3.2"
+        image:
+          - apache
+          - nginx
+        variant:
+          - ""
+          - "-alpine"
+        platform:
+          - linux/amd64
     steps:
-    - uses: actions/checkout@v1
-      with:
-        fetch-depth: 1
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
 
-    - name: Build ${{ matrix.version }}-${{ matrix.server }}
-      run: make VERSIONS=${{ matrix.version }} SERVERS=${{ matrix.server }} TAG=test
+      # https://github.com/docker/setup-qemu-action
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
 
-    - name: Run ${{ matrix.version }}-${{ matrix.server }}
-      run: |
-        docker run -d --name ${{ matrix.version }}-${{ matrix.server }} test:${{ matrix.version }}-${{ matrix.server }}
-        docker logs --details ${{ matrix.version }}-${{ matrix.server }}
+      # https://github.com/docker/setup-buildx-action
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+        with:
+          driver-opts: image=moby/buildkit:master
 
-    - name: Verify ${{ matrix.version }}-${{ matrix.server }}
-      run: |
-        docker inspect ${{ matrix.version }}-${{ matrix.server }}
-        [ $(docker inspect ${{ matrix.version }}-${{ matrix.server }} --format='{{.State.Running}}') = 'true' ]
+      - name: Build ${{ matrix.crs-version }}-${{ matrix.image }}${{ matrix.variant }}
+        uses: docker/bake-action@v1.5.0
+        with:
+          files: docker-bake.hcl
+          targets: ${{ matrix.image }}${{ matrix.variant }}
+          set: |
+            "${{ matrix.image }}${{ matrix.variant }}.tags=${{ matrix.crs-version }}-${{ matrix.image }}${{ matrix.variant }}-test"
+            "${{ matrix.image }}${{ matrix.variant }}.platform=${{ matrix.platform }}"
+          load: true
+          push: false
+
+      - name: Run ${{ matrix.image }}${{ matrix.variant }}
+        run: |
+          docker run -d --name ${{ matrix.crs-version }}-${{ matrix.image }}${{ matrix.variant }}-test ${{ matrix.crs-version }}-${{ matrix.image }}${{ matrix.variant }}-test
+          docker logs ${{ matrix.crs-version }}-${{ matrix.image }}${{ matrix.variant }}-test
+
+      - name: Verify ${{ matrix.crs-version }}-${{ matrix.image }}${{ matrix.variant }}
+        run: |
+          [ $(docker inspect ${{ matrix.crs-version }}-${{ matrix.image }}${{ matrix.variant }}-test --format='{{.State.Running}}') = 'true' ]
