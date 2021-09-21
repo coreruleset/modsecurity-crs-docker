@@ -38,6 +38,7 @@ RUN set -eux; \
    ca-certificates \
    curl \
    iproute2; \
+ update-ca-certificates -f; \
  mkdir /opt/owasp-crs; \
  curl -SL https://github.com/coreruleset/coreruleset/archive/v${RELEASE}.tar.gz | \
  tar -zxf - --strip-components=1 -C /opt/owasp-crs; \
