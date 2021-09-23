@@ -3,6 +3,24 @@ variable "crs-version" {
     default = "3.3.2"
 }
 
+variable "REPO" {
+    default = "owasp/modsecurity-crs"
+}
+
+function "tag" {
+    params = [tag]
+    result = ["${REPO}:${tag}"]
+}
+
+function "vtag" {
+    params = [semver, variant]
+    result = concat(
+        tag("${major(semver)}${variant}"),
+        tag("${minor(semver)}${variant}"),
+        tag("${patch(semver)}${variant}")
+    )
+}
+
 function "major" {
     params = [version]
     result = split(".", version)[0]
@@ -12,7 +30,7 @@ function "minor" {
     params = [version]
     result = join(".", slice(split(".", version),0,2))
 }
-# result = split(version, ".")[0] + "." + split(version, ".")[1] "." + split(version, ".")[2]
+
 function "patch" {
     params = [version]
     result = join(".", slice(split(".", version),0,3))
@@ -27,62 +45,42 @@ group "default" {
     ]
 }
 
-target "apache" {
-    context="."
-    dockerfile="apache/Dockerfile"
-    tags = [
-        "owasp/modsecurity-crs:apache",
-        "owasp/modsecurity-crs:${major(crs-version)}-apache",
-        "owasp/modsecurity-crs:${minor(crs-version)}-apache",
-        "owasp/modsecurity-crs:${patch(crs-version)}-apache"
-    ]
+target "platforms-base" {
+    context="."    
     platforms = ["linux/amd64", "linux/arm64/v8", "linux/arm/v7", "linux/i386"]
     args = {
         RELEASE = "${crs-version}"
     }
+}
+
+target "apache" {
+    inherits = ["platforms-base"]
+    dockerfile="apache/Dockerfile"
+    tags = concat(tag("apache"),
+        vtag("${crs-version}", "-apache")
+    )
 }
 
 target "apache-alpine" {
-    context="."    
+    inherits = ["platforms-base"]
     dockerfile="apache/Dockerfile-alpine"
-    tags = [
-        "owasp/modsecurity-crs:apache-alpine",
-        "owasp/modsecurity-crs:${major(crs-version)}-apache-alpine",
-        "owasp/modsecurity-crs:${minor(crs-version)}-apache-alpine",
-        "owasp/modsecurity-crs:${patch(crs-version)}-apache-alpine"
-    ]
-    platforms = ["linux/amd64", "linux/arm64/v8", "linux/arm/v7", "linux/i386"]
-    args = {
-        RELEASE = "${crs-version}"
-    }
+    tags = concat(tag("apache-alpine"),
+        vtag("${crs-version}", "-apache-alpine")
+    )
 }
 
 target "nginx" {
-    context="."    
+    inherits = ["platforms-base"]
     dockerfile="nginx/Dockerfile"
-    tags = [
-        "owasp/modsecurity-crs:nginx",
-        "owasp/modsecurity-crs:${major(crs-version)}-nginx",
-        "owasp/modsecurity-crs:${minor(crs-version)}-nginx",
-        "owasp/modsecurity-crs:${patch(crs-version)}-nginx"
-    ]
-    platforms = ["linux/amd64", "linux/arm64/v8", "linux/arm/v7", "linux/i386"]
-    args = {
-        RELEASE = "${crs-version}"
-    }
+    tags = concat(tag("nginx"),
+        vtag("${crs-version}", "-nginx")
+    )
 }
 
 target "nginx-alpine" {
-    context="."    
+    inherits = ["platforms-base"]
     dockerfile="nginx/Dockerfile-alpine"
-    tags = [
-        "owasp/modsecurity-crs:nginx-alpine",
-        "owasp/modsecurity-crs:${major(crs-version)}-nginx-alpine",
-        "owasp/modsecurity-crs:${minor(crs-version)}-nginx-alpine",
-        "owasp/modsecurity-crs:${patch(crs-version)}-nginx-alpine"
-    ]
-    platforms = ["linux/amd64", "linux/arm64/v8", "linux/arm/v7", "linux/i386"]
-    args = {
-        RELEASE = "${crs-version}"
-    }
+    tags = concat(tag("nginx-alpine"),
+        vtag("${crs-version}", "-nginx-alpine")
+    )
 }
