@@ -2,38 +2,48 @@ name: Build images for Docker Hub
 on:
   push:
     branches:
-    - master
+      - master
   schedule:
-    - cron: '0 12 * * MON'  # Run every Monday
-env:
-  DEFAULT_VERSION: 'v3.3.2'
-  DEFAULT_SERVER: 'apache'
+    - cron: "0 12 * * TUE" # Run every Tuesday (base run on Monday)
+
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        version: ['v3.3.2']
-        server: ['apache', 'nginx']
+        crs-version:
+          - "3.3.2"
+        image:
+          - apache
+          - nginx
+        variant:
+          - ""
+          - "-alpine"
     steps:
-    - uses: actions/checkout@v1
-      with:
-        fetch-depth: 1
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
 
-    - name: Log in to Docker Hub
-      run: docker login
-           -u "${{ secrets.dockerhub_user }}"
-           -p "${{ secrets.dockerhub_token }}"
+      # https://github.com/docker/setup-qemu-action
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
 
-    - name: Build ${{ matrix.version }}-${{ matrix.server }}
-      run: make VERSIONS=${{ matrix.version }} SERVERS=${{ matrix.server }}
+      # https://github.com/docker/setup-buildx-action
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+        with:
+          driver-opts: image=moby/buildkit:master
 
-    # As we build multiple versions now, we need one to be the default
-    - name: Set default tag for ${{ matrix.version }}-${{ matrix.server }}
-      if: matrix.server == env.DEFAULT_SERVER && matrix.version == env.DEFAULT_VERSION
-      run: docker tag owasp/modsecurity-crs:${{ matrix.version }}-${{ matrix.server }}
-                      owasp/modsecurity-crs:${{ matrix.server }}
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.dockerhub_user }}
+          password: ${{ secrets.dockerhub_token }}
 
-    - name: Push ${{ matrix.version }}-${{ matrix.server }}
-      run: docker push --all-tags owasp/modsecurity-crs
-
+      - name: Build and push ${{ matrix.crs-version }}-${{ matrix.image }}${{ matrix.variant }}
+        uses: docker/bake-action@v1.5.0
+        with:
+          targets: ${{ matrix.image }}${{ matrix.variant }}
+          files: docker-bake.hcl
+          push: true

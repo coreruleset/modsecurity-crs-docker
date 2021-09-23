@@ -14,26 +14,25 @@ ModSecurity is an open source, cross platform web application firewall (WAF) eng
 
 ## Supported tags and respective `Dockerfile` links
 
-* `3.3.2-nginx`, `nginx` ([master/nginx/Dockerfile](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile)) – *last stable ModSecurity v3 on Nginx 1.20 official stable base image, and latest stable Core Rule Set 3.3.2 *
-* `3.3.2-apache`, `apache` ([master/apache/Dockerfile](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/apache/Dockerfile)) – *last stable ModSecurity v2 on Apache 2.4 official stable base image, and latest stable Core Rule Set 3.3.2 *
+* `3-nginx`, `3.3-nginx`, `3.3.2-nginx`, `nginx` ([master/nginx/Dockerfile](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile)) – *last stable ModSecurity v3 on Nginx 1.20 official stable base image, and latest stable Core Rule Set 3.3.2 *
+* `3-apache`, `3.3-apache`, `3.3.2-apache`, `apache` ([master/apache/Dockerfile](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/apache/Dockerfile)) –*last stable ModSecurity v2 on Apache 2.4 official stable base image, and latest stable Core Rule Set 3.3.2 *
 
-## Building
+## Supported variants
 
-Image building requires `make`, or you can do the same by calling the `src/release.sh` helper with the version release you want and the web server, e.g:
+We have support for [alpine linux](https://www.alpinelinux.org/) variants of the base images. Just add `-alpine` and you will get it. Examples:
 
-```bash
-$ ./src/release.sh "v3.3.2-apache"
-$ docker build --tag owasp/modsecurity-crs:v3.3.2-apache -f v3.3.2-apache/Dockerfile .
-```
+* `3-nginx-alpine`, `3.3-nginx-alpine`, `3.3.2-nginx-alpine`, `nginx-alpine` ([master/nginx/Dockerfile-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile-alpine) – *last stable ModSecurity v3 on Nginx 1.20 official alpine stable base image, and latest stable Core Rule Set 3.3.2 *
+* `3-apache-alpine`, `3.3-apache-alpine`, `3.3.2-apache-alpine`, `apache-alpine` ([master/apache/Dockerfile-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/apache/Dockerfile-alpine)) – *last stable ModSecurity v2 on Apache 2.4 official alpine stable base image, and latest stable Core Rule Set 3.3.2 *
 
-If you call `make` without arguments, will build all releases and web server combinations.
+## Supported architectures
 
-Or use `make VERSIONS=v3.3.3-rc1` and it will get the proper release and build the container.
+We added the [docker buildx](https://github.com/docker/buildx) support to our docker builds so additional architectures are supported now. As we create our containers based on the official apache and nginx ones, we can only support the architectures they support.
 
-You can also add your local tag, or override the build:
+There is a new file `docker-bake.hcl` used for this purpose. To build for new platforms, just use this example:
 
 ```bash
-make VERSIONS=v3.3.2 SERVERS=nginx TAG=mytag
+$ docker buildx use $(docker buildx create --platform linux/amd64,linux/arm64,linux/arm/v8)
+$ docker buildx bake -f docker-bake.hcl
 ```
 
 ## CRS Versions
@@ -50,6 +49,7 @@ $ docker run -p 80:80 -ti -e PARANOIA=4 -v ./rules:/opt/owasp-crs/rules:ro --rm 
 ```
 
 ## Apache
+
 The Apache webserver is configured via the `httpd-modsecurity.conf` file overriding directives from the base file.
 
 ## Environment Variables
@@ -120,7 +120,7 @@ docker run -dti --rm \
    -p 80:80 \
    -v /path/to/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf:/etc/modsecurity.d/owasp-crs/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf \
    -v /path/to/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf:/etc/modsecurity.d/owasp-crs/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf \
-   owasp/modsecurity-crs
+   owasp/modsecurity-crs:apache
 ```
 
 ### Copy ModSecurity tuning file into created container
@@ -130,7 +130,7 @@ This example can be helpful when no volume mounts are possible (some CI pipeline
 ```
 docker create -ti --name modseccrs \
    -p 80:80 \
-   owasp/modsecurity-crs
+   owasp/modsecurity-crs:apache
 
 docker cp /path/to/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf \
    modseccrs:/etc/modsecurity.d/owasp-crs/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf
@@ -178,5 +178,5 @@ docker run -dti 80:80 --rm \
    -e MODSEC_PCRE_MATCH_LIMIT=1000 \
    -e MODSEC_PCRE_MATCH_LIMIT_RECURSION=1000 \
    -e VALIDATE_UTF8_ENCODING=1 
-   owasp/modsecurity-crs
+   owasp/modsecurity-crs:apache
 ```
