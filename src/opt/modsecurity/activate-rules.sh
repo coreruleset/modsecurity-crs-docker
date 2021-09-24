@@ -24,7 +24,7 @@ fi
 # Content-Types that a client is allowed to send in a request.
 if [ -n "$ALLOWED_REQUEST_CONTENT_TYPE" ]; then
   sed -z -E -i 's;#SecAction.{6}id:900220.*\x27tx\.allowed_request_content_type=[[:lower:][:space:]|+/-]*\x27\";SecAction \\\n  \"id:900220, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:\x27tx.allowed_request_content_type='"$ALLOWED_REQUEST_CONTENT_TYPE"'\x27\";' /etc/modsecurity.d/owasp-crs/crs-setup.conf
-fi 
+fi
 
 # Content-Types charsets that a client is allowed to send in a request.
 if [ -n "$ALLOWED_REQUEST_CONTENT_TYPE_CHARSET" ]; then
