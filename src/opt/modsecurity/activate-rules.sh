@@ -9,7 +9,7 @@ if [ -n "${EXECUTING_PARANOIA}" ]; then
 fi
 
 # Enforce Body Processor URLENCODED
-if [ -z "${ENFORCE_BODYPROC_URLENCODED}" ] || [ ${ENFORCE_BODYPROC_URLENCODED} -eq 1 ]; then
+if [ -n "${ENFORCE_BODYPROC_URLENCODED}" ]; then
   sed -z -E -i 's/#SecAction.{7}id:900010.*tx\.enforce_bodyproc_urlencoded=1\"/SecAction \\\n  \"id:900010, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:tx.enforce_bodyproc_urlencoded='"${ENFORCE_BODYPROC_URLENCODED}"'\"/' /etc/modsecurity.d/owasp-crs/crs-setup.conf
 fi
 
@@ -82,7 +82,7 @@ if [ -n "${COMBINED_FILE_SIZES}" ]; then
 fi
 
 # Activate UTF8 validation
-if [ -z "${VALIDATE_UTF8_ENCODING}" ] || [ ${VALIDATE_UTF8_ENCODING} -eq 1 ]; then
+if [ -n "${VALIDATE_UTF8_ENCODING}" ]; then
   sed -z -E -i 's/#SecAction.{6}id:900950.*tx\.crs_validate_utf8_encoding=1\"/SecAction \\\n  \"id:900950, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:tx.crs_validate_utf8_encoding=1\"/' /etc/modsecurity.d/owasp-crs/crs-setup.conf
 fi
 
@@ -103,7 +103,7 @@ fi
 
 # Add marker rule for CRS test setup
 # Add it only once
-if ([ -z "${ENABLE_CRS_TEST_MARKER}" ] || [ ${ENABLE_CRS_TEST_MARKER} -eq 1 ]) && ! grep -q id:999999 /etc/modsecurity.d/owasp-crs/crs-setup.conf; then
+if [ -n "${ENABLE_CRS_TEST_MARKER}" ] && [ ${ENABLE_CRS_TEST_MARKER} -eq 1 ] && ! grep -q id:999999 /etc/modsecurity.d/owasp-crs/crs-setup.conf; then
   cat <<EOF >> /etc/modsecurity.d/owasp-crs/crs-setup.conf
 
 
