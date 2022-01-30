@@ -9,12 +9,12 @@ if [ -n "${EXECUTING_PARANOIA}" ]; then
 fi
 
 # Enforce Body Processor URLENCODED
-if [ -n "${ENFORCE_BODYPROC_URLENCODED}" ]; then
+if [ ${ENFORCE_BODYPROC_URLENCODED} -eq 1 ]; then
   sed -z -E -i 's/#SecAction.{7}id:900010.*tx\.enforce_bodyproc_urlencoded=1\"/SecAction \\\n  \"id:900010, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:tx.enforce_bodyproc_urlencoded='"${ENFORCE_BODYPROC_URLENCODED}"'\"/' /etc/modsecurity.d/owasp-crs/crs-setup.conf
 fi
 
 # Inbound and Outbound Anomaly Score
-sed -z -E -i 's/#SecAction.{6}id:900110.*tx\.outbound_anomaly_score_threshold=4\"/SecAction \\\n  \"id:900110, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:tx.inbound_anomaly_score_threshold='"${ANOMALY_INBOUND}"',  \\\n   setvar:tx.outbound_anomaly_score_threshold='"$ANOMALY_OUTBOUND"'\"/' /etc/modsecurity.d/owasp-crs/crs-setup.conf
+sed -z -E -i 's/#SecAction.{6}id:900110.*tx\.outbound_anomaly_score_threshold=4\"/SecAction \\\n  \"id:900110, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:tx.inbound_anomaly_score_threshold='"${ANOMALY_INBOUND}"',  \\\n   setvar:tx.outbound_anomaly_score_threshold='"${ANOMALY_OUTBOUND}"'\"/' /etc/modsecurity.d/owasp-crs/crs-setup.conf
 
 # HTTP methods that a client is allowed to use.
 if [ -n "${ALLOWED_METHODS}" ]; then
@@ -82,28 +82,28 @@ if [ -n "${COMBINED_FILE_SIZES}" ]; then
 fi
 
 # Activate UTF8 validation
-if [ -n "$VALIDATE_UTF8_ENCODING" ]; then
+if [ ${VALIDATE_UTF8_ENCODING} -eq 1 ]; then
   sed -z -E -i 's/#SecAction.{6}id:900950.*tx\.crs_validate_utf8_encoding=1\"/SecAction \\\n  \"id:900950, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:tx.crs_validate_utf8_encoding=1\"/' /etc/modsecurity.d/owasp-crs/crs-setup.conf
 fi
 
 # Add SecDefaultActions
-if [ -n "$MODSEC_DEFAULT_PHASE1_ACTION" ]; then
+if [ -n "${MODSEC_DEFAULT_PHASE1_ACTION}" ]; then
   sed -z -E -i "s/SecDefaultAction \"phase:1,log,auditlog,pass\"/SecDefaultAction \"${MODSEC_DEFAULT_PHASE1_ACTION}\"/" /etc/modsecurity.d/owasp-crs/crs-setup.conf
 fi
 
-if [ -n "$MODSEC_DEFAULT_PHASE2_ACTION" ]; then
+if [ -n "${MODSEC_DEFAULT_PHASE2_ACTION}" ]; then
   sed -z -E -i "s/SecDefaultAction \"phase:2,log,auditlog,pass\"/SecDefaultAction \"${MODSEC_DEFAULT_PHASE2_ACTION}\"/" /etc/modsecurity.d/owasp-crs/crs-setup.conf
 fi
 
 # Substitute MODSEC_TAG
 if [ -n "${MODSEC_TAG}" ]; then
-  sed -z -E -i "s/\\$\{MODSEC_TAG\}/$MODSEC_TAG/" /etc/modsecurity.d/owasp-crs/crs-setup.conf
+  sed -z -E -i "s/\\$\{MODSEC_TAG\}/${MODSEC_TAG}/" /etc/modsecurity.d/owasp-crs/crs-setup.conf
 fi
 
 
 # Add marker rule for CRS test setup
 # Add it only once
-if [ "${ENABLE_CRS_TEST_MARKER}" = "true" ] && ! grep -q id:999999 /etc/modsecurity.d/owasp-crs/crs-setup.conf; then
+if [ ${ENABLE_CRS_TEST_MARKER} -eq 1 ] && ! grep -q id:999999 /etc/modsecurity.d/owasp-crs/crs-setup.conf; then
   cat <<EOF >> /etc/modsecurity.d/owasp-crs/crs-setup.conf
 
 
