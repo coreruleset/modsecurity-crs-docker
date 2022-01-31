@@ -103,7 +103,7 @@ fi
 
 # Add marker rule for CRS test setup
 # Add it only once
-if [ -n "${ENABLE_CRS_TEST_MARKER}" ] && [ ${ENABLE_CRS_TEST_MARKER} -eq 1 ] && ! grep -q id:999999 /etc/modsecurity.d/owasp-crs/crs-setup.conf; then
+if [ -n "${CRS_ENABLE_TEST_MARKER}" ] && [ ${CRS_ENABLE_TEST_MARKER} -eq 1 ] && ! grep -q id:999999 /etc/modsecurity.d/owasp-crs/crs-setup.conf; then
   cat <<EOF >> /etc/modsecurity.d/owasp-crs/crs-setup.conf
 
 

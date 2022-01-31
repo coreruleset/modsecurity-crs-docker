@@ -96,7 +96,7 @@ The following environment variables are available to configure the CRS container
 | MODSEC_PCRE_MATCH_LIMIT_RECURSION | ModSecurity integer value indicating the limit for the depth of recursion when calling PCRE function (Default: 1000) |
 | MODSEC_DEFAULT_PHASE1_ACTION | ModSecurity string with the contents for the default action in phase 1 (Default: `'phase:1,log,auditlog,pass,tag:\'\${MODSEC_TAG}\''`) |
 | MODSEC_DEFAULT_PHASE2_ACTION | ModSecurity string with the contents for the default action in phase 2 (Default: `'phase:2,log,auditlog,pass,tag:\'\${MODSEC_TAG}\''`) |
-| ENABLE_CRS_TEST_MARKER | A boolean indicating whether to write test markers to the log file (Used for running the CRS test suite. Default: 0) |
+| CRS_ENABLE_TEST_MARKER | A boolean indicating whether to write test markers to the log file (Used for running the CRS test suite. Default: 0) |
 
 ## Notes regarding reverse proxy
 
@@ -179,6 +179,6 @@ docker run -dti 80:80 --rm \
    -e MODSEC_PCRE_MATCH_LIMIT=1000 \
    -e MODSEC_PCRE_MATCH_LIMIT_RECURSION=1000 \
    -e VALIDATE_UTF8_ENCODING=1 \
-   -e ENABLE_CRS_TEST_MARKER=1
+   -e CRS_ENABLE_TEST_MARKER=1
    owasp/modsecurity-crs:apache
 ```
