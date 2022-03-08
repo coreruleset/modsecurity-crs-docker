@@ -3,9 +3,19 @@
 # Paranoia Level
 sed -z -E -i 's/#SecAction.{7}id:900000.*tx\.paranoia_level=1\"/SecAction \\\n  \"id:900000, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:tx.paranoia_level='"${PARANOIA}"'\"/' /etc/modsecurity.d/owasp-crs/crs-setup.conf
 
+# Blocking Paranoia Level
+if [ -n "${BLOCKING_PARANOIA}" ]; then
+  sed -z -E -i 's/#SecAction.{7}id:900000.*tx\.blocking_paranoia_level=1\"/SecAction \\\n  \"id:900000, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:tx.blocking_paranoia_level='"${BLOCKING_PARANOIA}"'\"/' /etc/modsecurity.d/owasp-crs/crs-setup.conf
+fi
+
 # Executing Paranoia Level
 if [ -n "${EXECUTING_PARANOIA}" ]; then
   sed -z -E -i 's/#SecAction.{7}id:900001.*tx\.executing_paranoia_level=1\"/SecAction \\\n  \"id:900001, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:tx.executing_paranoia_level='"${EXECUTING_PARANOIA}"'\"/' /etc/modsecurity.d/owasp-crs/crs-setup.conf
+fi
+
+# Detection Paranoia Level
+if [ -n "${DETECTION_PARANOIA}" ]; then
+  sed -z -E -i 's/#SecAction.{7}id:900001.*tx\.detection_paranoia_level=1\"/SecAction \\\n  \"id:900001, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:tx.detection_paranoia_level='"${EXECUTING_PARANOIA}"'\"/' /etc/modsecurity.d/owasp-crs/crs-setup.conf
 fi
 
 # Enforce Body Processor URLENCODED
@@ -97,7 +107,12 @@ fi
 
 # Substitute MODSEC_TAG
 if [ -n "${MODSEC_TAG}" ]; then
-  sed -z -E -i "s/\\$\{MODSEC_TAG\}/${MODSEC_TAG}/" /etc/modsecurity.d/owasp-crs/crs-setup.conf
+  sed -z -E -i "s/\\$\{MODSEC_TAG\}/${MODSEC_TAG}/g" /etc/modsecurity.d/owasp-crs/crs-setup.conf
+fi
+
+# Reporting Level
+if [ -n "${REPORTING_LEVEL}" ]; then
+  sed -z -E -i 's/#SecAction.{6}id:900115.*tx\.reporting_level=2\"/SecAction \\\n  \"id:900115, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:tx.reporting_level='"${REPORTING_LEVEL}"'\"/' /etc/modsecurity.d/owasp-crs/crs-setup.conf
 fi
 
 

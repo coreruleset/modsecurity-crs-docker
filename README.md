@@ -59,8 +59,10 @@ The following environment variables are available to configure the CRS container
 | Name     | Description|
 | -------- | ------------------------------------------------------------------- |
 | PARANOIA | An integer indicating the paranoia level (Default: 1)               |
+| BLOCKING_PARANOIA | (:new: Replaces `PARANOIA` in CRSv4) An integer indicating the paranoia level (Default: 1)               |
 | BACKEND  | The backend address (and optional port) of the backend server. (Default: the container's default router, port 81) (Examples: 192.0.2.2, 192.0.2.2:80, http://172.17.0.1:8000) |
 | EXECUTING_PARANOIA | An integer indicating the executing_paranoia_level (Default: paranoia level) |
+| DETECTION_PARANOIA | (:new: Replaces `EXECUTING_PARANOIA` in CRSv4) An integer indicating the detection_paranoia_level (Default: blocking_paranoia) |
 | ENFORCE_BODYPROC_URLENCODED | A boolean indicating the enforce_bodyproc_urlencoded (Default: 0) |
 | VALIDATE_UTF8_ENCODING | A boolean indicating the crs_validate_utf8_encoding (Default: 0) |
 | ANOMALY_INBOUND | An integer indicating the inbound_anomaly_score_threshold (Default: 5) |
