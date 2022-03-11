@@ -26,11 +26,19 @@ services:
       #############################################
       # Paranoia Level
       - PARANOIA=1
+      # Replaces PARANOIA as of CRS 4
+      - BLOCKING_PARANOIA=1
       # Inbound and Outbound Anomaly Score Threshold
       - ANOMALY_INBOUND=5
       - ANOMALY_OUTBOUND=4
       # Executing Paranoia Level
       # - EXECUTING_PARANOIA=2
+      #
+      # Replaces EXECUTING_PARANOIA as of CRS 4
+      # - DETECTION_PARANOIA=2
+      #
+      # New in CRS 4
+      - REPORTING_LEVEL=2
 
       #######################################################
       # Reverse Proxy mode
