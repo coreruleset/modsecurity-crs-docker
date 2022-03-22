@@ -14,4 +14,17 @@ done
 
 . /opt/modsecurity/activate-rules.sh
 
+# work around ModSecurity not supporting optional includes on NGiNX
+if [ -d /opt/owasp-crs/plugins ]; then
+    if ! [ -z "$(find /opt/owasp-crs/plugins -name "*-config.conf")" ]; then
+        sed -i 's/#\(.*-config.conf\)/\1/' /etc/modsecurity.d/setup.conf
+    fi
+    if ! [ -z "$(find /opt/owasp-crs/plugins -name "*-before.conf")" ]; then
+        sed -i 's/#\(.*-before.conf\)/\1/' /etc/modsecurity.d/setup.conf
+    fi
+    if ! [ -z "$(find /opt/owasp-crs/plugins -name "*-after.conf")" ]; then
+        sed -i 's/#(\.*-after.conf\)/\1/' /etc/modsecurity.d/setup.conf
+    fi
+fi
+
 exec "$@"
