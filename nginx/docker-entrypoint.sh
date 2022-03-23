@@ -14,17 +14,16 @@ done
 
 . /opt/modsecurity/activate-rules.sh
 
-# work around ModSecurity not supporting optional includes on NGiNX
-if [ -d /opt/owasp-crs/plugins ]; then
-    if ! [ -z "$(find /opt/owasp-crs/plugins -name "*-config.conf")" ]; then
-        sed -i 's/#\(.*-config.conf\)/\1/' /etc/modsecurity.d/setup.conf
+# Work around ModSecurity not supporting optional includes on NGiNX
+# Note: we are careful here to not assume the existance of the "plugins"
+# directory. It is being introduced with version 4 of CRS.
+for suffix in "config" "before" "after"; do
+    if [ -n "$(find /opt/owasp-crs -path "*plugins/*-${suffix}.conf")" ]; then
+        # enable if there are config files
+        sed -i "s/#\s*\(.+-${suffix}.conf\)/\1/" /etc/modsecurity.d/setup.conf
+    else
+        # disable if there are no config files
+        sed -i "s/\([^#]+-${suffix}.conf\)/# \1/" /etc/modsecurity.d/setup.conf
     fi
-    if ! [ -z "$(find /opt/owasp-crs/plugins -name "*-before.conf")" ]; then
-        sed -i 's/#\(.*-before.conf\)/\1/' /etc/modsecurity.d/setup.conf
-    fi
-    if ! [ -z "$(find /opt/owasp-crs/plugins -name "*-after.conf")" ]; then
-        sed -i 's/#(\.*-after.conf\)/\1/' /etc/modsecurity.d/setup.conf
-    fi
-fi
-
+done
 exec "$@"
