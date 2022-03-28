@@ -1,8 +1,26 @@
+FROM owasp/modsecurity:nginx-alpine as release
+
+ARG RELEASE
+
+# hadolint ignore=DL3008,SC2016
+RUN set -eux; \
+    apk add --no-cache \
+    ca-certificates \
+    curl \
+    gnupg; \
+    mkdir /opt/owasp-crs; \
+    curl -SL https://github.com/coreruleset/coreruleset/archive/v${RELEASE}.tar.gz -o v${RELEASE}.tar.gz; \
+    curl -SL https://github.com/coreruleset/coreruleset/releases/download/v${RELEASE}/coreruleset-${RELEASE}.tar.gz.asc -o coreruleset-${RELEASE}.tar.gz.asc; \
+    gpg --fetch-key https://coreruleset.org/security.asc; \
+    gpg --verify coreruleset-${RELEASE}.tar.gz.asc v${RELEASE}.tar.gz; \
+    tar -zxf v${RELEASE}.tar.gz --strip-components=1 -C /opt/owasp-crs; \
+    rm -f v${RELEASE}.tar.gz coreruleset-${RELEASE}.tar.gz.asc; \
+    mv -v /opt/owasp-crs/crs-setup.conf.example /opt/owasp-crs/crs-setup.conf; \
+    ln -sv /opt/owasp-crs /etc/modsecurity.d/
+
 FROM owasp/modsecurity:nginx-alpine
 
 LABEL maintainer="Felipe Zipitria <felipe.zipitria@owasp.org>"
-
-ARG RELEASE
 
 ENV PARANOIA=1 \
     ANOMALY_INBOUND=5 \
@@ -30,18 +48,14 @@ COPY src/opt/modsecurity/activate-rules.sh /opt/modsecurity/
 COPY src/etc/modsecurity.d/*.conf /etc/modsecurity.d/
 COPY nginx/docker-entrypoint.sh /
 COPY nginx/nginx.conf /etc/nginx/nginx.conf
+COPY --from=release /opt/owasp-crs /opt/owasp-crs
 
-# hadolint ignore=DL3008,SC2016
+# Alpine needs sed because busybox does not support 'z' param
 RUN set -eux; \
     apk add --no-cache \
-    ca-certificates \
-    curl \
-    sed; \
-    mkdir /opt/owasp-crs; \
-    curl -SL https://github.com/coreruleset/coreruleset/archive/v${RELEASE}.tar.gz \
-    | tar -zxf - --strip-components=1 -C /opt/owasp-crs; \
-    mv -v /opt/owasp-crs/crs-setup.conf.example /opt/owasp-crs/crs-setup.conf; \
+        sed; \
     ln -sv /opt/owasp-crs /etc/modsecurity.d/
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]
+

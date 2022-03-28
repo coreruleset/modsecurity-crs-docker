@@ -1,8 +1,26 @@
+FROM owasp/modsecurity:nginx as release
+
+ARG RELEASE
+
+# hadolint ignore=DL3008,SC2016
+RUN set -eux; \
+    apt-get update; \
+    apt-get -y install --no-install-recommends \
+      ca-certificates \
+      curl \
+      gnupg; \
+    mkdir /opt/owasp-crs; \
+    curl -SL https://github.com/coreruleset/coreruleset/archive/v${RELEASE}.tar.gz -o v${RELEASE}.tar.gz; \
+    curl -SL https://github.com/coreruleset/coreruleset/releases/download/v${RELEASE}/coreruleset-${RELEASE}.tar.gz.asc -o coreruleset-${RELEASE}.tar.gz.asc; \
+    gpg --fetch-key https://coreruleset.org/security.asc; \
+    gpg --verify coreruleset-${RELEASE}.tar.gz.asc v${RELEASE}.tar.gz; \
+    tar -zxf v${RELEASE}.tar.gz --strip-components=1 -C /opt/owasp-crs; \
+    rm -f v${RELEASE}.tar.gz coreruleset-${RELEASE}.tar.gz.asc; \
+    mv -v /opt/owasp-crs/crs-setup.conf.example /opt/owasp-crs/crs-setup.conf
+
 FROM owasp/modsecurity:nginx
 
 LABEL maintainer="Felipe Zipitria <felipe.zipitria@owasp.org>"
-
-ARG RELEASE
 
 ENV PARANOIA=1 \
     ANOMALY_INBOUND=5 \
@@ -30,22 +48,9 @@ COPY src/opt/modsecurity/activate-rules.sh /opt/modsecurity/
 COPY src/etc/modsecurity.d/*.conf /etc/modsecurity.d/
 COPY nginx/docker-entrypoint.sh /
 COPY nginx/nginx.conf /etc/nginx/nginx.conf
+COPY --from=release /opt/owasp-crs /opt/owasp-crs
 
-# Change default shell to bash
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-
-# hadolint ignore=DL3008,SC2016
-RUN apt-get update \
- && apt-get -y install --no-install-recommends \
-      ca-certificates \
-      curl \
-      iproute2 \
- && mkdir /opt/owasp-crs \
- && curl -SL https://github.com/coreruleset/coreruleset/archive/v${RELEASE}.tar.gz \
- | tar -zxf - --strip-components=1 -C /opt/owasp-crs \
- && mv -v /opt/owasp-crs/crs-setup.conf.example /opt/owasp-crs/crs-setup.conf \
- && ln -sv /opt/owasp-crs /etc/modsecurity.d/ \
- && rm -rf /var/lib/apt/lists/*
+RUN  set -eux; ln -sv /opt/owasp-crs /etc/modsecurity.d/
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]
