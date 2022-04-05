@@ -15,7 +15,7 @@ fi
 
 # Detection Paranoia Level
 if [ -n "${DETECTION_PARANOIA}" ]; then
-  sed -z -E -i 's/#SecAction.{7}id:900001.*tx\.detection_paranoia_level=1\"/SecAction \\\n  \"id:900001, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:tx.detection_paranoia_level='"${EXECUTING_PARANOIA}"'\"/' /etc/modsecurity.d/owasp-crs/crs-setup.conf
+  sed -z -E -i 's/#SecAction.{7}id:900001.*tx\.detection_paranoia_level=1\"/SecAction \\\n  \"id:900001, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:tx.detection_paranoia_level='"${DETECTION_PARANOIA}"'\"/' /etc/modsecurity.d/owasp-crs/crs-setup.conf
 fi
 
 # Enforce Body Processor URLENCODED
