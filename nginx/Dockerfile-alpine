@@ -53,7 +53,7 @@ COPY --from=release /opt/owasp-crs /opt/owasp-crs
 # Alpine needs GNU 'sed' because the 'sed' program shipped with busybox does not support 'z' parameter for separating lines with a 'NUL' character.
 RUN set -eux; \
     apk add --no-cache \
-        sed; \
+    sed; \
     ln -sv /opt/owasp-crs /etc/modsecurity.d/
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
