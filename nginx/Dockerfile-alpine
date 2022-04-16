@@ -44,10 +44,11 @@ ENV PARANOIA=1 \
     MODSEC_PCRE_MATCH_LIMIT=100000 \
     MODSEC_PCRE_MATCH_LIMIT_RECURSION=100000
 
-COPY src/opt/modsecurity/activate-rules.sh /opt/modsecurity/
-COPY src/etc/modsecurity.d/*.conf /etc/modsecurity.d/
-COPY nginx/docker-entrypoint.sh /
-COPY nginx/nginx.conf /etc/nginx/nginx.conf
+# We use the templating mechanism from the nginx image here,
+# as set up by owasp/modsecurity-docker
+COPY nginx/templates /etc/nginx/templates/
+COPY src/etc/modsecurity.d/setup.conf /etc/nginx/templates/modsecurity.d/setup.conf.template
+COPY nginx/docker-entrypoint.d/*.sh /docker-entrypoint.d/
 COPY --from=release /opt/owasp-crs /opt/owasp-crs
 
 # Alpine needs GNU 'sed' because the 'sed' program shipped with busybox does not support 'z' parameter for separating lines with a 'NUL' character.
@@ -55,7 +56,3 @@ RUN set -eux; \
     apk add --no-cache \
     sed; \
     ln -sv /opt/owasp-crs /etc/modsecurity.d/
-
-ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["nginx", "-g", "daemon off;"]
-
