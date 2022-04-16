@@ -49,6 +49,7 @@ ENV PARANOIA=1 \
 COPY nginx/templates /etc/nginx/templates/
 COPY src/etc/modsecurity.d/setup.conf /etc/nginx/templates/modsecurity.d/setup.conf.template
 COPY nginx/docker-entrypoint.d/*.sh /docker-entrypoint.d/
+COPY src/opt/modsecurity/activate-rules.sh /docker-entrypoint.d/95-activate-rules.sh
 COPY --from=release /opt/owasp-crs /opt/owasp-crs
 
 # Alpine needs GNU 'sed' because the 'sed' program shipped with busybox does not support 'z' parameter for separating lines with a 'NUL' character.
