@@ -45,8 +45,9 @@ services:
       # (only available if SETPROXY was enabled during the
       # parent ModSecurity image)
       #######################################################
-      # PROXYLOCATION: Application Backend of Reverse Proxy
-      # - PROXYLOCATION=http://app:8000/
+      # BACKEND: Application Backend of Reverse Proxy
+      # - BACKEND=http://app:8000/
+      # - DNS_SERVER=127.0.0.11
       #
       # If needed: add own httpd-proxy.conf (only available if SETPROXY
       # was enabled during build of parent ModSecurity image)

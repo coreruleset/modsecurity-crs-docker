@@ -83,6 +83,7 @@ The following environment variables are available to configure the CRS container
 | APACHE_TIMEOUT | Apache integer value indicating the number of seconds before receiving and sending time out (Default: 60) |
 | NGINX_KEEPALIVE_TIMEOUT | Nginx integer value indicating the number of seconds a keep-alive client connection will stay open on the server side (Default: 60) |
 | LOGLEVEL | A string value controlling the number of messages logged to the error_log (Default: warn) |
+| DNS_SERVER | A string indicating the name servers used to resolve names of upstream servers into addresses. For localhost backend this value should not be defined (Default: not defined) |
 | ERRORLOG | A string value indicating the location of the error log file (Default: '/proc/self/fd/2') |
 | PORT | An integer value indicating the port where the webserver is listening to (Default: 80) |
 | USER | A string value indicating the name (or #number) of the user to run httpd as (Default: daemon) |
