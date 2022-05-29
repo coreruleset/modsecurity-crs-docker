@@ -26,28 +26,19 @@ FROM owasp/modsecurity:apache-alpine
 
 LABEL maintainer="Felipe Zipitria <felipe.zipitria@owasp.org>"
 
+
+# overridden variables
+ENV ERRORLOG='/proc/self/fd/2' \
+    USER=www-data \
+    GROUP=www-data \
+    MODSEC_PCRE_MATCH_LIMIT=100000 \
+    MODSEC_PCRE_MATCH_LIMIT_RECURSION=100000
+
+# CRS specific variables
 ENV PARANOIA=1 \
     ANOMALY_INBOUND=5 \
     ANOMALY_OUTBOUND=4 \
-    BLOCKING_PARANOIA=1 \
-    APACHE_TIMEOUT=60 \
-    LOGLEVEL=warn \
-    ERRORLOG='/proc/self/fd/2' \
-    USER=www-data \
-    GROUP=www-data \
-    SERVERADMIN=root@localhost \
-    SERVERNAME=localhost \
-    PORT=80 \
-    MODSEC_DEFAULT_PHASE1_ACTION="phase:1,pass,log,tag:'\${MODSEC_TAG}'" \
-    MODSEC_DEFAULT_PHASE2_ACTION="phase:2,pass,log,tag:'\${MODSEC_TAG}'" \
-    MODSEC_RULE_ENGINE=on \
-    MODSEC_REQ_BODY_ACCESS=on \
-    MODSEC_REQ_BODY_LIMIT=13107200 \
-    MODSEC_REQ_BODY_NOFILES_LIMIT=131072 \
-    MODSEC_RESP_BODY_ACCESS=on \
-    MODSEC_RESP_BODY_LIMIT=1048576 \
-    MODSEC_PCRE_MATCH_LIMIT=100000 \
-    MODSEC_PCRE_MATCH_LIMIT_RECURSION=100000
+    BLOCKING_PARANOIA=1
 
 COPY src/etc/modsecurity.d/*.conf /etc/modsecurity.d/
 COPY src/opt/modsecurity/activate-rules.sh /opt/modsecurity/
@@ -56,3 +47,5 @@ COPY apache/docker-entrypoint.sh /
 COPY --from=release /opt/owasp-crs /opt/owasp-crs
 
 RUN set -eux; ln -s /opt/owasp-crs /etc/modsecurity.d/
+
+# Use httpd-foreground from upstream
