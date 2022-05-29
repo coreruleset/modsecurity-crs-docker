@@ -31,8 +31,21 @@ We added the [docker buildx](https://github.com/docker/buildx) support to our do
 There is a new file `docker-bake.hcl` used for this purpose. To build for new platforms, just use this example:
 
 ```bash
-$ docker buildx use $(docker buildx create --platform linux/amd64,linux/arm64,linux/arm/v8)
-$ docker buildx bake -f docker-bake.hcl
+docker buildx create \
+   --name modsecurity-docker \
+   --use
+docker buildx bake -f docker-bake.hcl
+```
+
+To build a specific target for a single platform only (replace target and platform strings in the example with the your choices):
+
+```bash
+docker buildx create \
+   --name modsecurity-docker \
+   --use
+docker buildx bake \
+   -f docker-bake.hcl \
+   --set target.platforms=linux/amd64 nginx-alpine
 ```
 
 ## CRS Versions
@@ -56,49 +69,44 @@ The Apache webserver is configured via the `httpd-modsecurity.conf` file overrid
 
 The following environment variables are available to configure the CRS container:
 
+### Inherited
+
+See [modsecurity-docker](https://github.com/coreruleset/modsecurity-docker/blob/master/README.md) for the list of inherited environment variables.
+
+### Overridden
+
 | Name     | Description|
 | -------- | ------------------------------------------------------------------- |
-| PARANOIA | An integer indicating the paranoia level (Default: 1)               |
-| BLOCKING_PARANOIA | (:new: Replaces `PARANOIA` in CRSv4) An integer indicating the paranoia level (Default: 1)               |
+| USER | A string value indicating the name (or #number) of the user to run httpd or nginx as (Default: `www-data` (httpd), `nginx` (nginx)) |
+| GROUP | A string value indicating the name (or #number) of the group to run httpd as (Default: `www-data`) |
 | BACKEND  | The backend address (and optional port) of the backend server. (Default: the container's default router, port 81) (Examples: 192.0.2.2, 192.0.2.2:80, http://172.17.0.1:8000) |
-| EXECUTING_PARANOIA | An integer indicating the executing_paranoia_level (Default: paranoia level) |
-| DETECTION_PARANOIA | (:new: Replaces `EXECUTING_PARANOIA` in CRSv4) An integer indicating the detection_paranoia_level (Default: blocking_paranoia) |
-| ENFORCE_BODYPROC_URLENCODED | A boolean indicating the enforce_bodyproc_urlencoded (Default: 0) |
-| VALIDATE_UTF8_ENCODING | A boolean indicating the crs_validate_utf8_encoding (Default: 0) |
-| ANOMALY_INBOUND | An integer indicating the inbound_anomaly_score_threshold (Default: 5) |
-| ANOMALY_OUTBOUND | An integer indicating the outbound_anomaly_score_threshold (Default: 4) |
-| ALLOWED_METHODS | A string indicating the allowed_methods (Default: GET HEAD POST OPTIONS) |
-| ALLOWED_REQUEST_CONTENT_TYPE | A string indicating the allowed_request_content_type (Default: |application/x-www-form-urlencoded| |multipart/form-data| |multipart/related| |text/xml| |application/xml| |application/soap+xml| |application/x-amf| |application/json| |application/cloudevents+json| |application/cloudevents-batch+json| |application/octet-stream| |application/csp-report| |application/xss-auditor-report| |text/plain|) |
-| ALLOWED_REQUEST_CONTENT_TYPE_CHARSET | A string indicating the allowed_request_content_type_charset (Default: utf-8\|iso-8859-1\|iso-8859-15\|windows-1252) |
-| ALLOWED_HTTP_VERSIONS | A string indicating the allowed_http_versions (Default: HTTP/1.0 HTTP/1.1 HTTP/2 HTTP/2.0) |
-| RESTRICTED_EXTENSIONS | A string indicating the restricted_extensions (Default: .asa/ .asax/ .ascx/ .axd/ .backup/ .bak/ .bat/ .cdx/ .cer/ .cfg/ .cmd/ .com/ .config/ .conf/ .cs/ .csproj/ .csr/ .dat/ .db/ .dbf/ .dll/ .dos/ .htr/ .htw/ .ida/ .idc/ .idq/ .inc/ .ini/ .key/ .licx/ .lnk/ .log/ .mdb/ .old/ .pass/ .pdb/ .pol/ .printer/ .pwd/ .resources/ .resx/ .sql/ .sys/ .vb/ .vbs/ .vbproj/ .vsdisco/ .webinfo/ .xsd/ .xsx/) |
-| RESTRICTED_HEADERS | A string indicating the restricted_headers (Default: /proxy/ /lock-token/ /content-range/ /if/) |
-| STATIC_EXTENSIONS | A string indicating the static_extensions (Default: /.jpg/ /.jpeg/ /.png/ /.gif/ /.js/ /.css/ /.ico/ /.svg/ /.webp/) |
-| MAX_NUM_ARGS | An integer indicating the max_num_args (Default: unlimited) |
-| ARG_NAME_LENGTH | An integer indicating the arg_name_length (Default: unlimited) |
-| ARG_LENGTH | An integer indicating the arg_length (Default: unlimited) |
-| TOTAL_ARG_LENGTH | An integer indicating the total_arg_length (Default: unlimited) |
-| MAX_FILE_SIZE | An integer indicating the max_file_size (Default: unlimited) |
-| COMBINED_FILE_SIZES | An integer indicating the combined_file_sizes (Default: unlimited) |
-| APACHE_TIMEOUT | Apache integer value indicating the number of seconds before receiving and sending time out (Default: 60) |
-| NGINX_KEEPALIVE_TIMEOUT | Nginx integer value indicating the number of seconds a keep-alive client connection will stay open on the server side (Default: 60) |
-| LOGLEVEL | A string value controlling the number of messages logged to the error_log (Default: warn) |
-| ERRORLOG | A string value indicating the location of the error log file (Default: '/proc/self/fd/2') |
-| PORT | An integer value indicating the port where the webserver is listening to (Default: 80) |
-| USER | A string value indicating the name (or #number) of the user to run httpd as (Default: daemon) |
-| GROUP | Apache string value indicating the name (or #number) of the group to run httpd as (Default: daemon) |
-| SERVERADMIN | A string value indicating the address where problems with the server should be e-mailed (Default: root@localhost) |
-| SERVERNAME | A string value indicating the server name (Default: localhost) |
-| MODSEC_RULE_ENGINE | ModSecurity string value enabling ModSecurity itself (Default: on) |
-| MODSEC_REQ_BODY_ACCESS | ModSecurity string value allowing ModSecurity to access request bodies (Default: on) |
-| MODSEC_REQ_BODY_LIMIT | ModSecurity integer value indicating the maximum request body size  accepted for buffering (Default: 13107200) |
-| MODSEC_RESP_BODY_ACCESS | ModSecurity string value allowing ModSecurity to access response bodies (Default: on) |
-| MODSEC_RESP_BODY_LIMIT | ModSecurity integer value indicating the maximum response body size  accepted for buffering (Default: 524288) |
-| MODSEC_PCRE_MATCH_LIMIT | ModSecurity integer value indicating the limit for the number of internal executions in the PCRE function (Default: 1000) |
-| MODSEC_PCRE_MATCH_LIMIT_RECURSION | ModSecurity integer value indicating the limit for the depth of recursion when calling PCRE function (Default: 1000) |
-| MODSEC_DEFAULT_PHASE1_ACTION | ModSecurity string with the contents for the default action in phase 1 (Default: `'phase:1,log,auditlog,pass,tag:\'\${MODSEC_TAG}\''`) |
-| MODSEC_DEFAULT_PHASE2_ACTION | ModSecurity string with the contents for the default action in phase 2 (Default: `'phase:2,log,auditlog,pass,tag:\'\${MODSEC_TAG}\''`) |
-| CRS_ENABLE_TEST_MARKER | A boolean indicating whether to write test markers to the log file (Used for running the CRS test suite. Default: 0) |
+
+### CRS specific
+
+| Name     | Description|
+| -------- | ------------------------------------------------------------------- |
+| PARANOIA | An integer indicating the paranoia level (Default: `1`)               |
+| BLOCKING_PARANOIA | (:new: Replaces `PARANOIA` in CRSv4) An integer indicating the paranoia level (Default: `1`)               |
+| EXECUTING_PARANOIA | An integer indicating the executing_paranoia_level (Default: `PARANOIA`) |
+| DETECTION_PARANOIA | (:new: Replaces `EXECUTING_PARANOIA` in CRSv4) An integer indicating the detection_paranoia_level (Default: `BLOCKING_PARANOIA`) |
+| ENFORCE_BODYPROC_URLENCODED | A boolean indicating the enforce_bodyproc_urlencoded (Default: `0`) |
+| VALIDATE_UTF8_ENCODING | A boolean indicating the crs_validate_utf8_encoding (Default: `0`) |
+| ANOMALY_INBOUND | An integer indicating the inbound_anomaly_score_threshold (Default: `5`) |
+| ANOMALY_OUTBOUND | An integer indicating the outbound_anomaly_score_threshold (Default: `4`) |
+| ALLOWED_METHODS | A string indicating the allowed_methods (Default: `GET HEAD POST OPTIONS`) |
+| ALLOWED_REQUEST_CONTENT_TYPE | A string indicating the allowed_request_content_type (Default: `|application/x-www-form-urlencoded| |multipart/form-data| |multipart/related| |text/xml| |application/xml| |application/soap+xml| |application/x-amf| |application/json| |application/cloudevents+json| |application/cloudevents-batch+json| |application/octet-stream| |application/csp-report| |application/xss-auditor-report| |text/plain|`) |
+| ALLOWED_REQUEST_CONTENT_TYPE_CHARSET | A string indicating the allowed_request_content_type_charset (Default: `utf-8\|iso-8859-1\|iso-8859-15\|windows-1252`) |
+| ALLOWED_HTTP_VERSIONS | A string indicating the allowed_http_versions (Default: `HTTP/1.0 HTTP/1.1 HTTP/2 HTTP/2.0`) |
+| RESTRICTED_EXTENSIONS | A string indicating the restricted_extensions (Default: `.asa/ .asax/ .ascx/ .axd/ .backup/ .bak/ .bat/ .cdx/ .cer/ .cfg/ .cmd/ .com/ .config/ .conf/ .cs/ .csproj/ .csr/ .dat/ .db/ .dbf/ .dll/ .dos/ .htr/ .htw/ .ida/ .idc/ .idq/ .inc/ .ini/ .key/ .licx/ .lnk/ .log/ .mdb/ .old/ .pass/ .pdb/ .pol/ .printer/ .pwd/ .resources/ .resx/ .sql/ .sys/ .vb/ .vbs/ .vbproj/ .vsdisco/ .webinfo/ .xsd/ .xsx/`) |
+| RESTRICTED_HEADERS | A string indicating the restricted_headers (Default: `/proxy/ /lock-token/ /content-range/ /if/`) |
+| STATIC_EXTENSIONS | A string indicating the static_extensions (Default: `/.jpg/ /.jpeg/ /.png/ /.gif/ /.js/ /.css/ /.ico/ /.svg/ /.webp/`) |
+| MAX_NUM_ARGS | An integer indicating the max_num_args (Default: `unlimited`) |
+| ARG_NAME_LENGTH | An integer indicating the arg_name_length (Default: `unlimited`) |
+| ARG_LENGTH | An integer indicating the arg_length (Default: `unlimited`) |
+| TOTAL_ARG_LENGTH | An integer indicating the total_arg_length (Default: `unlimited`) |
+| MAX_FILE_SIZE | An integer indicating the max_file_size (Default: `unlimited`) |
+| COMBINED_FILE_SIZES | An integer indicating the combined_file_sizes (Default: `unlimited`) |
+| CRS_ENABLE_TEST_MARKER | A boolean indicating whether to write test markers to the log file (Used for running the CRS test suite. Default: `0`) |
 
 ## Notes regarding reverse proxy
 
@@ -141,7 +149,7 @@ docker cp /path/to/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf \
 docker start modseccrs
 ```
 
-## Full docker run example with all possible environment variables
+## Full docker run example of possible setup
 
 ```
 docker run -dti 80:80 --rm \
@@ -164,7 +172,7 @@ docker run -dti 80:80 --rm \
    -e MAX_FILE_SIZE=100000 \
    -e COMBINED_FILE_SIZES=1000000 \
    -e PROXY=1 \
-   -e APACHE_TIMEOUT=60 \
+   -e TIMEOUT=60 \
    -e LOGLEVEL=warn \
    -e ERRORLOG='/proc/self/fd/2' \
    -e USER=daemon \

@@ -22,27 +22,17 @@ FROM owasp/modsecurity:nginx-alpine
 
 LABEL maintainer="Felipe Zipitria <felipe.zipitria@owasp.org>"
 
-ENV PARANOIA=1 \
-    ANOMALY_INBOUND=5 \
-    ANOMALY_OUTBOUND=4 \
-    BLOCKING_PARANOIA=1 \
-    NGINX_KEEPALIVE_TIMEOUT=60s \
-    ERRORLOG=/var/log/nginx/error.log \
-    LOGLEVEL=warn \
-    USER=nginx \
-    PORT=80 \
-    SERVERNAME=locahost \
-    WORKER_CONNECTIONS=1024 \
-    MODSEC_DEFAULT_PHASE1_ACTION="phase:1,pass,log,tag:'\${MODSEC_TAG}'" \
-    MODSEC_DEFAULT_PHASE2_ACTION="phase:2,pass,log,tag:'\${MODSEC_TAG}'" \
-    MODSEC_RULE_ENGINE=on \
-    MODSEC_REQ_BODY_ACCESS=on \
-    MODSEC_REQ_BODY_LIMIT=13107200 \
-    MODSEC_REQ_BODY_NOFILES_LIMIT=131072 \
-    MODSEC_RESP_BODY_ACCESS=on \
-    MODSEC_RESP_BODY_LIMIT=1048576 \
+# overridden variables
+ENV USER=nginx \
     MODSEC_PCRE_MATCH_LIMIT=100000 \
     MODSEC_PCRE_MATCH_LIMIT_RECURSION=100000
+
+# CRS specific variables
+ENV USER=nginx \
+    PARANOIA=1 \
+    ANOMALY_INBOUND=5 \
+    ANOMALY_OUTBOUND=4 \
+    BLOCKING_PARANOIA=1
 
 # We use the templating mechanism from the nginx image here,
 # as set up by owasp/modsecurity-docker
