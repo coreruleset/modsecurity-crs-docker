@@ -177,8 +177,8 @@ docker run -dti 80:80 --rm \
    -e ERRORLOG='/proc/self/fd/2' \
    -e USER=daemon \
    -e GROUP=daemon \
-   -e SERVERADMIN=root@localhost \
-   -e SERVERNAME=localhost \
+   -e SERVER_ADMIN=root@localhost \
+   -e SERVER_NAME=localhost \
    -e PORT=80 \
    -e MODSEC_RULE_ENGINE=on \
    -e MODSEC_REQ_BODY_ACCESS=on \
