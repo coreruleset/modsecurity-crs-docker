@@ -52,3 +52,4 @@ RUN set -eux; ln -s /opt/owasp-crs /etc/modsecurity.d/
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
 # Use httpd-foreground from upstream
+CMD ["httpd-foreground"]
