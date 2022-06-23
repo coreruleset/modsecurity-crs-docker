@@ -1,5 +1,5 @@
-#!/bin/bash -e
+#!/bin/sh -e
 
-source /opt/modsecurity/activate-rules.sh
+. /opt/modsecurity/activate-rules.sh
 
 exec "$@"
