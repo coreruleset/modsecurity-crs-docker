@@ -85,6 +85,7 @@ See [modsecurity-docker](https://github.com/coreruleset/modsecurity-docker/blob/
 
 | Name     | Description|
 | -------- | ------------------------------------------------------------------- |
+| MANUAL_MODE | A boolean indicating that you are providing your own `crs-setup.conf` file mounted as volume. (Default: `0`). ⚠️ None of the following variables are used if you set it to `1`. |
 | PARANOIA | An integer indicating the paranoia level (Default: `1`)               |
 | BLOCKING_PARANOIA | (:new: Replaces `PARANOIA` in CRSv4) An integer indicating the paranoia level (Default: `1`)               |
 | EXECUTING_PARANOIA | An integer indicating the executing_paranoia_level (Default: `PARANOIA`) |
@@ -107,7 +108,6 @@ See [modsecurity-docker](https://github.com/coreruleset/modsecurity-docker/blob/
 | MAX_FILE_SIZE | An integer indicating the max_file_size (Default: `unlimited`) |
 | COMBINED_FILE_SIZES | An integer indicating the combined_file_sizes (Default: `unlimited`) |
 | CRS_ENABLE_TEST_MARKER | A boolean indicating whether to write test markers to the log file (Used for running the CRS test suite. Default: `0`) |
-
 ## Notes regarding reverse proxy
 
 In order to more easily test drive the CRS ruleset, we include support for an technique called [Reverse Proxy](https://en.wikipedia.org/wiki/Reverse_proxy). Using this technique, you keep your pre-existing web server online at a non-standard host and port, and then configure the CRS container to accept public traffic. The CRS container then proxies the traffic to your pre-existing webserver. This way, you can test out CRS with any web server. Some notes:

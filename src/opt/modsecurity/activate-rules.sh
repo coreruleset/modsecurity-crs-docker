@@ -1,5 +1,11 @@
 #!/bin/sh -e
 
+# Check if crs-setup.conf is overriden
+if [ -n "${MANUAL_MODE}" ]; then
+  echo "Using manual config mode"
+  return; # Don't use exit on a sourced script
+fi
+
 # Paranoia Level
 sed -z -E -i 's/#SecAction.{7}id:900000.*tx\.paranoia_level=1\"/SecAction \\\n  \"id:900000, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:tx.paranoia_level='"${PARANOIA}"'\"/' /etc/modsecurity.d/owasp-crs/crs-setup.conf
 
