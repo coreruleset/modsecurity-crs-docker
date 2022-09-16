@@ -1,4 +1,4 @@
-FROM owasp/modsecurity:apache as release
+FROM owasp/modsecurity:2.9.6-202209170109 as release
 
 ARG RELEASE
 
@@ -23,7 +23,7 @@ RUN set -eux; \
     sed -i -E 's/(Listen) [0-9]+/\1 ${PORT}/g' /usr/local/apache2/conf/httpd.conf; \
     rm -rf /var/lib/apt/lists/*
 
-FROM owasp/modsecurity:apache
+FROM owasp/modsecurity:2.9.6-202209170109
 
 LABEL maintainer="Felipe Zipitria <felipe.zipitria@owasp.org>"
 

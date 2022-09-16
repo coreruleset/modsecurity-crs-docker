@@ -1,4 +1,4 @@
-FROM owasp/modsecurity:nginx-alpine as release
+FROM owasp/modsecurity:3.0.8-alpine-202209170109 as release
 
 ARG RELEASE
 
@@ -18,7 +18,7 @@ RUN set -eux; \
     mv -v /opt/owasp-crs/crs-setup.conf.example /opt/owasp-crs/crs-setup.conf; \
     ln -sv /opt/owasp-crs /etc/modsecurity.d/
 
-FROM owasp/modsecurity:nginx-alpine
+FROM owasp/modsecurity:3.0.8-alpine-202209170109
 
 LABEL maintainer="Felipe Zipitria <felipe.zipitria@owasp.org>"
 
