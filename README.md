@@ -35,7 +35,7 @@ We added the [docker buildx](https://github.com/docker/buildx) support to our do
 There is a new file `docker-bake.hcl` used for this purpose. To build for new platforms, just use this example:
 
 ```bash
-$ docker buildx use $(docker buildx create --platform linux/amd64,linux/arm64,linux/arm/v8)
+$ docker buildx create --use --platform linux/amd64,linux/i386,linux/arm64,linux/arm/v7
 $ docker buildx bake -f docker-bake.hcl
 ```
 
