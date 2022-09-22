@@ -1,4 +1,4 @@
-FROM owasp/modsecurity:apache-alpine as release
+FROM owasp/modsecurity:2.9.6-alpine-202209170109 as release
 
 ARG RELEASE
 
@@ -22,7 +22,7 @@ RUN set -eux; \
     ln -sv /opt/owasp-crs /etc/modsecurity.d/; \
     sed -i -E 's/(Listen) [0-9]+/\1 ${PORT}/g' /usr/local/apache2/conf/httpd.conf
 
-FROM owasp/modsecurity:apache-alpine
+FROM owasp/modsecurity:2.9.6-alpine-202209170109
 
 LABEL maintainer="Felipe Zipitria <felipe.zipitria@owasp.org>"
 
