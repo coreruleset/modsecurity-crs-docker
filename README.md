@@ -14,15 +14,19 @@ ModSecurity is an open source, cross platform web application firewall (WAF) eng
 
 ## Supported tags and respective `Dockerfile` links
 
-* `3-nginx`, `3.3-nginx`, `3.3.2-nginx`, `nginx` ([master/nginx/Dockerfile](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile)) – *last stable ModSecurity v3 on Nginx 1.20 official stable base image, and latest stable Core Rule Set 3.3.2 *
-* `3-apache`, `3.3-apache`, `3.3.2-apache`, `apache` ([master/apache/Dockerfile](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/apache/Dockerfile)) –*last stable ModSecurity v2 on Apache 2.4 official stable base image, and latest stable Core Rule Set 3.3.2 *
+* `3-nginx-YYYYMMDDHHMM`, `3.3-nginx-YYYYMMDDHHMM`, `3.3.2-nginx-YYYYMMDDHHMM`, `nginx` ([master/nginx/Dockerfile](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile)) – *last stable ModSecurity v3 on Nginx 1.20 official stable base image, and latest stable Core Rule Set 3.3.2 *
+* `3-apache-YYYYMMDDHHMM`, `3.3-apache-YYYYMMDDHHMM`, `3.3.2-apache-YYYYMMDDHHMM`, `apache` ([master/apache/Dockerfile](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/apache/Dockerfile)) –*last stable ModSecurity v2 on Apache 2.4 official stable base image, and latest stable Core Rule Set 3.3.2 *
+
+⚠️ We changed tags to [support production usage](https://github.com/coreruleset/modsecurity-crs-docker/issues/67). Now, if you want to use the "rolling version", use the tag `owasp/modsecurity-crs:nginx` or `owasp/modsecurity-crs:apache`. If you need a stable long term image, use the one with the full CRS version, in addition to the build date in `YYYYMMDDHHMM` format, example `owasp/modsecurity-crs:3.3.2-nginx-202209141209` or `owasp/modsecurity-crs:3.3.2-apache-202209141209` for example. You have been warned.
 
 ## Supported variants
 
 We have support for [alpine linux](https://www.alpinelinux.org/) variants of the base images. Just add `-alpine` and you will get it. Examples:
 
-* `3-nginx-alpine`, `3.3-nginx-alpine`, `3.3.2-nginx-alpine`, `nginx-alpine` ([master/nginx/Dockerfile-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile-alpine) – *last stable ModSecurity v3 on Nginx 1.20 official alpine stable base image, and latest stable Core Rule Set 3.3.2 *
-* `3-apache-alpine`, `3.3-apache-alpine`, `3.3.2-apache-alpine`, `apache-alpine` ([master/apache/Dockerfile-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/apache/Dockerfile-alpine)) – *last stable ModSecurity v2 on Apache 2.4 official alpine stable base image, and latest stable Core Rule Set 3.3.2 *
+* `3-nginx-alpine-YYYYMMDDHHMM`, `3.3-nginx-alpine-YYYYMMDDHHMM`, `3.3.2-nginx-alpine-YYYYMMDDHHMM`, `nginx-alpine` ([master/nginx/Dockerfile-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile-alpine) – *last stable ModSecurity v3 on Nginx 1.20 official alpine stable base image, and latest stable Core Rule Set 3.3.2 *
+* `3-apache-alpine-YYYYMMDDHHMM`, `3.3-apache-alpine-YYYYMMDDHHMM`, `3.3.2-apache-alpine-YYYYMMDDHHMM`, `apache-alpine` ([master/apache/Dockerfile-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/apache/Dockerfile-alpine)) – *last stable ModSecurity v2 on Apache 2.4 official alpine stable base image, and latest stable Core Rule Set 3.3.2 *
+
+⚠️ We changed tags to [support production usage](https://github.com/coreruleset/modsecurity-crs-docker/issues/67). Now, if you want to use the "rolling version", use the tag `owasp/modsecurity-crs:nginx-alpine` or `owasp/modsecurity-crs:apache-alpine`. If you need a stable long term image, use the one with the full CRS version, in addition to the build date in `YYYYMMDDHHMM` format, example `owasp/modsecurity-crs:3.3.2-nginx-alpine-202209141209` or `owasp/modsecurity-crs:3.3.2-apache-alpine-202209141209` for example. You have been warned.
 
 ## Supported architectures
 
@@ -31,21 +35,34 @@ We added the [docker buildx](https://github.com/docker/buildx) support to our do
 There is a new file `docker-bake.hcl` used for this purpose. To build for new platforms, just use this example:
 
 ```bash
-docker buildx create \
-   --name modsecurity-docker \
-   --use
-docker buildx bake -f docker-bake.hcl
+$ docker buildx create --use --platform linux/amd64,linux/i386,linux/arm64,linux/arm/v7
+$ docker buildx bake -f docker-bake.hcl
 ```
+
+We require a version of `buildx` >= v0.9.1. [Visit the official documentation](https://docs.docker.com/build/buildx/install/) for instructions on installing and upgrading `buildx`. You can check which version you have using:
+```
+docker buildx version
+github.com/docker/buildx v0.9.1 ed00243a0ce2a0aee75311b06e32d33b44729689
+```
+
+If you want to see the targets of the build, use:
+```
+docker buildx bake -f ./docker-bake.hcl --print
+```
+
+We are building now for these architectures:
+  - linux/amd64
+  - linux/i386
+  - linux/arm64
+  - linux/arm/v7
+
+You can find additional examples on how to use `buildx` in this repository's GitHub act
+We added the [docker buildx](https://github.com/docker/buildx) support to our docker builds so additional architectures are supported now. As we create our containers based on the official apache and nginx ones, we can only support the architectures they support.
 
 To build a specific target for a single platform only (replace target and platform strings in the example with the your choices):
 
 ```bash
-docker buildx create \
-   --name modsecurity-docker \
-   --use
-docker buildx bake \
-   -f docker-bake.hcl \
-   --set target.platforms=linux/amd64 nginx-alpine
+docker buildx bake -f docker-bake.hcl --set target.platforms=linux/amd64 nginx-alpine
 ```
 
 ## CRS Versions

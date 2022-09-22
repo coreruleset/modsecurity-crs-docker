@@ -4,53 +4,69 @@ on:
   pull_request:
     branches:
       - master
+      - develop
+
+env:
+  REPO: "owasp/modsecurity-crs"
+
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        crs-version:
-          - "3.3.2"
-        image:
-          - apache
-          - nginx
-        variant:
-          - ""
-          - "-alpine"
-        platform:
-          - linux/amd64
+        crs_version: ["3.3.4"]
+        image: [apache, nginx]
+        variant: ["", "-alpine"]
+        platform: [linux/amd64]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 1
 
       # https://github.com/docker/setup-qemu-action
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v2
 
       # https://github.com/docker/setup-buildx-action
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
         with:
           driver-opts: image=moby/buildkit:master
 
-      - name: Build ${{ matrix.crs-version }}-${{ matrix.image }}${{ matrix.variant }}
-        uses: docker/bake-action@v1.5.0
+      - name: Docker meta ${{ matrix.crs_version }}-${{ matrix.image }}${{ matrix.variant }}
+        id: meta
+        uses: docker/metadata-action@v4
         with:
-          files: docker-bake.hcl
+          images: |
+            ${{ env.REPO }}
+          flavor: |
+            latest=false
+          tags: |
+            type=raw,value=${{ matrix.image }}${{ matrix.variant }}
+            type=semver,pattern={{major}},value=v${{ matrix.crs_version }},suffix=${{ matrix.image }}${{ matrix.variant }}-{{date 'YYYYMMDDHHMM'}}
+            type=semver,pattern={{major}}.{{minor}},value=v${{ matrix.crs_version }},suffix=${{ matrix.image }}${{ matrix.variant }}-{{date 'YYYYMMDDHHMM'}}
+            type=semver,pattern={{version}},value=v${{ matrix.crs_version }},suffix=${{ matrix.image }}${{ matrix.variant }}-{{date 'YYYYMMDDHHMM'}}
+
+      - name: Build ${{ matrix.crs_version }}-${{ matrix.image }}${{ matrix.variant }}
+        uses: docker/bake-action@v2.2.0
+        with:
           targets: ${{ matrix.image }}${{ matrix.variant }}
+          files: |
+            ./docker-bake.hcl
+            ${{ steps.meta.outputs.bake-file }}
           set: |
-            "${{ matrix.image }}${{ matrix.variant }}.tags=${{ matrix.crs-version }}-${{ matrix.image }}${{ matrix.variant }}-test"
             "${{ matrix.image }}${{ matrix.variant }}.platform=${{ matrix.platform }}"
           load: true
           push: false
 
-      - name: Run ${{ matrix.image }}${{ matrix.variant }}
+      - name: Run ${{ matrix.crs_version }}-${{ matrix.image }}${{ matrix.variant }}
         run: |
-          docker run -d --name ${{ matrix.crs-version }}-${{ matrix.image }}${{ matrix.variant }}-test ${{ matrix.crs-version }}-${{ matrix.image }}${{ matrix.variant }}-test
-          docker logs ${{ matrix.crs-version }}-${{ matrix.image }}${{ matrix.variant }}-test
+          TAG=$(docker image inspect -f '{{ json .RepoTags }}' ${{ env.REPO }}:${{ matrix.image }}${{ matrix.variant }} | jq -r '.[0]')
+          echo "Starting container with TAG=$TAG"
+          docker run --pull "never" -d --name ${{ matrix.crs_version }}-${{ matrix.image }}${{ matrix.variant }}-test "$TAG"
+          docker logs ${{ matrix.crs_version }}-${{ matrix.image }}${{ matrix.variant }}-test
 
-      - name: Verify ${{ matrix.crs-version }}-${{ matrix.image }}${{ matrix.variant }}
+      - name: Verify ${{ matrix.crs_version }}-${{ matrix.image }}${{ matrix.variant }}
         run: |
-          [ $(docker inspect ${{ matrix.crs-version }}-${{ matrix.image }}${{ matrix.variant }}-test --format='{{.State.Running}}') = 'true' ]
+          [ $(docker inspect ${{ matrix.crs_version }}-${{ matrix.image }}${{ matrix.variant }}-test --format='{{.State.Running}}') = 'true' ]

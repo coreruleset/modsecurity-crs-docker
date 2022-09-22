@@ -1,24 +1,10 @@
 # docker-bake.hcl
 variable "crs-version" {
-    default = "3.3.2"
+    default = "3.3.4"
 }
 
 variable "REPO" {
     default = "owasp/modsecurity-crs"
-}
-
-function "tag" {
-    params = [tag]
-    result = ["${REPO}:${tag}"]
-}
-
-function "vtag" {
-    params = [semver, variant]
-    result = concat(
-        tag("${major(semver)}${variant}"),
-        tag("${minor(semver)}${variant}"),
-        tag("${patch(semver)}${variant}")
-    )
 }
 
 function "major" {
@@ -36,6 +22,20 @@ function "patch" {
     result = join(".", slice(split(".", version),0,3))
 }
 
+function "tag" {
+    params = [tag]
+    result = ["${REPO}:${tag}"]
+}
+
+function "vtag" {
+    params = [semver, variant]
+    result = concat(
+        tag("${major(semver)}${variant}-${formatdate("YYYYMMDDHHMM", timestamp())}"),
+        tag("${minor(semver)}${variant}-${formatdate("YYYYMMDDHHMM", timestamp())}"),
+        tag("${patch(semver)}${variant}-${formatdate("YYYYMMDDHHMM", timestamp())}")
+    )
+}
+
 group "default" {
     targets = [
         "apache",
@@ -45,7 +45,10 @@ group "default" {
     ]
 }
 
+target "docker-metadata-action" {}
+
 target "platforms-base" {
+    inherits = ["docker-metadata-action"]
     context="."    
     platforms = ["linux/amd64", "linux/arm64/v8", "linux/arm/v7", "linux/i386"]
     args = {
