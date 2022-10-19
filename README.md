@@ -169,7 +169,7 @@ docker start modseccrs
 ## Full docker run example of possible setup
 
 ```
-docker run -dti 80:80 --rm \
+docker run -dti -p 80:80 --rm \
    -e PARANOIA=1 \
    -e EXECUTING_PARANOIA=2 \
    -e ENFORCE_BODYPROC_URLENCODED=1 \
@@ -206,6 +206,6 @@ docker run -dti 80:80 --rm \
    -e MODSEC_PCRE_MATCH_LIMIT=1000 \
    -e MODSEC_PCRE_MATCH_LIMIT_RECURSION=1000 \
    -e VALIDATE_UTF8_ENCODING=1 \
-   -e CRS_ENABLE_TEST_MARKER=1
+   -e CRS_ENABLE_TEST_MARKER=1 \
    owasp/modsecurity-crs:apache
 ```
