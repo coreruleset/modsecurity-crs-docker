@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# Health Check running web server.
+# Endpoint /healthz should always return 200.
+
+scheme="https"
+host="localhost"
+port="${SSL_PORT}"
+
+if [ "$(env | grep -c APACHE)" -gt 1 ] && [ "${SSL_ENGINE}" = "off" ]
+then 
+    scheme="http"
+    port="${PORT}"
+fi
+
+curl -sk "${scheme}://${host}:${port}/healthz"
