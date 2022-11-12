@@ -38,7 +38,6 @@ ENV USER=nginx \
 # as set up by owasp/modsecurity-docker
 COPY nginx/templates /etc/nginx/templates/
 COPY src/etc/modsecurity.d/setup.conf /etc/nginx/templates/modsecurity.d/setup.conf.template
-COPY nginx/docker-entrypoint.d/*.sh /docker-entrypoint.d/
 COPY src/opt/modsecurity/activate-rules.sh /docker-entrypoint.d/95-activate-rules.sh
 COPY --from=release /opt/owasp-crs /opt/owasp-crs
 
