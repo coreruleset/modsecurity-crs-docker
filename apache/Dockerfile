@@ -124,6 +124,18 @@ ENV APACHE_ALWAYS_TLS_REDIRECT=off \
     ANOMALY_OUTBOUND=4 \
     BLOCKING_PARANOIA=1
 
+COPY --from=build /usr/local/apache2/modules/mod_security2.so                  /usr/local/apache2/modules/mod_security2.so
+COPY --from=build /usr/local/apache2/ModSecurity-${MODSEC_VERSION}/modsecurity.conf-recommended  /etc/modsecurity.d/modsecurity.conf
+COPY --from=build /usr/local/apache2/ModSecurity-${MODSEC_VERSION}/unicode.mapping               /etc/modsecurity.d/unicode.mapping
+COPY --from=build /usr/share/TLS/server.key                                    /usr/local/apache2/conf/server.key
+COPY --from=build /usr/share/TLS/server.crt                                    /usr/local/apache2/conf/server.crt
+COPY src/etc/modsecurity.d/*.conf /etc/modsecurity.d/
+COPY src/bin/healthcheck /usr/local/bin/healthcheck
+COPY apache/conf/extra/*.conf /usr/local/apache2/conf/extra/
+COPY src/etc/modsecurity.d/*.conf /etc/modsecurity.d/
+COPY src/opt/modsecurity/activate-rules.sh /opt/modsecurity/
+COPY apache/docker-entrypoint.sh /
+
 RUN set -eux; \
     echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections; \
     apt-get update -qq; \
@@ -180,18 +192,6 @@ RUN set -eux; \
     sed -i -E 's|(MaxRequestWorkers[ ]*)[0-9]*|\1${WORKER_CONNECTIONS}|' /usr/local/apache2/conf/extra/httpd-mpm.conf; \
     chgrp -R 0 /var/log/ /usr/local/apache2/; \
     chmod -R g=u /var/log/ /usr/local/apache2/
-
-COPY --from=build /usr/local/apache2/modules/mod_security2.so                  /usr/local/apache2/modules/mod_security2.so
-COPY --from=build /usr/local/apache2/ModSecurity-${MODSEC_VERSION}/modsecurity.conf-recommended  /etc/modsecurity.d/modsecurity.conf
-COPY --from=build /usr/local/apache2/ModSecurity-${MODSEC_VERSION}/unicode.mapping               /etc/modsecurity.d/unicode.mapping
-COPY --from=build /usr/share/TLS/server.key                                    /usr/local/apache2/conf/server.key
-COPY --from=build /usr/share/TLS/server.crt                                    /usr/local/apache2/conf/server.crt
-COPY src/etc/modsecurity.d/*.conf /etc/modsecurity.d/
-COPY src/bin/healthcheck /usr/local/bin/healthcheck
-COPY apache/conf/extra/*.conf /usr/local/apache2/conf/extra/
-COPY src/etc/modsecurity.d/*.conf /etc/modsecurity.d/
-COPY src/opt/modsecurity/activate-rules.sh /opt/modsecurity/
-COPY apache/docker-entrypoint.sh /
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
