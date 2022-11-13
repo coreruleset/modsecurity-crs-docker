@@ -1,6 +1,51 @@
-FROM owasp/modsecurity:2.9.6-202210230310 as release
+ARG APACHE_VERSION=2.4
 
-ARG RELEASE
+FROM httpd:${APACHE_VERSION} as build
+
+ARG MODSEC_VERSION=2.9.6
+
+RUN set -eux; \
+    echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections; \
+    apt-get update -qq; \
+    apt-get install -y -qq --no-install-recommends --no-install-suggests \
+        automake \
+        ca-certificates \
+        g++ \
+        git \
+        libapr1-dev \
+        libaprutil1-dev \
+        libcurl4-gnutls-dev \
+        libfuzzy-dev \
+        libpcre++-dev \
+        libtool \
+        libxml2-dev \
+        libyajl-dev \
+        lua5.2-dev \
+        make \
+        pkgconf \
+        wget
+
+RUN set -eux; \
+    wget --quiet https://github.com/SpiderLabs/ModSecurity/archive/refs/tags/v${MODSEC_VERSION}.tar.gz; \
+    tar -zxvf v${MODSEC_VERSION}.tar.gz; \
+    cd ModSecurity-${MODSEC_VERSION}; \
+    ./autogen.sh; \
+    ./configure --with-yajl --with-ssdeep; \
+    make; \
+    make install; \
+    make clean
+
+# Generate self-signed certificates (if needed)
+RUN mkdir -p /usr/share/TLS
+COPY apache/openssl.conf /usr/share/TLS
+RUN openssl req -x509 -days 365 -new \
+    -config /usr/share/TLS/openssl.conf \
+    -keyout /usr/share/TLS/server.key \
+    -out /usr/share/TLS/server.crt
+
+FROM httpd:${APACHE_VERSION} as crs_release
+
+ARG CRS_RELEASE
 
 # hadolint ignore=DL3008,SC2016
 RUN set -eux; \
@@ -8,48 +53,161 @@ RUN set -eux; \
     apt-get -y install --no-install-recommends \
       ca-certificates \
       curl \
-      gnupg \
-      iproute2; \
-    update-ca-certificates -f; \
+      gnupg; \
     mkdir /opt/owasp-crs; \
-    curl -SL -q https://github.com/coreruleset/coreruleset/archive/v${RELEASE}.tar.gz -o v${RELEASE}.tar.gz; \
-    curl -SL -q https://github.com/coreruleset/coreruleset/releases/download/v${RELEASE}/coreruleset-${RELEASE}.tar.gz.asc -o coreruleset-${RELEASE}.tar.gz.asc; \
+    curl -SL https://github.com/coreruleset/coreruleset/archive/v${CRS_RELEASE}.tar.gz -o v${CRS_RELEASE}.tar.gz; \
+    curl -SL https://github.com/coreruleset/coreruleset/releases/download/v${CRS_RELEASE}/coreruleset-${CRS_RELEASE}.tar.gz.asc -o coreruleset-${CRS_RELEASE}.tar.gz.asc; \
     gpg --fetch-key https://coreruleset.org/security.asc; \
-    gpg --verify coreruleset-${RELEASE}.tar.gz.asc v${RELEASE}.tar.gz; \
-    tar -zxf v${RELEASE}.tar.gz --strip-components=1 -C /opt/owasp-crs; \
-    rm -f v${RELEASE}.tar.gz coreruleset-${RELEASE}.tar.gz.asc; \
-    mv -v /opt/owasp-crs/crs-setup.conf.example /opt/owasp-crs/crs-setup.conf; \
-    ln -sv /opt/owasp-crs /etc/modsecurity.d/; \
-    sed -i -E 's/(Listen) [0-9]+/\1 ${PORT}/g' /usr/local/apache2/conf/httpd.conf; \
-    rm -rf /var/lib/apt/lists/*
+    gpg --verify coreruleset-${CRS_RELEASE}.tar.gz.asc v${CRS_RELEASE}.tar.gz; \
+    tar -zxf v${CRS_RELEASE}.tar.gz --strip-components=1 -C /opt/owasp-crs; \
+    rm -f v${CRS_RELEASE}.tar.gz coreruleset-${CRS_RELEASE}.tar.gz.asc; \
+    mv -v /opt/owasp-crs/crs-setup.conf.example /opt/owasp-crs/crs-setup.conf
 
-FROM owasp/modsecurity:2.9.6-202210230310
+FROM httpd:${APACHE_VERSION}
+
+ARG MODSEC_VERSION=2.9.6
 
 LABEL maintainer="Felipe Zipitria <felipe.zipitria@owasp.org>"
 
-
-# overridden variables
-ENV ERRORLOG='/proc/self/fd/2' \
+ENV APACHE_ALWAYS_TLS_REDIRECT=off \
+    ACCESSLOG=/var/log/apache2/access.log \
+    BACKEND=http://localhost:80 \
+    BACKEND_WS=ws://localhost:8080 \
+    ERRORLOG='/proc/self/fd/2' \
+    APACHE_LOGFORMAT='"%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""' \
+    APACHE_METRICS_LOGFORMAT='"%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""' \
+    H2_PROTOCOLS='h2 http/1.1' \
+    LOGLEVEL=warn \
+    METRICS_ALLOW_FROM='127.0.0.0/255.0.0.0 ::1/128' \
+    METRICS_DENY_FROM='All' \
+    METRICSLOG='/dev/null' \
+    MODSEC_AUDIT_ENGINE="RelevantOnly" \
+    MODSEC_AUDIT_LOG_FORMAT=JSON \
+    MODSEC_AUDIT_LOG_TYPE=Serial \
+    MODSEC_AUDIT_LOG=/dev/stdout \
+    MODSEC_AUDIT_LOG_PARTS='ABIJDEFHZ' \
+    MODSEC_AUDIT_STORAGE=/var/log/modsecurity/audit/ \
+    MODSEC_DATA_DIR=/tmp/modsecurity/data \
+    MODSEC_DEBUG_LOG=/dev/null \
+    MODSEC_DEBUG_LOGLEVEL=0 \
+    MODSEC_DEFAULT_PHASE1_ACTION="phase:1,pass,log,tag:'\${MODSEC_TAG}'" \
+    MODSEC_DEFAULT_PHASE2_ACTION="phase:2,pass,log,tag:'\${MODSEC_TAG}'" \
+    MODSEC_DISABLE_BACKEND_COMPRESSION="Off" \
+    MODSEC_PCRE_MATCH_LIMIT_RECURSION=100000 \
+    MODSEC_PCRE_MATCH_LIMIT=100000 \
+    MODSEC_REQ_BODY_ACCESS=on \
+    MODSEC_REQ_BODY_LIMIT=13107200 \
+    MODSEC_REQ_BODY_LIMIT_ACTION="Reject" \
+    MODSEC_REQ_BODY_JSON_DEPTH_LIMIT=512 \
+    MODSEC_REQ_BODY_NOFILES_LIMIT=131072 \
+    MODSEC_RESP_BODY_ACCESS=on \
+    MODSEC_RESP_BODY_LIMIT=1048576 \
+    MODSEC_RESP_BODY_LIMIT_ACTION="ProcessPartial" \
+    MODSEC_RESP_BODY_MIMETYPE="text/plain text/html text/xml" \
+    MODSEC_RULE_ENGINE=on \
+    MODSEC_STATUS_ENGINE="Off" \
+    MODSEC_TAG=modsecurity \
+    MODSEC_TMP_DIR=/tmp/modsecurity/tmp \
+    MODSEC_TMP_SAVE_UPLOADED_FILES="on" \
+    MODSEC_UPLOAD_DIR=/tmp/modsecurity/upload \
+    PORT=80 \
+    PROXY_ERROR_OVERRIDE=on \
+    PROXY_PRESERVE_HOST=on \
+    PROXY_SSL_CA_CERT=/etc/ssl/certs/ca-certificates.crt \
+    PROXY_SSL_CERT_KEY=/usr/local/apache2/conf/server.key \
+    PROXY_SSL_CERT=/usr/local/apache2/conf/server.crt \
+    PROXY_SSL_CHECK_PEER_NAME=off \
+    PROXY_SSL_VERIFY=none \
+    PROXY_SSL=on \
+    PROXY_TIMEOUT=60 \
+    REMOTEIP_INT_PROXY='10.1.0.0/16' \
+    REQ_HEADER_FORWARDED_PROTO='https' \
+    SERVER_ADMIN=root@localhost \
+    SERVER_NAME=localhost \
+    SSL_CIPHER_SUITE="ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384" \
+    SSL_ENGINE=on \
+    SSL_HONOR_CIPHER_ORDER=off \
+    SSL_PORT=443 \
+    SSL_PROTOCOL="all -SSLv3 -TLSv1 -TLSv1.1" \
+    SSL_PROXY_PROTOCOL="all -SSLv3 -TLSv1 -TLSv1.1" \
+    SSL_PROXY_CIPHER_SUITE="ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384" \
+    SSL_SESSION_TICKETS=off \
+    SSL_USE_STAPLING=On \
+    TIMEOUT=60 \
+    WORKER_CONNECTIONS=400 \
     USER=www-data \
     GROUP=www-data \
-    MODSEC_PCRE_MATCH_LIMIT=100000 \
-    MODSEC_PCRE_MATCH_LIMIT_RECURSION=100000
-
-# CRS specific variables
-ENV PARANOIA=1 \
+    # CRS specific variables
+    PARANOIA=1 \
     ANOMALY_INBOUND=5 \
     ANOMALY_OUTBOUND=4 \
     BLOCKING_PARANOIA=1
 
+COPY --from=build /usr/local/apache2/modules/mod_security2.so                  /usr/local/apache2/modules/mod_security2.so
+COPY --from=build /usr/local/apache2/ModSecurity-${MODSEC_VERSION}/modsecurity.conf-recommended  /etc/modsecurity.d/modsecurity.conf
+COPY --from=build /usr/local/apache2/ModSecurity-${MODSEC_VERSION}/unicode.mapping               /etc/modsecurity.d/unicode.mapping
+COPY --from=build /usr/share/TLS/server.key                                    /usr/local/apache2/conf/server.key
+COPY --from=build /usr/share/TLS/server.crt                                    /usr/local/apache2/conf/server.crt
+COPY --from=crs_release /opt/owasp-crs /opt/owasp-crs
+COPY src/etc/modsecurity.d/*.conf /etc/modsecurity.d/
+COPY src/bin/healthcheck /usr/local/bin/healthcheck
+COPY apache/conf/extra/*.conf /usr/local/apache2/conf/extra/
 COPY src/etc/modsecurity.d/*.conf /etc/modsecurity.d/
 COPY src/opt/modsecurity/activate-rules.sh /opt/modsecurity/
-COPY apache/conf/extra/*.conf /usr/local/apache2/conf/extra/
 COPY apache/docker-entrypoint.sh /
-COPY --from=release /opt/owasp-crs /opt/owasp-crs
 
-RUN set -eux; ln -s /opt/owasp-crs /etc/modsecurity.d/
+RUN set -eux; \
+    echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections; \
+    apt-get update -qq; \
+    apt-get install -qq -y --no-install-recommends --no-install-suggests \
+        ca-certificates \
+        curl \
+        gnupg \
+        iproute2 \
+        libcurl3-gnutls \
+        libfuzzy2 \
+        libxml2 \
+        libyajl2; \
+    update-ca-certificates -f; \
+    apt-get clean; \
+    rm -rf /var/lib/apt/lists/*
+
+RUN set -eux; \
+    mkdir -p /etc/modsecurity.d/; \
+    mkdir -p /tmp/modsecurity/data; \
+    mkdir -p /tmp/modsecurity/upload; \
+    mkdir -p /tmp/modsecurity/tmp; \
+    chown -R $(awk '/^User/ { print $2;}' /usr/local/apache2/conf/httpd.conf) /tmp/modsecurity; \
+    mkdir -p /var/log/apache2/; \
+    ln -s /opt/owasp-crs /etc/modsecurity.d/; \
+    sed -i -E 's|(Listen) [0-9]+|\1 ${PORT}|' /usr/local/apache2/conf/httpd.conf; \
+    sed -i -E 's|(ServerTokens) Full|\1 Prod|' /usr/local/apache2/conf/extra/httpd-default.conf; \
+    sed -i -E 's|#(ServerName) www.example.com:80|\1 ${SERVER_NAME}|' /usr/local/apache2/conf/httpd.conf; \
+    sed -i -E 's|(ServerAdmin) you@example.com|\1 ${SERVER_ADMIN}|' /usr/local/apache2/conf/httpd.conf; \
+    sed -i -E 's|^(\s*CustomLog)(\s+\S+)+|\1 ${ACCESSLOG} modsec "env=!nologging"|g' /usr/local/apache2/conf/httpd.conf; \
+	sed -i -E 's|^(\s*ErrorLog)\s+\S+|\1 ${ERRORLOG}|g' /usr/local/apache2/conf/httpd.conf; \
+	sed -i -E 's|^(\s*TransferLog)\s+\S+|\1 ${ACCESSLOG}|g' /usr/local/apache2/conf/httpd.conf; \
+    sed -i -E 's|#(LoadModule unique_id_module)|\1|' /usr/local/apache2/conf/httpd.conf; \
+    sed -i -E 's|#(LoadModule rewrite_module modules/mod_rewrite.so)|\1|' /usr/local/apache2/conf/httpd.conf; \
+    sed -i -E 's|#(LoadModule proxy_module modules/mod_proxy.so)|\1|' /usr/local/apache2/conf/httpd.conf; \
+    sed -i -E 's|#(LoadModule proxy_http_module modules/mod_proxy_http.so)|\1|' /usr/local/apache2/conf/httpd.conf; \
+    sed -i -E 's|#(LoadModule remoteip_module modules/mod_remoteip.so)|\1|' /usr/local/apache2/conf/httpd.conf; \
+    sed -i -E 's|#(LoadModule socache_shmcb_module modules/mod_socache_shmcb.so)|\1|' /usr/local/apache2/conf/httpd.conf; \
+    sed -i -E 's|#(LoadModule ssl_module modules/mod_ssl.so)|\1|' /usr/local/apache2/conf/httpd.conf; \
+    sed -i -E 's|#(LoadModule http2_module modules/mod_http2.so)|\1|' /usr/local/apache2/conf/httpd.conf; \
+    sed -i -E 's|#(Include conf/extra/httpd-default.conf)|\1|' /usr/local/apache2/conf/httpd.conf; \
+    sed -i -E 's|#(Include conf/extra/httpd-proxy.conf)|\1|' /usr/local/apache2/conf/httpd.conf; \
+    sed -i -E 's|#(Include conf/extra/httpd-ssl.conf)|\1|' /usr/local/apache2/conf/httpd.conf; \
+    sed -i -E 's|#(Include conf/extra/httpd-vhosts.conf)|\1|' /usr/local/apache2/conf/httpd.conf; \
+    echo 'Include conf/extra/httpd-locations.conf' >> /usr/local/apache2/conf/httpd.conf; \
+    echo 'Include conf/extra/httpd-modsecurity.conf' >> /usr/local/apache2/conf/httpd.conf; \
+    sed -i -E 's|(MaxRequestWorkers[ ]*)[0-9]*|\1${WORKER_CONNECTIONS}|' /usr/local/apache2/conf/extra/httpd-mpm.conf; \
+    chgrp -R 0 /var/log/ /usr/local/apache2/; \
+    chmod -R g=u /var/log/ /usr/local/apache2/
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
+
+HEALTHCHECK CMD /usr/local/bin/healthcheck
 
 # Use httpd-foreground from upstream
 CMD ["httpd-foreground"]
