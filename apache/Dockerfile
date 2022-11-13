@@ -43,10 +43,29 @@ RUN openssl req -x509 -days 365 -new \
     -keyout /usr/share/TLS/server.key \
     -out /usr/share/TLS/server.crt
 
+FROM httpd:${APACHE_VERSION} as crs_release
+
+ARG CRS_RELEASE
+
+# hadolint ignore=DL3008,SC2016
+RUN set -eux; \
+    apt-get update; \
+    apt-get -y install --no-install-recommends \
+      ca-certificates \
+      curl \
+      gnupg; \
+    mkdir /opt/owasp-crs; \
+    curl -SL https://github.com/coreruleset/coreruleset/archive/v${CRS_RELEASE}.tar.gz -o v${CRS_RELEASE}.tar.gz; \
+    curl -SL https://github.com/coreruleset/coreruleset/releases/download/v${CRS_RELEASE}/coreruleset-${CRS_RELEASE}.tar.gz.asc -o coreruleset-${CRS_RELEASE}.tar.gz.asc; \
+    gpg --fetch-key https://coreruleset.org/security.asc; \
+    gpg --verify coreruleset-${CRS_RELEASE}.tar.gz.asc v${CRS_RELEASE}.tar.gz; \
+    tar -zxf v${CRS_RELEASE}.tar.gz --strip-components=1 -C /opt/owasp-crs; \
+    rm -f v${CRS_RELEASE}.tar.gz coreruleset-${CRS_RELEASE}.tar.gz.asc; \
+    mv -v /opt/owasp-crs/crs-setup.conf.example /opt/owasp-crs/crs-setup.conf
+
 FROM httpd:${APACHE_VERSION}
 
 ARG MODSEC_VERSION=2.9.6
-ARG CRS_RELEASE
 
 LABEL maintainer="Felipe Zipitria <felipe.zipitria@owasp.org>"
 
@@ -129,6 +148,7 @@ COPY --from=build /usr/local/apache2/ModSecurity-${MODSEC_VERSION}/modsecurity.c
 COPY --from=build /usr/local/apache2/ModSecurity-${MODSEC_VERSION}/unicode.mapping               /etc/modsecurity.d/unicode.mapping
 COPY --from=build /usr/share/TLS/server.key                                    /usr/local/apache2/conf/server.key
 COPY --from=build /usr/share/TLS/server.crt                                    /usr/local/apache2/conf/server.crt
+COPY --from=crs_release /opt/owasp-crs /opt/owasp-crs
 COPY src/etc/modsecurity.d/*.conf /etc/modsecurity.d/
 COPY src/bin/healthcheck /usr/local/bin/healthcheck
 COPY apache/conf/extra/*.conf /usr/local/apache2/conf/extra/
@@ -159,14 +179,6 @@ RUN set -eux; \
     mkdir -p /tmp/modsecurity/tmp; \
     chown -R $(awk '/^User/ { print $2;}' /usr/local/apache2/conf/httpd.conf) /tmp/modsecurity; \
     mkdir -p /var/log/apache2/; \
-    mkdir /opt/owasp-crs; \
-    curl -SL -q https://github.com/coreruleset/coreruleset/archive/v${CRS_RELEASE}.tar.gz -o v${CRS_RELEASE}.tar.gz; \
-    curl -SL -q https://github.com/coreruleset/coreruleset/releases/download/v${CRS_RELEASE}/coreruleset-${CRS_RELEASE}.tar.gz.asc -o coreruleset-${CRS_RELEASE}.tar.gz.asc; \
-    gpg --fetch-key https://coreruleset.org/security.asc; \
-    gpg --verify coreruleset-${CRS_RELEASE}.tar.gz.asc v${CRS_RELEASE}.tar.gz; \
-    tar -zxf v${CRS_RELEASE}.tar.gz --strip-components=1 -C /opt/owasp-crs; \
-    rm -f v${CRS_RELEASE}.tar.gz coreruleset-${CRS_RELEASE}.tar.gz.asc; \
-    mv -v /opt/owasp-crs/crs-setup.conf.example /opt/owasp-crs/crs-setup.conf; \
     ln -s /opt/owasp-crs /etc/modsecurity.d/; \
     sed -i -E 's|(Listen) [0-9]+|\1 ${PORT}|' /usr/local/apache2/conf/httpd.conf; \
     sed -i -E 's|(ServerTokens) Full|\1 Prod|' /usr/local/apache2/conf/extra/httpd-default.conf; \
