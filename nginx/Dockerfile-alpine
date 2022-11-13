@@ -65,7 +65,7 @@ RUN set -eux; \
 
 # Generate self-signed certificates (if needed)
 RUN mkdir -p /usr/share/TLS
-COPY v3-nginx/openssl.conf /usr/share/TLS
+COPY nginx/openssl.conf /usr/share/TLS
 RUN openssl req -x509 -days 365 -new \
     -config /usr/share/TLS/openssl.conf \
     -keyout /usr/share/TLS/server.key \
