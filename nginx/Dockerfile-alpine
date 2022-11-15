@@ -180,6 +180,7 @@ COPY src/etc/modsecurity.d/modsecurity-override.conf /etc/nginx/templates/modsec
 COPY src/etc/modsecurity.d/setup.conf /etc/nginx/templates/modsecurity.d/setup.conf.template
 COPY src/bin/healthcheck /usr/local/bin/healthcheck
 COPY nginx/docker-entrypoint.d/*.sh /docker-entrypoint.d/
+COPY src/opt/modsecurity/activate-plugins.sh /docker-entrypoint.d/94-activate-plugins.sh
 COPY src/opt/modsecurity/activate-rules.sh /docker-entrypoint.d/95-activate-rules.sh
 
 

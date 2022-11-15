@@ -161,7 +161,7 @@ COPY --from=build /usr/share/TLS/server.crt                                    /
 COPY --from=crs_release /opt/owasp-crs /opt/owasp-crs
 COPY src/etc/modsecurity.d/*.conf /etc/modsecurity.d/
 COPY src/bin/healthcheck /usr/local/bin/healthcheck
-COPY src/opt/modsecurity/activate-rules.sh /opt/modsecurity/
+COPY src/opt/modsecurity/activate-*.sh /opt/modsecurity/
 COPY apache/conf/extra/*.conf /usr/local/apache2/conf/extra/
 COPY apache/docker-entrypoint.sh /
 

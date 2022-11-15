@@ -153,7 +153,7 @@ COPY src/etc/modsecurity.d/*.conf /etc/modsecurity.d/
 COPY src/bin/healthcheck /usr/local/bin/healthcheck
 COPY apache/conf/extra/*.conf /usr/local/apache2/conf/extra/
 COPY src/etc/modsecurity.d/*.conf /etc/modsecurity.d/
-COPY src/opt/modsecurity/activate-rules.sh /opt/modsecurity/
+COPY src/opt/modsecurity/activate-*.sh /opt/modsecurity/
 COPY apache/docker-entrypoint.sh /
 
 RUN set -eux; \
