@@ -261,6 +261,7 @@ All these variables impact in configuration directives in the modsecurity engine
 | Name     | Description|
 | -------- | ------------------------------------------------------------------- |
 | MANUAL_MODE | A boolean indicating that you are providing your own `crs-setup.conf` file mounted as volume. (Default: `0`). ⚠️ None of the following variables are used if you set it to `1`. |
+| CRS_DISABLE_PLUGINS | A boolean indicating whether plugins will be **disabled** (Only from v4 and up. Default: `0`) |
 | PARANOIA | An integer indicating the paranoia level (Default: `1`)               |
 | BLOCKING_PARANOIA | (:new: Replaces `PARANOIA` in CRSv4) An integer indicating the paranoia level (Default: `1`)               |
 | EXECUTING_PARANOIA | An integer indicating the executing_paranoia_level (Default: `PARANOIA`) |
