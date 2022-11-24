@@ -52,7 +52,7 @@ target "platforms-base" {
     context="."    
     platforms = ["linux/amd64", "linux/arm64/v8", "linux/arm/v7", "linux/i386"]
     args = {
-        RELEASE = "${crs-version}"
+        CRS_RELEASE = "${crs-version}"
     }
 }
 

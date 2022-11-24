@@ -130,11 +130,12 @@ if [ -n "${CRS_ENABLE_TEST_MARKER}" ] && [ ${CRS_ENABLE_TEST_MARKER} -eq 1 ] && 
 
 # Write the value from the X-CRS-Test header as a marker to the log
 SecRule REQUEST_HEADERS:X-CRS-Test "@rx ^.*$" \\
-  "id:999999,\\
-  phase:1,\\
-  log,\\
-  msg:'%{MATCHED_VAR}',\\
-  pass,\\
-  t:none"
+    "id:999999,\\
+    phase:1,\\
+    pass,\\
+    t:none,\\
+    log,\\
+    msg:'%{MATCHED_VAR}'"
 EOF
 fi
+

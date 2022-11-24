@@ -1,4 +1,18 @@
-# Work around ModSecurity not supporting optional includes on NGiNX
+#!/bin/sh -e
+
+# Check if crs-setup.conf is overriden
+if [ -n "${MANUAL_MODE}" ]; then
+  echo "Using manual config mode"
+  return; # Don't use exit on a sourced script
+fi
+
+# Plugins can be disabled entirely by setting CRS_DISABLE_PLUGINS.
+if [ -n "${CRS_DISABLE_PLUGINS}" ]; then
+    echo "Plugins will be disabled"
+    return; # Don't use exit on a sourced script
+fi
+
+# Handle plugins if we have the files.
 # Note: we are careful here to not assume the existance of the "plugins"
 # directory. It is being introduced with version 4 of CRS.
 for suffix in "config" "before" "after"; do
@@ -10,3 +24,4 @@ for suffix in "config" "before" "after"; do
         sed -i -E "s/^([^#]+-${suffix}\.conf)/# \1/" /etc/modsecurity.d/setup.conf
     fi
 done
+
