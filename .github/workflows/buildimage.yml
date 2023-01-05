@@ -54,7 +54,7 @@ jobs:
             type=semver,pattern={{version}},value=v${{ matrix.crs_version }},suffix=${{ matrix.image }}${{ matrix.variant }}-{{date 'YYYYMMDDHHMM'}}
 
       - name: Build and push ${{ matrix.crs_version }}-${{ matrix.image }}${{ matrix.variant }}
-        uses: docker/bake-action@v2.2.0
+        uses: docker/bake-action@v2.3.0
         with:
           targets: ${{ matrix.image }}${{ matrix.variant }}
           files: |
