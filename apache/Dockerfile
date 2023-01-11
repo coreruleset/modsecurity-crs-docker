@@ -2,7 +2,7 @@ ARG APACHE_VERSION=2.4
 
 FROM httpd:${APACHE_VERSION} as build
 
-ARG MODSEC_VERSION=2.9.6
+ARG MODSEC_VERSION=2.9.7
 
 RUN set -eux; \
     echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections; \
@@ -65,7 +65,7 @@ RUN set -eux; \
 
 FROM httpd:${APACHE_VERSION}
 
-ARG MODSEC_VERSION=2.9.6
+ARG MODSEC_VERSION=2.9.7
 
 LABEL maintainer="Felipe Zipitria <felipe.zipitria@owasp.org>"
 
