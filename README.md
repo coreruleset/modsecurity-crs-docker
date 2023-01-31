@@ -80,7 +80,7 @@ You can achieve the same results just by getting any version you want, and using
 git clone https://github.com/coreruleset/coreruleset.git myrules
 cd myrules
 git checkout ac2a0d1
-docker run -p 80:80 -ti -e PARANOIA=4 -v ./rules:/opt/owasp-crs/rules:ro --rm owasp/modsecurity-crs
+docker run -p 80:80 -ti -e PARANOIA=4 -v rules:/opt/owasp-crs/rules:ro --rm owasp/modsecurity-crs
 ```
 
 ## Quick reference
