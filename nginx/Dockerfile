@@ -5,7 +5,7 @@ FROM nginx:${NGINX_VERSION} as build
 ARG MODSEC_VERSION=3.0.8 \
     LMDB_VERSION=0.9.29
 
-# Note: libpcre++-dev (PCRE3) is required by the build description,
+# Note: libpcre3-dev (PCRE) is required by the build description,
 # even though the build will use PCRE2.
 RUN set -eux; \
     echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections; \
@@ -20,7 +20,7 @@ RUN set -eux; \
         libfuzzy-dev \
         libgeoip-dev \
         liblua5.3-dev \
-        libpcre++-dev \
+        libpcre3-dev \
         libpcre2-dev \
         libtool \
         libxml2-dev \
