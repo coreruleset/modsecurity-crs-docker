@@ -4,7 +4,7 @@ FROM nginx:${NGINX_VERSION}-alpine as build
 
 ARG MODSEC_VERSION=3.0.8
 
-# Note: pcre-dev (PCRE3) is required by the build description,
+# Note: pcre-dev (PCRE 1) is required by the build description,
 # even though the build will use PCRE2.
 RUN set -eux; \
     apk add --no-cache --virtual .build-deps \
