@@ -42,6 +42,7 @@ group "default" {
         "apache-alpine",
         "nginx",
         "nginx-alpine",
+        "nginx-alpine-with-lua",
         "openresty-bullseye-fat",
         "openresty-alpine-fat"
     ]
@@ -87,6 +88,15 @@ target "nginx-alpine" {
     dockerfile="nginx/Dockerfile-alpine"
     tags = concat(tag("nginx-alpine"),
         vtag("${crs-version}", "-nginx-alpine")
+    )
+}
+
+target "nginx-alpine-with-lua" {
+    inherits = ["platforms-base"]
+    dockerfile="nginx/Dockerfile-alpine-with-lua"
+    platforms = ["linux/amd64"]
+    tags = concat(tag("nginx-alpine-with-lua"),
+        vtag("${crs-version}", "-nginx-alpine-with-lua")
     )
 }
 
