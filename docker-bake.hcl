@@ -92,8 +92,8 @@ target "nginx-alpine" {
 
 target "openresty-bullseye-fat" {
     inherits = ["platforms-base"]
-    platforms = ["linux/amd64", "linux/arm64/v8"]
     dockerfile="openresty/Dockerfile"
+    platforms = ["linux/amd64"]
     tags = concat(tag("openresty-bullseye-fat"),
         vtag("${crs-version}", "-openresty-bullseye-fat")
     )
@@ -101,8 +101,8 @@ target "openresty-bullseye-fat" {
 
 target "openresty-alpine-fat" {
     inherits = ["platforms-base"]
-    platforms = ["linux/amd64", "linux/arm64/v8"]
     dockerfile="openresty/Dockerfile-alpine"
+    platforms = ["linux/amd64"]
     tags = concat(tag("openresty-alpine-fat"),
         vtag("${crs-version}", "-openresty-alpine-fat")
     )
