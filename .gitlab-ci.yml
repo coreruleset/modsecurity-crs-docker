@@ -25,17 +25,10 @@ before_script:
 build:
   stage: build
   image: docker
-  services:
-    - name: docker:dind
-      command: ['dockerd', '--host=tcp://0.0.0.0:2375']
-      alias: 'docker'
   before_script:
     - docker buildx create --driver=docker-container --name=buildkit-builder --use
   script: |
     docker buildx bake \
       -f docker-bake.hcl \
-      --cache-from type=registry,ref=$CI_REGISTRY_IMAGE:cache \
-      --cache-to type=registry,ref=$CI_REGISTRY_IMAGE:cache \
       --push \
-      --tag $CI_REGISTRY_IMAGE:latest \
       .
