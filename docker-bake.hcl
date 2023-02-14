@@ -4,7 +4,7 @@ variable "crs-version" {
 }
 
 variable "REPO" {
-    default = "owasp/modsecurity-crs"
+    default = "$CI_REGISTRY_IMAGE"
 }
 
 function "major" {
