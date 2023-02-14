@@ -34,4 +34,4 @@ build:
       "$BUILD"
   parallel:
     matrix:
-      - BUILD: ['nginx-alpine-with-lua]
+      - BUILD: ['nginx-alpine-with-lua']
