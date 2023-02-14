@@ -30,6 +30,6 @@ build:
   script: |
     docker buildx bake \
       -f docker-bake.hcl \
-      --set default.platforms=linux/amd64 \
+      --set openresty-alpine-fat.platforms=linux/amd64 \
       --push \
       openresty-alpine-fat
