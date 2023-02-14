@@ -10,7 +10,7 @@ ARG MODSEC_VERSION=3.0.8 \
 
 # Note: pcre-dev (PCRE 1) is required by the build description,
 # even though the build will use PCRE2.
-# Add lua-rocks for lua integration.
+# Add luarocks and lua-dev for lua integration.
 RUN set -eux; \
     apk add --no-cache --virtual .build-deps \
         autoconf \
@@ -39,7 +39,10 @@ RUN set -eux; \
         pcre2-dev \
         yajl-dev \
         zlib-dev \
+        lua-dev \
         luarocks
+# luarocks is not by default like that
+RUN alias luarocks=luarocks-5.1
 
 WORKDIR /sources
 
