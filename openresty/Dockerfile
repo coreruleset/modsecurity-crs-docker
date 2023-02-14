@@ -221,4 +221,6 @@ RUN set -eux; \
     chmod -R g=u /var/cache/nginx/ /var/log/ /var/run/ /usr/share/nginx/ /etc/nginx/ /etc/modsecurity.d/; \
     ln -sv /opt/owasp-crs /etc/modsecurity.d/
 
+WORKDIR /usr/share/nginx/html
+
 HEALTHCHECK CMD /usr/local/bin/healthcheck

@@ -214,10 +214,6 @@ RUN set -eux; \
     ln -sv /opt/owasp-crs /etc/modsecurity.d/; \
     chmod -R g=u /var/log/ /var/run/ /usr/local/openresty/nginx/ /etc/modsecurity.d/
 
-CMD ["/usr/local/openresty/bin/openresty", "-g", "daemon off;"]
+WORKDIR /usr/share/nginx/html
 
 HEALTHCHECK CMD /usr/local/bin/healthcheck
-
-# Use SIGQUIT instead of default SIGTERM to cleanly drain requests
-# See https://github.com/openresty/docker-openresty/blob/master/README.md#tips--pitfalls
-STOPSIGNAL SIGQUIT
