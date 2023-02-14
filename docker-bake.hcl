@@ -3,8 +3,8 @@ variable "crs-version" {
     default = "3.3.4"
 }
 
-variable "REPO" {
-    default = "$CI_REGISTRY_IMAGE"
+variable "REGISTRY" {
+    default = "owasp/modsecurity-crs"
 }
 
 function "major" {
@@ -24,7 +24,7 @@ function "patch" {
 
 function "tag" {
     params = [tag]
-    result = ["${REPO}:${tag}"]
+    result = ["${REGISTRY}:${tag}"]
 }
 
 function "vtag" {

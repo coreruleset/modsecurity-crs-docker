@@ -28,7 +28,9 @@ build:
   before_script:
     - docker buildx create --driver=docker-container --name=buildkit-builder --use
   script: |
+    REGISTRY=${CI_REGISTRY} \
     docker buildx bake \
       -f docker-bake.hcl \
       --push \
+      --progress tty \
       openresty-alpine-fat
