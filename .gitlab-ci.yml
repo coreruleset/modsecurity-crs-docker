@@ -23,13 +23,17 @@ before_script:
   - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
 
 build:
-  stage: build
   image: docker
+  stage: build
+  when: manual
   before_script:
     - docker buildx create --driver=docker-container --name=buildkit-builder --use
   script: |
-    REGISTRY=${CI_REGISTRY} \
+    REGISTRY="${CI_REGISTRY}/${CI_REGISTRY_IMAGE}" \
     docker buildx bake \
       --push \
       -f docker-bake.hcl \
-      openresty-alpine-fat
+      "$BUILD"
+  parallel:
+    matrix:
+      - BUILD: ['openresty-alpine-fat', 'openresty-bullseye-fat']
