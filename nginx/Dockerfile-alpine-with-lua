@@ -1,12 +1,12 @@
-ARG OPENRESTY_VERSION="1.21.4.1" \
-    NGINX_VERSION="1.21.4" \
+ARG NGINX_VERSION="1.22.1" \
     LUA_NGINX_MODULE_VERSION="0.10.23"
 
 FROM nginx:${NGINX_VERSION}-alpine as build
 
 ARG MODSEC_VERSION=3.0.8 \
     NGINX_VERSION \
-    OPENRESTY_VERSION
+    LUA_NGINX_MODULE_VERSION
+    
 
 # Note: pcre-dev (PCRE 1) is required by the build description,
 # even though the build will use PCRE2.
