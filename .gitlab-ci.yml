@@ -29,7 +29,7 @@ build:
   before_script:
     - docker buildx create --driver=docker-container --name=buildkit-builder --use
   script: |
-    REGISTRY="${CI_REGISTRY}/${CI_REGISTRY_IMAGE}" \
+    REGISTRY="${CI_REGISTRY_IMAGE}" \
     docker buildx bake \
       --push \
       -f docker-bake.hcl \
