@@ -30,7 +30,7 @@ build:
   script: |
     REGISTRY=${CI_REGISTRY} \
     docker buildx bake \
-      -f docker-bake.hcl \
+      --progress=tty \
       --push \
-      --progress tty \
+      -f docker-bake.hcl \
       openresty-alpine-fat
