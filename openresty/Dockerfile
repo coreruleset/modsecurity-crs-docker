@@ -1,9 +1,11 @@
-ARG NGINX_VERSION="1.22.1"
+ARG OPENRESTY_VERSION="1.21.4.1" \
+    NGINX_VERSION="1.21.4"
 
-FROM nginx:${NGINX_VERSION} as build
+FROM openresty/openresty:${OPENRESTY_VERSION}-bullseye-fat as build
 
 ARG MODSEC_VERSION=3.0.8 \
-    LMDB_VERSION=0.9.29
+    LMDB_VERSION=0.9.29 \
+    NGINX_VERSION
 
 # Note: libpcre3-dev (PCRE 1) is required by the build description,
 # even though the build will use PCRE2.
@@ -80,7 +82,7 @@ RUN openssl dhparam -out /usr/share/TLS/dhparam-1024.pem 1024
 RUN curl -sSL https://ssl-config.mozilla.org/ffdhe2048.txt -o /usr/share/TLS/dhparam-2048.pem
 RUN curl -sSL https://ssl-config.mozilla.org/ffdhe4096.txt -o /usr/share/TLS/dhparam-4096.pem
 
-FROM nginx:${NGINX_VERSION} as crs_release
+FROM openresty/openresty:${OPENRESTY_VERSION}-bullseye-fat as crs_release
 
 ARG CRS_RELEASE
 
@@ -100,7 +102,7 @@ RUN set -eux; \
     rm -f v${CRS_RELEASE}.tar.gz coreruleset-${CRS_RELEASE}.tar.gz.asc; \
     mv -v /opt/owasp-crs/crs-setup.conf.example /opt/owasp-crs/crs-setup.conf
 
-FROM nginx:${NGINX_VERSION}
+FROM openresty/openresty:${OPENRESTY_VERSION}-bullseye-fat
 
 ARG MODSEC_VERSION=3.0.8 \
     LMDB_VERSION=0.9.29
