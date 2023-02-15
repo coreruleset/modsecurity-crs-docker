@@ -51,9 +51,9 @@ RUN set -eux; \
 # We use master
 RUN set -eux; \
     git clone -b master --depth 1 https://github.com/SpiderLabs/ModSecurity-nginx.git; \
-    wget --quiet http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz; \
-    tar -xzf nginx-${NGINX_VERSION}.tar.gz; \
-    cd ./nginx-${NGINX_VERSION}; \
+    wget --quiet https://openresty.org/download/openresty-"${OPENRESTY_VERSION}".tar.gz; \
+    tar -xzf openresty-"${OPENRESTY_VERSION}".tar.gz; \
+    cd ./openresty-"${OPENRESTY_VERSION}"; \
     ./configure --with-compat --add-dynamic-module=../ModSecurity-nginx; \
     make modules; \
     cp objs/ngx_http_modsecurity_module.so /usr/local/openresty/nginx/modules/; \
