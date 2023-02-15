@@ -38,7 +38,6 @@ RUN set -eux; \
         pcre-dev \
         yajl-dev \
         zlib-dev
-        libxml2/libxslt
 
 WORKDIR /sources
 
