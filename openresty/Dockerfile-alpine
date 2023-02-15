@@ -51,7 +51,8 @@ RUN set -eux; \
     make install; \
     strip /usr/local/modsecurity/lib/lib*.so*
 
-# We use master
+# We use master Modsec version
+# Instead of Nginx download the bundled openresty for this version of openresty base image. We can use the openresty already installed on the base image and get the compile options from there. For building the nginx module we can use the bundled nginx.
 RUN set -eux; \
     git clone -b master --depth 1 https://github.com/SpiderLabs/ModSecurity-nginx.git; \
     wget --quiet https://openresty.org/download/openresty-"${OPENRESTY_VERSION}".tar.gz; \
