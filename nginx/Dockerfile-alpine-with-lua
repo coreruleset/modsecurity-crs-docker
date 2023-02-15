@@ -41,8 +41,6 @@ RUN set -eux; \
         zlib-dev \
         lua-dev \
         luarocks
-# luarocks is not by default like that
-RUN alias luarocks=luarocks-5.1
 
 WORKDIR /sources
 
@@ -58,9 +56,10 @@ RUN set -eux; \
     strip /usr/local/modsecurity/lib/lib*.so*
 
 # Install luaffifb for Lua 5.1
+# Need to add alias for Lua
 RUN git clone https://github.com/facebook/luaffifb; \
     cd luaffifb; \
-    luarocks make
+    alias luarocks=luarocks-5.1 && luarocks make
 
 # Install lua
 RUN set -eux; \
@@ -71,7 +70,7 @@ RUN set -eux; \
     make linux test; \
     make install; 
 
-RUN luarocks install \
+RUN luarocks-5.1 install \
     lua-cjson \
     lua-resty-openidc
 
