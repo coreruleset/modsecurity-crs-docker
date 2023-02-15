@@ -7,9 +7,7 @@ ARG MODSEC_VERSION=3.0.8 \
     NGINX_VERSION \
     LUA_NGINX_MODULE_VERSION
     
-
-# Note: pcre-dev (PCRE 1) is required by the build description,
-# even though the build will use PCRE2.
+# Remove pcre2-dev packages to not build for pcre2
 # Add luarocks and lua-dev for lua integration.
 RUN set -eux; \
     apk add --no-cache --virtual .build-deps \
@@ -36,7 +34,6 @@ RUN set -eux; \
         patch \
         pkgconfig \
         pcre-dev \
-        pcre2-dev \
         yajl-dev \
         zlib-dev \
         lua-dev \
@@ -44,16 +41,21 @@ RUN set -eux; \
 
 WORKDIR /sources
 
+# Remove pcre2 support for now.
 RUN set -eux; \
     git clone https://github.com/SpiderLabs/ModSecurity --branch v"${MODSEC_VERSION}" --depth 1 --recursive; \
     cd ModSecurity; \
     ARCH=$(gcc -print-multiarch); \
     sed -ie "s/i386-linux-gnu/${ARCH}/g" build/ssdeep.m4; \
-    sed -ie "s/i386-linux-gnu/${ARCH}/g" build/pcre2.m4; \
+    sed -ie "s/i386-linux-gnu/${ARCH}/g" build/pcre.m4; \
     ./build.sh; \
-    ./configure --with-yajl --with-ssdeep --with-lmdb --with-geoip --with-pcre2 --enable-silent-rules; \
+    ./configure --with-yajl --with-ssdeep --with-lmdb --with-geoip --enable-silent-rules; \
     make install; \
     strip /usr/local/modsecurity/lib/lib*.so*
+
+# Install ngx_devel_kit to compile
+RUN  
+    wget https://github.com/vision5/ngx_devel_kit/archive/refs/tags/v0.3.2.tar.gz
 
 # Install luaffifb for Lua 5.1
 # Need to add alias for Lua

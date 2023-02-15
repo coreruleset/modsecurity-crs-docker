@@ -6,8 +6,7 @@ FROM openresty/openresty:${OPENRESTY_VERSION}-alpine-fat as build
 ARG MODSEC_VERSION=3.0.8 \
     NGINX_VERSION
 
-# Note: pcre-dev (PCRE 1) is required by the build description,
-# even though the build will use PCRE2.
+# Remove pcre2 support for now
 RUN set -eux; \
     apk add --no-cache --virtual .build-deps \
         autoconf \
@@ -33,7 +32,6 @@ RUN set -eux; \
         patch \
         pkgconfig \
         pcre-dev \
-        pcre2-dev \
         yajl-dev \
         zlib-dev
 
@@ -44,9 +42,9 @@ RUN set -eux; \
     cd ModSecurity; \
     ARCH=$(gcc -print-multiarch); \
     sed -ie "s/i386-linux-gnu/${ARCH}/g" build/ssdeep.m4; \
-    sed -ie "s/i386-linux-gnu/${ARCH}/g" build/pcre2.m4; \
+    sed -ie "s/i386-linux-gnu/${ARCH}/g" build/pcre.m4; \
     ./build.sh; \
-    ./configure --with-yajl --with-ssdeep --with-lmdb --with-geoip --with-pcre2 --enable-silent-rules; \
+    ./configure --with-yajl --with-ssdeep --with-lmdb --with-geoip --enable-silent-rules; \
     make install; \
     strip /usr/local/modsecurity/lib/lib*.so*
 
@@ -198,7 +196,6 @@ RUN set -eux; \
         moreutils \
         tzdata \
         pcre \
-        pcre2 \
         # Alpine needs GNU 'sed' because the 'sed' program shipped with busybox does not support 'z' parameter for separating lines with a 'NUL' character.
         sed \
         yajl; \
