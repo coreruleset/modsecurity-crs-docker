@@ -1,11 +1,13 @@
 ARG OPENRESTY_VERSION="1.21.4.1" \
-    NGINX_VERSION="1.21.4"
+    NGINX_VERSION="1.21.4" \
+    LUA_JIT_VERSION="2.1-20220411"
 
 FROM openresty/openresty:${OPENRESTY_VERSION}-alpine-fat as build
 
 ARG MODSEC_VERSION=3.0.8 \
     OPENRESTY_VERSION \
-    NGINX_VERSION
+    NGINX_VERSION \
+    LUA_JIT_VERSION 
 
 # Remove pcre2 support for now
 RUN set -eux; \
@@ -54,8 +56,11 @@ RUN set -eux; \
     git clone -b master --depth 1 https://github.com/SpiderLabs/ModSecurity-nginx.git; \
     wget --quiet https://openresty.org/download/openresty-"${OPENRESTY_VERSION}".tar.gz; \
     tar -xzf openresty-"${OPENRESTY_VERSION}".tar.gz; \
-    cd ./openresty-"${OPENRESTY_VERSION}"; \
-    ./configure --with-compat --add-dynamic-module=../ModSecurity-nginx; \
+    cd ./openresty-"${OPENRESTY_VERSION}"/bundle/nginx-${NGINX_VERSION}; \
+    export LUJAJIT_LIB="/usr/local/openresty/luajit/lib/"; \
+    export LUAJIT_INC="../LuaJIT/LuaJIT-${LUA_JIT_VERSION}/src/"; \
+    COMPILEOPTIONS=$(openresty -V 2>&1| grep -i "arguments"|cut -d ":" -f2-); \
+    eval ./configure $COMPILEOPTIONS --add-dynamic-module=../../ModSecurity-nginx; \
     make modules; \
     cp objs/ngx_http_modsecurity_module.so /usr/local/openresty/nginx/modules/; \
     mkdir /etc/modsecurity.d; \
