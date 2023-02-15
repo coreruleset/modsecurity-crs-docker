@@ -40,6 +40,7 @@ RUN set -eux; \
         pcre-dev \
         yajl-dev \
         gd \
+        gd-dev \
         zlib-dev
 
 WORKDIR /sources
