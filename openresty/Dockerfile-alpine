@@ -28,6 +28,8 @@ RUN set -eux; \
         libtool \
         libxml2-dev \
         libxml2 \
+        libxslt-dev \
+        libxslt \
         linux-headers \
         lmdb-dev \
         make \
