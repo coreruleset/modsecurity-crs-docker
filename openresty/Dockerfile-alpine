@@ -27,6 +27,7 @@ RUN set -eux; \
         libstdc++ \
         libtool \
         libxml2-dev \
+        libxml2 \
         linux-headers \
         lmdb-dev \
         make \
@@ -37,6 +38,7 @@ RUN set -eux; \
         pcre-dev \
         yajl-dev \
         zlib-dev
+        libxml2/libxslt
 
 WORKDIR /sources
 
