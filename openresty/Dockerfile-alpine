@@ -39,6 +39,7 @@ RUN set -eux; \
         pkgconfig \
         pcre-dev \
         yajl-dev \
+        gd-devel \
         zlib-dev
 
 WORKDIR /sources
