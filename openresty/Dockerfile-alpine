@@ -4,6 +4,7 @@ ARG OPENRESTY_VERSION="1.21.4.1" \
 FROM openresty/openresty:${OPENRESTY_VERSION}-alpine-fat as build
 
 ARG MODSEC_VERSION=3.0.8 \
+    OPENRESTY_VERSION \
     NGINX_VERSION
 
 # Remove pcre2 support for now
