@@ -222,7 +222,7 @@ RUN set -eux; \
     ln -s /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC_VERSION} /usr/local/modsecurity/lib/libmodsecurity.so.3; \
     ln -s /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC_VERSION} /usr/local/modsecurity/lib/libmodsecurity.so; \
     ln -sv /opt/owasp-crs /etc/modsecurity.d/; \
-    chmod -R g=u /var/cache/nginx/ /var/log/ /var/run/ /usr/share/nginx/ /usr/local/openresty/nginx/ /etc/modsecurity.d/
+    chmod -R g=u /var/log/ /var/run/ /usr/local/openresty/nginx/ /etc/modsecurity.d/
 
 HEALTHCHECK CMD /usr/local/bin/healthcheck
 
