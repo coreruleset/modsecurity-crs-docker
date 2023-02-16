@@ -224,6 +224,8 @@ RUN set -eux; \
     ln -sv /opt/owasp-crs /etc/modsecurity.d/; \
     chmod -R g=u /var/log/ /var/run/ /usr/local/openresty/nginx/ /etc/modsecurity.d/
 
+EXPOSE 80
+
 HEALTHCHECK CMD /usr/local/bin/healthcheck
 
 ENTRYPOINT ["/docker-entrypoint.sh"]

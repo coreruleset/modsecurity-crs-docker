@@ -212,6 +212,10 @@ Note: Apache access and metric logs can be disabled by exporting the `nologging=
 | TIMEOUT  | Number of seconds for a keep-alive client connection to stay open on the server side (Default: `60s`) |
 | WORKER_CONNECTIONS  | Maximum number of simultaneous connections that can be opened by a worker process (Default: `1024`) |
 
+### Openresty ENV Variables
+
+Similar to NGINX variables. Need to check.
+
 ### ModSecurity ENV Variables
 
 All these variables impact in configuration directives in the modsecurity engine running inside the container. The [reference manual](https://github.com/SpiderLabs/ModSecurity/wiki/Reference-Manual-(v2.x)) has the extended documentation, and for your reference we list the specific directive we change when you modify the ENV variables for the container.
