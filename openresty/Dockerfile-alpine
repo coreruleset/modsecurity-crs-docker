@@ -227,3 +227,6 @@ RUN set -eux; \
 HEALTHCHECK CMD /usr/local/bin/healthcheck
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
+
+CMD ["/usr/local/openresty/bin/openresty", "-g", "daemon off;"]
+
