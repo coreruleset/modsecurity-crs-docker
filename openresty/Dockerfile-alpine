@@ -114,10 +114,10 @@ ARG MODSEC_VERSION=3.0.8
 
 LABEL maintainer="Felipe Zipitria <felipe.zipitria@owasp.org>"
 
-ENV ACCESSLOG=/usr/local/openresty/nginx/logs/access.log \
+ENV ACCESSLOG=/var/log/nginx/access.log \
     BACKEND=http://localhost:80 \
     DNS_SERVER= \
-    ERRORLOG=/usr/local/openresty/nginx/logs/error.log \
+    ERRORLOG=/var/log/nginx/error.log \
     LOGLEVEL=warn \
     METRICS_ALLOW_FROM='127.0.0.0/24' \
     METRICS_DENY_FROM='all' \
@@ -213,6 +213,8 @@ RUN set -eux; \
         # Alpine needs GNU 'sed' because the 'sed' program shipped with busybox does not support 'z' parameter for separating lines with a 'NUL' character.
         sed \
         yajl; \
+    luarocks install lua-resty-openidc; \
+    mkdir /var/log/nginx; \
     mkdir -p /tmp/modsecurity/data; \
     mkdir -p /tmp/modsecurity/upload; \
     mkdir -p /tmp/modsecurity/tmp; \ 
