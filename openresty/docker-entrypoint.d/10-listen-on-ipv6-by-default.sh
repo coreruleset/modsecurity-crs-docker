@@ -10,7 +10,7 @@ entrypoint_log() {
 }
 
 ME=$(basename $0)
-DEFAULT_CONF_FILE="/usr/local/openresty/nginx/conf.d/default.conf"
+DEFAULT_CONF_FILE="usr/local/openresty/nginx/conf.d/default.conf"
 
 # check if we have ipv6 available
 if [ ! -f "/proc/net/if_inet6" ]; then
