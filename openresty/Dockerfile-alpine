@@ -186,14 +186,14 @@ COPY --from=build /etc/modsecurity.d/modsecurity.conf /etc/modsecurity.d/modsecu
 COPY --from=crs_release /opt/owasp-crs /opt/owasp-crs
 # We use the templating mechanism from the nginx image here,
 # as set up by owasp/modsecurity-docker
-COPY nginx/templates /usr/local/openresty/nginx/templates/
+COPY openresty/templates /usr/local/openresty/nginx/templates/
 COPY src/etc/modsecurity.d/modsecurity-override.conf /usr/local/openresty/nginx/templates/modsecurity.d/modsecurity-override.conf.template
 COPY src/etc/modsecurity.d/setup.conf /usr/local/openresty/nginx/templates/modsecurity.d/setup.conf.template
 COPY src/bin/healthcheck /usr/local/bin/healthcheck
-COPY nginx/docker-entrypoint.d/*.sh /docker-entrypoint.d/
+COPY openresty/docker-entrypoint.d/*.sh /docker-entrypoint.d/
 COPY src/opt/modsecurity/activate-plugins.sh /docker-entrypoint.d/94-activate-plugins.sh
 COPY src/opt/modsecurity/activate-rules.sh /docker-entrypoint.d/95-activate-rules.sh
-COPY docker-entrypoint.sh /
+COPY openresty/docker-entrypoint.sh /
 
 
 RUN set -eux; \
