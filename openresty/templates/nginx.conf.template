@@ -3,7 +3,7 @@
 # Enables the use of JIT for regular expressions to speed-up their processing.
 pcre_jit on;
 
-load_module modules/ngx_http_modsecurity_module.so;
+load_module ../modules/ngx_http_modsecurity_module.so;
 
 worker_processes auto;
 pid /var/run/nginx.pid;
@@ -18,6 +18,7 @@ http {
     keepalive_timeout ${TIMEOUT};
     sendfile on;
 
+    # Openresty specific paths.
     client_body_temp_path /var/run/openresty/nginx-client-body;
     proxy_temp_path       /var/run/openresty/nginx-proxy;
     fastcgi_temp_path     /var/run/openresty/nginx-fastcgi;
