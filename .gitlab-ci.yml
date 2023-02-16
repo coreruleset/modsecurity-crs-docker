@@ -30,6 +30,7 @@ build:
     REGISTRY="${CI_REGISTRY_IMAGE}" \
     docker buildx bake \
       --push \
+      --provenance false \
       -f docker-bake.hcl \
       "$BUILD"
   parallel:
