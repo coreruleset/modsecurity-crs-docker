@@ -9,7 +9,7 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 [ "${NGINX_ENTRYPOINT_WORKER_PROCESSES_AUTOTUNE:-}" ] || exit 0
 
-touch /user/local/openresty/nginx/nginx.conf 2>/dev/null || { echo >&2 "$ME: error: can not modify /usr/local/openresty/nginx/nginx.conf (read-only file system?)"; exit 0; }
+touch /usr/local/openresty/nginx/nginx.conf 2>/dev/null || { echo >&2 "$ME: error: can not modify /usr/local/openresty/nginx/nginx.conf (read-only file system?)"; exit 0; }
 
 ceildiv() {
   num=$1
@@ -185,4 +185,4 @@ ncpu=$( printf "%s\n%s\n%s\n%s\n%s\n" \
                | sort -n \
                | head -n 1 )
 
-sed -i.bak -r 's/^(worker_processes)(.*)$/# Commented out by '"$ME"' on '"$(date)"'\n#\1\2\n\1 '"$ncpu"';/' /etc/nginx/nginx.conf
+sed -i.bak -r 's/^(worker_processes)(.*)$/# Commented out by '"$ME"' on '"$(date)"'\n#\1\2\n\1 '"$ncpu"';/' /usr/local/openresty/nginx/nginx.conf
