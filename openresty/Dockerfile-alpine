@@ -74,18 +74,18 @@ RUN set -eux; \
     wget --quiet https://raw.githubusercontent.com/SpiderLabs/ModSecurity/v3/master/unicode.mapping \
         -O /etc/modsecurity.d/unicode.mapping
 
-# Generate self-signed certificates (if needed)
-RUN mkdir -p /usr/share/TLS
-COPY nginx/openssl.conf /usr/share/TLS
-RUN /usr/local/openresty/openssl/bin/openssl req -x509 -days 365 -new \
-    -config /usr/share/TLS/openssl.conf \
-    -keyout /usr/share/TLS/server.key \
-    -out /usr/share/TLS/server.crt
 
-# Generate/Download Diffie-Hellman parameter files
-RUN /usr/local/openresty/openssl/bin/openssl dhparam -out /usr/share/TLS/dhparam-1024.pem 1024
-RUN curl -sSL https://ssl-config.mozilla.org/ffdhe2048.txt -o /usr/share/TLS/dhparam-2048.pem
-RUN curl -sSL https://ssl-config.mozilla.org/ffdhe4096.txt -o /usr/share/TLS/dhparam-4096.pem
+
+
+
+
+
+
+
+
+
+
+
 
 FROM openresty/openresty:${OPENRESTY_VERSION}-alpine-fat as crs_release
 
@@ -210,7 +210,6 @@ RUN set -eux; \
         # Alpine needs GNU 'sed' because the 'sed' program shipped with busybox does not support 'z' parameter for separating lines with a 'NUL' character.
         sed \
         yajl; \
-    mkdir /usr/local/openresty/nginx/ssl/; \
     mkdir -p /tmp/modsecurity/data; \
     mkdir -p /tmp/modsecurity/upload; \
     mkdir -p /tmp/modsecurity/tmp; \ 
