@@ -13,7 +13,7 @@ entrypoint_log() {
 auto_envsubst() {
   local template_dir="${NGINX_ENVSUBST_TEMPLATE_DIR:-/usr/local/openresty/nginx/templates}"
   local suffix="${NGINX_ENVSUBST_TEMPLATE_SUFFIX:-.template}"
-  local output_dir="${NGINX_ENVSUBST_OUTPUT_DIR:-/usr/local/openresty/nginx/conf/conf.d}"
+  local output_dir="${NGINX_ENVSUBST_OUTPUT_DIR:-/usr/local/openresty/nginx/conf}"
   local filter="${NGINX_ENVSUBST_FILTER:-}"
 
   local template defined_envs relative_path output_path subdir
