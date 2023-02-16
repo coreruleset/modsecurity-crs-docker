@@ -42,6 +42,7 @@ RUN set -eux; \
         gd-dev \
         zlib-dev
 
+
 WORKDIR /sources
 
 RUN set -eux; \
@@ -166,7 +167,7 @@ ENV ACCESSLOG=/var/log/nginx/access.log \
     SSL_PORT=443 \
     TIMEOUT=60s \
     WORKER_CONNECTIONS=1024 \
-    LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib \
+    LD_LIBRARY_PATH=/usr/local/lib:/usr/local/openresty \
     NGINX_ENVSUBST_OUTPUT_DIR=/usr/local/openresty/nginx \
     # overridden variables
     USER=root \
