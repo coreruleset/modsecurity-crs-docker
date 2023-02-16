@@ -33,8 +33,6 @@ RUN set -eux; \
         linux-headers \
         lmdb-dev \
         make \
-        openssl \
-        openssl-dev \
         patch \
         pkgconfig \
         pcre \
