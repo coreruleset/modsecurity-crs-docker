@@ -178,9 +178,9 @@ ENV ACCESSLOG=/var/log/nginx/access.log \
 
 COPY --from=build /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC_VERSION} /usr/local/modsecurity/lib/
 COPY --from=build /usr/local/openresty/nginx/modules/ngx_http_modsecurity_module.so /usr/local/openresty/nginx/modules/ngx_http_modsecurity_module.so
-COPY --from=build /usr/share/TLS/server.key /usr/local/openresty/nginx/conf/server.key
-COPY --from=build /usr/share/TLS/server.crt /usr/local/openresty/nginx/conf/server.crt
-COPY --from=build /usr/share/TLS/dhparam-* /etc/ssl/certs/
+#COPY --from=build /usr/share/TLS/server.key /usr/local/openresty/nginx/conf/server.key
+#COPY --from=build /usr/share/TLS/server.crt /usr/local/openresty/nginx/conf/server.crt
+#COPY --from=build /usr/share/TLS/dhparam-* /etc/ssl/certs/
 COPY --from=build /etc/modsecurity.d/unicode.mapping /etc/modsecurity.d/unicode.mapping
 COPY --from=build /etc/modsecurity.d/modsecurity.conf /etc/modsecurity.d/modsecurity.conf
 COPY --from=crs_release /opt/owasp-crs /opt/owasp-crs
