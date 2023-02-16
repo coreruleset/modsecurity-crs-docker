@@ -114,10 +114,10 @@ ARG MODSEC_VERSION=3.0.8
 
 LABEL maintainer="Felipe Zipitria <felipe.zipitria@owasp.org>"
 
-ENV ACCESSLOG=/var/log/nginx/access.log \
+ENV ACCESSLOG=/usr/local/openresty/nginx/logs/access.log \
     BACKEND=http://localhost:80 \
     DNS_SERVER= \
-    ERRORLOG=/var/log/nginx/error.log \
+    ERRORLOG=/usr/local/openresty/nginx/logs/error.log \
     LOGLEVEL=warn \
     METRICS_ALLOW_FROM='127.0.0.0/24' \
     METRICS_DENY_FROM='all' \
