@@ -9,4 +9,4 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 DNS_SERVER="${DNS_SERVER:-$(grep -i '^nameserver' /etc/resolv.conf | head -n1 | cut -d ' ' -f2)}"
 
-sed -i.bak -r 's/DNS_SERVER/'"${DNS_SERVER}"'/' /usr/local/openresty/nginx/nginx.conf
+sed -i.bak -r 's/DNS_SERVER/'"${DNS_SERVER}"'/' /usr/local/openresty/nginx/conf/nginx.conf

@@ -7,16 +7,15 @@
 # and only if build args SETTLS and SETPROXY were set during
 # the build of the parent owasp/modsecurity:2.9-apache image.
 
-version: "3"
+version: '3'
 
 services:
-
   crs:
     image: owasp/modsecurity-crs
     ports:
-      - "80:80"
+      - '80:80'
       # only available if SETTLS was enabled:
-      - "443:443"
+      - '443:443'
 
     environment:
       - SERVERNAME=localhost
@@ -51,7 +50,6 @@ services:
       # If needed: add own httpd-proxy.conf (only available if SETPROXY
       # was enabled during build of parent ModSecurity image)
       #  - ./httpd-proxy.conf:/usr/local/apache2/conf/extra/httpd-proxy.conf
-
       #######################################################
       # Various CRS Variables with Default Values
       #######################################################
@@ -63,7 +61,6 @@ services:
       #- RESTRICTED_EXTENSIONS=.asa/ .asax/ .ascx/ .axd/ .backup/ .bak/ .bat/ .cdx/ .cer/ .cfg/ .cmd/ .com/ .config/ .conf/ .cs/ .csproj/ .csr/ .dat/ .db/ .dbf/ .dll/ .dos/ .htr/ .htw/ .ida/ .idc/ .idq/ .inc/ .ini/ .key/ .licx/ .lnk/ .log/ .mdb/ .old/ .pass/ .pdb/ .pol/ .printer/ .pwd/ .resources/ .resx/ .sql/ .sys/ .vb/ .vbs/ .vbproj/ .vsdisco/ .webinfo/ .xsd/ .xsx/
       #- RESTRICTED_HEADERS=/proxy/ /lock-token/ /content-range/ /if/
       #- STATIC_EXTENSIONS=/.jpg/ /.jpeg/ /.png/ /.gif/ /.js/ /.css/ /.ico/ /.svg/ /.webp/
-
       #######################################################
       # CRS Variables with Default Value unlimited
       #######################################################
@@ -80,7 +77,6 @@ services:
     volumes:
       - ./REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf:/etc/modsecurity.d/owasp-crs/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf
       - ./RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf:/etc/modsecurity.d/owasp-crs/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf
-
     #######################################################
     # Add TLS server certificate and key
     # (only available if SETPROXY was enabled during the
