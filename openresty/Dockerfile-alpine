@@ -37,6 +37,7 @@ RUN set -eux; \
         openssl-dev \
         patch \
         pkgconfig \
+        pcre \
         pcre-dev \
         yajl-dev \
         gd \
