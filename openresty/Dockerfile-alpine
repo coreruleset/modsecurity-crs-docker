@@ -53,7 +53,7 @@ RUN set -eux; \
     sed -ie "s/i386-linux-gnu/${ARCH}/g" build/ssdeep.m4; \
     sed -ie "s/i386-linux-gnu/${ARCH}/g" build/pcre.m4; \
     ./build.sh; \
-    ./configure --with-yajl --with-ssdeep --with-lmdb --with-geoip --enable-silent-rules --with-pcre; \
+    ./configure --with-yajl --with-ssdeep --with-lmdb --with-geoip --enable-silent-rules --with-pcre=/usr/bin/pcre-config; \
     make install; \
     strip /usr/local/modsecurity/lib/lib*.so*
 
