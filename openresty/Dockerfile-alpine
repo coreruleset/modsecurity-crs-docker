@@ -1,3 +1,6 @@
+# Current latest Openresty version is here.
+# Also specify the Nginx core used. (Openresty, adds their own version numbers after the nginx one, so we can't use the same number for both openresty and nginx)
+# Also specify the LUA version used. (Comes with the latest Openresty src bundle.)
 ARG OPENRESTY_VERSION="1.21.4.1" \
     NGINX_VERSION="1.21.4" \
     LUA_JIT_VERSION="2.1-20220411"
@@ -9,7 +12,7 @@ ARG MODSEC_VERSION=3.0.8 \
     NGINX_VERSION \
     LUA_JIT_VERSION 
 
-# Remove pcre2 support for now
+# Remove pcre2 support for openresty, until it gets update to pcre2.
 RUN set -eux; \
     apk add --no-cache --virtual .build-deps \
         autoconf \
@@ -45,6 +48,7 @@ RUN set -eux; \
 
 WORKDIR /sources
 
+# Download modsecurity and compile it.
 RUN set -eux; \
     git clone https://github.com/SpiderLabs/ModSecurity --branch v"${MODSEC_VERSION}" --depth 1 --recursive; \
     cd ModSecurity; \
@@ -58,6 +62,8 @@ RUN set -eux; \
 
 # We use master Modsec version
 # Instead of Nginx download the bundled openresty for this version of openresty base image. We can use the openresty already installed on the base image and get the compile options from there. For building the nginx module we can use the bundled nginx.
+# Specify the LUAJIT_LIB-s that are already installed in the base image.
+# use the includes from the bundled version. This is where LUA JIT VERSION is important. Because it differs from release to release (probably).
 RUN set -eux; \
     git clone -b master --depth 1 https://github.com/SpiderLabs/ModSecurity-nginx.git; \
     wget --quiet https://openresty.org/download/openresty-"${OPENRESTY_VERSION}".tar.gz; \
@@ -168,6 +174,7 @@ ENV ACCESSLOG=/var/log/nginx/access.log \
     SSL_PORT=443 \
     TIMEOUT=60s \
     WORKER_CONNECTIONS=1024 \
+    # Change this from normal nginx setup. Do not add /usr/lib or /lib
     LD_LIBRARY_PATH=/usr/local/lib:/usr/local/openresty \
     NGINX_ENVSUBST_OUTPUT_DIR=/usr/local/openresty/nginx/conf \
     # overridden variables
@@ -213,6 +220,8 @@ RUN set -eux; \
         # Alpine needs GNU 'sed' because the 'sed' program shipped with busybox does not support 'z' parameter for separating lines with a 'NUL' character.
         sed \
         yajl; \
+    # Install lua modules here
+    # Possible TODO make it a variable if you want to build this Dockerfile yourself.
     luarocks install lua-resty-openidc; \
     mkdir /var/log/nginx; \
     mkdir -p /tmp/modsecurity/data; \
@@ -230,7 +239,8 @@ EXPOSE 80
 
 HEALTHCHECK CMD /usr/local/bin/healthcheck
 
+# Openresty does not use NGINX dockerfile. 
+# This Dockerfile integrates the docker-entrypoint and envsubst logic from there into here.
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
 CMD ["/usr/local/openresty/bin/openresty", "-g", "daemon off;"]
-
