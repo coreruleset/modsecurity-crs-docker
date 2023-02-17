@@ -91,6 +91,7 @@ target "nginx-alpine" {
 
 target "openresty-alpine-fat" {
     inherits = ["platforms-base"]
+    platforms = ["linux/amd64", "linux/arm64/v8", "linux/i386"]
     dockerfile="openresty/Dockerfile-alpine"
     tags = concat(tag("openresty-alpine-fat"),
         vtag("${crs-version}", "-openresty-alpine-fat")
