@@ -16,8 +16,9 @@ ModSecurity is an open source, cross platform web application firewall (WAF) eng
 
 * `3-nginx-YYYYMMDDHHMM`, `3.3-nginx-YYYYMMDDHHMM`, `3.3.4-nginx-YYYYMMDDHHMM`, `nginx` ([master/nginx/Dockerfile](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile)) – *last stable ModSecurity v3 on Nginx 1.22 official stable base image, and latest stable Core Rule Set 3.3.4*
 * `3-apache-YYYYMMDDHHMM`, `3.3-apache-YYYYMMDDHHMM`, `3.3.4-apache-YYYYMMDDHHMM`, `apache` ([master/apache/Dockerfile](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/apache/Dockerfile)) –*last stable ModSecurity v2 on Apache 2.4 official stable base image, and latest stable Core Rule Set 3.3.4*
+* `3-openresty-YYYYMMDDHHMM`, `3.3-openresty-YYYYMMDDHHMM`, `3.3.4-openresty-YYYYMMDDHHMM`, `openresty` ([master/openresty/Dockerfile-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/openresty/Dockerfile-alpine)) –*last stable ModSecurity v3 on Openresty 1.21 official stable base image, and latest stable Core Rule Set 3.3.4*
 
-⚠️ We changed tags to [support production usage](https://github.com/coreruleset/modsecurity-crs-docker/issues/67). Now, if you want to use the "rolling version", use the tag `owasp/modsecurity-crs:nginx` or `owasp/modsecurity-crs:apache`. If you need a stable long term image, use the one with the full CRS version, in addition to the build date in `YYYYMMDDHHMM` format, example `owasp/modsecurity-crs:3.3.4-nginx-202209141209` or `owasp/modsecurity-crs:3.3.4-apache-202209141209` for example. You have been warned.
+⚠️ We changed tags to [support production usage](https://github.com/coreruleset/modsecurity-crs-docker/issues/67). Now, if you want to use the "rolling version", use the tag `owasp/modsecurity-crs:nginx`, `owasp/modsecurity-crs:apache` or `owasp/modsecurity-crs:openresty`. If you need a stable long term image, use the one with the full CRS version, in addition to the build date in `YYYYMMDDHHMM` format, example `owasp/modsecurity-crs:3.3.4-nginx-202209141209`, `owasp/modsecurity-crs:3.3.4-apache-202209141209` or `owasp/modsecurity-crs:3.3.4-apache-202209141209` for example. You have been warned.
 
 🆕 We added healthchecks to the images. Containers already return HTTP status code 200 when accessing the `/healthz` URI. When a container has a healthcheck specified, it has a _health status_ in addition to its normal status. This status is initially `starting`. Whenever a health check passes, it becomes `healthy` (whatever state it was previously in). After a certain number of consecutive failures, it becomes `unhealthy`. See <https://docs.docker.com/engine/reference/builder/#healthcheck> for more information.
 
@@ -32,7 +33,7 @@ We have support for [alpine linux](https://www.alpinelinux.org/) variants of the
 
 ## Supported architectures
 
-We added the [docker buildx](https://github.com/docker/buildx) support to our docker builds so additional architectures are supported now. As we create our containers based on the official apache and nginx ones, we can only support the architectures they support.
+We added the [docker buildx](https://github.com/docker/buildx) support to our docker builds so additional architectures are supported now. As we create our containers based on the official apache, nginx and openresty ones, we can only support the architectures they support.
 
 There is a new file `docker-bake.hcl` used for this purpose. To build for new platforms, just use this example:
 
