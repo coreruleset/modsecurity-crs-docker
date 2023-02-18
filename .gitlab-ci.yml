@@ -36,3 +36,4 @@ build:
   parallel:
     matrix:
       - BUILD: ['openresty-alpine-fat']
+  timeout: 3 hours
