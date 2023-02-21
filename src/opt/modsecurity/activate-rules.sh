@@ -135,7 +135,7 @@ SecRule REQUEST_HEADERS:X-CRS-Test "@rx ^.*$" \\
     pass,\\
     t:none,\\
     log,\\
-    msg:'%{MATCHED_VAR}'"
+    msg:'%{MATCHED_VAR}',\
+    ctl:ruleRemoveById=1-999999"
 EOF
 fi
-
