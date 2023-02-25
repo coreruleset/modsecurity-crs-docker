@@ -85,7 +85,7 @@ docker run -p 80:80 -ti -e PARANOIA=4 -v rules:/opt/owasp-crs/rules:ro --rm owas
 
 ## Quick reference
 
-* **Where to get help**: the [CRS-Support Docker Repo](https://github.com/coreruleset/modsecurity-crs-docker), the [Core Rule Set Slack Channel](https://owasp-slack.herokuapp.com/) (#coreruleset on owasp.slack.com), or [Stack Overflow](https://stackoverflow.com/questions/tagged/mod-security)
+* **Where to get help**: the [CRS-Support Docker Repo](https://github.com/coreruleset/modsecurity-crs-docker), the [Core Rule Set Slack Channel](https://owasp.org/slack/invite) (#coreruleset on owasp.slack.com), or [Stack Overflow](https://stackoverflow.com/questions/tagged/mod-security)
 
 * **Where to file issues**: the [Core Rule Set Docker Repo](https://github.com/coreruleset/modsecurity-crs-docker)
 
