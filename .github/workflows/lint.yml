@@ -1,5 +1,5 @@
 ---
-name: Check lenght of dockerhub README file
+name: Check length of Docker Hub README file
 on:  # yamllint disable-line rule:truthy
   pull_request:
     branches:
@@ -19,8 +19,8 @@ jobs:
       - name: Check README-containers.md lenght
         run: |
           count=$(wc -m <README-containers.md)
-          if [[ $count -ge 25000 ]]; then
-            echo -n "README-containers.md contains $count characters"
+          if [[ ${count} -ge 25000 ]]; then
+            echo -n "README-containers.md contains ${count} characters"
             echo "which exceeds the 25000 character limit of Docker Hub"
             exit 1;
           fi
