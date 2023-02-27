@@ -110,7 +110,7 @@ An example can be seen in the [docker-compose](https://github.com/coreruleset/mo
 
 ### TLS/HTTPS
 
-The TLS is configured by default on port 443. Note: The default configuration uses self signed certificates, to use your own certificates (recommended) COPY or mount (-v) your server.crt and server.key into `/usr/local/apache2/conf/`. Please remember you'll need to forward the HTTPS port.
+The TLS is configured by default on port 443. Note: The default configuration generates self signed certificates at first run. To use your own certificates (recommended) COPY or mount (-v) your server.crt and server.key into `/usr/local/apache2/conf/` or `/etc/nginx/conf/`. Please remember you'll need to forward the HTTPS port.
 
 ```bash
 docker build -t my-modsec .
