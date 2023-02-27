@@ -185,6 +185,7 @@ RUN set -eux; \
         libxml2-dev \
         lmdb-dev \
         moreutils \
+        openssl \
         tzdata \
         pcre \
         pcre2 \
