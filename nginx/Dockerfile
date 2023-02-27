@@ -179,8 +179,7 @@ COPY src/opt/modsecurity/activate-rules.sh /docker-entrypoint.d/95-activate-rule
 # We use the templating mechanism from the nginx image here,
 # as set up by owasp/modsecurity-docker
 COPY nginx/templates /etc/nginx/templates/
-COPY src/bin/healthcheck /usr/local/bin/healthcheck
-COPY src/bin/generate-certificate /usr/local/bin/generate-certificate
+COPY src/bin/* /usr/local/bin/
 
 RUN set -eux; \
     echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections; \

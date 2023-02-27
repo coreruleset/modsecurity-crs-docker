@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Prefix will be /usr/local/apache2 or /etc/nginx
-PREFIX="$1/conf"
+PREFIX="${1}/conf"
 KEY_FILE="${PREFIX}/server.key"
 CSR_FILE="${PREFIX}/server.csr"
 CERT_FILE="${PREFIX}/server.crt"
@@ -12,12 +12,12 @@ export OPENSSL_CONF
 # If key file exists, we assume the certificate is in place or
 # it was already mounted/copied
 if [ -f "${KEY_FILE}" ]; then
-    echo "$0: using existing key/certicate"
+    echo "${0}: using existing key / certificate"
     # do not exit on docker scripts
     return
 fi
 
-echo "$0: generating new certificate"
+echo "${0}: generating new certificate"
 
 # Create directory if it does not exist
 if [ ! -d "${PREFIX}" ]; then
@@ -57,4 +57,4 @@ openssl req -x509 -nodes \
 
 chmod 600 "${KEY_FILE}" "${CERT_FILE}"
 
-echo "$0: generated ${KEY_FILE} and ${CERT_FILE}"
+echo "${0}: generated ${KEY_FILE} and ${CERT_FILE}"

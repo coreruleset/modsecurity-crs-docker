@@ -140,8 +140,7 @@ COPY --from=build /usr/local/apache2/ModSecurity-${MODSEC_VERSION}/modsecurity.c
 COPY --from=build /usr/local/apache2/ModSecurity-${MODSEC_VERSION}/unicode.mapping               /etc/modsecurity.d/unicode.mapping
 COPY --from=crs_release /opt/owasp-crs /opt/owasp-crs
 COPY src/etc/modsecurity.d/*.conf /etc/modsecurity.d/
-COPY src/bin/healthcheck /usr/local/bin/healthcheck
-COPY src/bin/generate-certificate /usr/local/bin/generate-certificate
+COPY src/bin/* /usr/local/bin/
 COPY apache/conf/extra/*.conf /usr/local/apache2/conf/extra/
 COPY src/etc/modsecurity.d/*.conf /etc/modsecurity.d/
 COPY src/opt/modsecurity/activate-*.sh /opt/modsecurity/
