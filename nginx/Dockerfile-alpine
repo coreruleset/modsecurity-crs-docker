@@ -63,18 +63,11 @@ RUN set -eux; \
     wget --quiet https://raw.githubusercontent.com/SpiderLabs/ModSecurity/v3/master/unicode.mapping \
         -O /etc/modsecurity.d/unicode.mapping
 
-# Generate self-signed certificates (if needed)
-RUN mkdir -p /usr/share/TLS
-COPY nginx/openssl.conf /usr/share/TLS
-RUN openssl req -x509 -days 365 -new \
-    -config /usr/share/TLS/openssl.conf \
-    -keyout /usr/share/TLS/server.key \
-    -out /usr/share/TLS/server.crt
-
 # Generate/Download Diffie-Hellman parameter files
-RUN openssl dhparam -out /usr/share/TLS/dhparam-1024.pem 1024
-RUN curl -sSL https://ssl-config.mozilla.org/ffdhe2048.txt -o /usr/share/TLS/dhparam-2048.pem
-RUN curl -sSL https://ssl-config.mozilla.org/ffdhe4096.txt -o /usr/share/TLS/dhparam-4096.pem
+RUN set -eux; \
+    mkdir -p /usr/share/TLS; \
+    curl -sSL https://ssl-config.mozilla.org/ffdhe2048.txt -o /usr/share/TLS/dhparam-2048.pem; \
+    curl -sSL https://ssl-config.mozilla.org/ffdhe4096.txt -o /usr/share/TLS/dhparam-4096.pem
 
 FROM nginx:${NGINX_VERSION}-alpine as crs_release
 
@@ -167,8 +160,6 @@ ENV ACCESSLOG=/var/log/nginx/access.log \
 
 COPY --from=build /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC_VERSION} /usr/local/modsecurity/lib/
 COPY --from=build /etc/nginx/modules/ngx_http_modsecurity_module.so /etc/nginx/modules/ngx_http_modsecurity_module.so
-COPY --from=build /usr/share/TLS/server.key /etc/nginx/conf/server.key
-COPY --from=build /usr/share/TLS/server.crt /etc/nginx/conf/server.crt
 COPY --from=build /usr/share/TLS/dhparam-* /etc/ssl/certs/
 COPY --from=build /etc/modsecurity.d/unicode.mapping /etc/modsecurity.d/unicode.mapping
 COPY --from=build /etc/modsecurity.d/modsecurity.conf /etc/modsecurity.d/modsecurity.conf
@@ -179,6 +170,7 @@ COPY nginx/templates /etc/nginx/templates/
 COPY src/etc/modsecurity.d/modsecurity-override.conf /etc/nginx/templates/modsecurity.d/modsecurity-override.conf.template
 COPY src/etc/modsecurity.d/setup.conf /etc/nginx/templates/modsecurity.d/setup.conf.template
 COPY src/bin/healthcheck /usr/local/bin/healthcheck
+COPY src/bin/generate-certificate /usr/local/bin/generate-certificate
 COPY nginx/docker-entrypoint.d/*.sh /docker-entrypoint.d/
 COPY src/opt/modsecurity/activate-plugins.sh /docker-entrypoint.d/94-activate-plugins.sh
 COPY src/opt/modsecurity/activate-rules.sh /docker-entrypoint.d/95-activate-rules.sh
