@@ -3,8 +3,8 @@
 # Prefix will be /usr/local/apache2 or /etc/nginx
 PREFIX="$1/conf"
 KEY_FILE="${PREFIX}/server.key"
-CSR_FILE="${PREFIX}/crs.pem"
-CERT_FILE="${PREFIX}/server.pem"
+CSR_FILE="${PREFIX}/server.csr"
+CERT_FILE="${PREFIX}/server.crt"
 OPENSSL_CONF="${PREFIX}/.openssl.conf"
 
 export OPENSSL_CONF

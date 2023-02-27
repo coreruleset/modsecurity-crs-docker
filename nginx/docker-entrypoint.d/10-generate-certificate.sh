@@ -7,6 +7,6 @@ LC_ALL=C
 ME=$( basename "$0" )
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
-/usr/local/bin/generate-certicate /etc/nginx
+/usr/local/bin/generate-certificate /etc/nginx
 
 exit 0
