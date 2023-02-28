@@ -35,14 +35,6 @@ RUN set -eux; \
     make install; \
     make clean
 
-# Generate self-signed certificates (if needed)
-RUN mkdir -p /usr/share/TLS
-COPY apache/openssl.conf /usr/share/TLS
-RUN openssl req -x509 -days 365 -new \
-    -config /usr/share/TLS/openssl.conf \
-    -keyout /usr/share/TLS/server.key \
-    -out /usr/share/TLS/server.crt
-
 FROM httpd:${APACHE_VERSION} as crs_release
 
 ARG CRS_RELEASE
@@ -146,11 +138,9 @@ ENV APACHE_ALWAYS_TLS_REDIRECT=off \
 COPY --from=build /usr/local/apache2/modules/mod_security2.so                  /usr/local/apache2/modules/mod_security2.so
 COPY --from=build /usr/local/apache2/ModSecurity-${MODSEC_VERSION}/modsecurity.conf-recommended  /etc/modsecurity.d/modsecurity.conf
 COPY --from=build /usr/local/apache2/ModSecurity-${MODSEC_VERSION}/unicode.mapping               /etc/modsecurity.d/unicode.mapping
-COPY --from=build /usr/share/TLS/server.key                                    /usr/local/apache2/conf/server.key
-COPY --from=build /usr/share/TLS/server.crt                                    /usr/local/apache2/conf/server.crt
 COPY --from=crs_release /opt/owasp-crs /opt/owasp-crs
 COPY src/etc/modsecurity.d/*.conf /etc/modsecurity.d/
-COPY src/bin/healthcheck /usr/local/bin/healthcheck
+COPY src/bin/* /usr/local/bin/
 COPY apache/conf/extra/*.conf /usr/local/apache2/conf/extra/
 COPY src/etc/modsecurity.d/*.conf /etc/modsecurity.d/
 COPY src/opt/modsecurity/activate-*.sh /opt/modsecurity/
