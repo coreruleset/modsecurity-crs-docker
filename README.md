@@ -15,7 +15,7 @@ ModSecurity is an open source, cross platform web application firewall (WAF) eng
 ## Supported tags and respective `Dockerfile` links
 
 * `3-nginx-YYYYMMDDHHMM`, `3.3-nginx-YYYYMMDDHHMM`, `3.3.4-nginx-YYYYMMDDHHMM`, `nginx` ([master/nginx/Dockerfile](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile)) – *last stable ModSecurity v3 on Nginx 1.22 official stable base image, and latest stable Core Rule Set 3.3.4*
-* `3-apache-YYYYMMDDHHMM`, `3.3-apache-YYYYMMDDHHMM`, `3.3.4-apache-YYYYMMDDHHMM`, `apache` ([master/apache/Dockerfile](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/apache/Dockerfile)) –*last stable ModSecurity v2 on Apache 2.4 official stable base image, and latest stable Core Rule Set 3.3.4*
+* `3-apache-YYYYMMDDHHMM`, `3.3-apache-YYYYMMDDHHMM`, `3.3.4-apache-YYYYMMDDHHMM`, `apache` ([master/apache/Dockerfile](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/apache/Dockerfile)) –*last stable ModSecurity v2 on Apache 2.4.55 official stable base image, and latest stable Core Rule Set 3.3.4*
 
 ⚠️ We changed tags to [support production usage](https://github.com/coreruleset/modsecurity-crs-docker/issues/67). Now, if you want to use the "rolling version", use the tag `owasp/modsecurity-crs:nginx` or `owasp/modsecurity-crs:apache`. If you need a stable long term image, use the one with the full CRS version, in addition to the build date in `YYYYMMDDHHMM` format, example `owasp/modsecurity-crs:3.3.4-nginx-202209141209` or `owasp/modsecurity-crs:3.3.4-apache-202209141209` for example. You have been warned.
 
@@ -85,7 +85,7 @@ docker run -p 80:80 -ti -e PARANOIA=4 -v rules:/opt/owasp-crs/rules:ro --rm owas
 
 ## Quick reference
 
-* **Where to get help**: the [CRS-Support Docker Repo](https://github.com/coreruleset/modsecurity-crs-docker), the [Core Rule Set Slack Channel](https://owasp-slack.herokuapp.com/) (#coreruleset on owasp.slack.com), or [Stack Overflow](https://stackoverflow.com/questions/tagged/mod-security)
+* **Where to get help**: the [CRS-Support Docker Repo](https://github.com/coreruleset/modsecurity-crs-docker), the [Core Rule Set Slack Channel](https://owasp.org/slack/invite) (#coreruleset on owasp.slack.com), or [Stack Overflow](https://stackoverflow.com/questions/tagged/mod-security)
 
 * **Where to file issues**: the [Core Rule Set Docker Repo](https://github.com/coreruleset/modsecurity-crs-docker)
 
@@ -110,7 +110,7 @@ An example can be seen in the [docker-compose](https://github.com/coreruleset/mo
 
 ### TLS/HTTPS
 
-The TLS is configured by default on port 443. Note: The default configuration uses self signed certificates, to use your own certificates (recommended) COPY or mount (-v) your server.crt and server.key into `/usr/local/apache2/conf/`. Please remember you'll need to forward the HTTPS port.
+TLS is configured by default on port 443. Note: The default configuration generates a self signed certificate on first run. To use your own certificates (recommended) `COPY` or mount (`-v`) your `server.crt` and `server.key` into `/usr/local/apache2/conf/` or `/etc/nginx/conf/`. Remember to publish the HTTPS port when running the image.
 
 ```bash
 docker build -t my-modsec .
@@ -169,7 +169,7 @@ docker run -p 8080:80 -e SERVER_NAME=myhost my-modsec
 | SERVER_ADMIN  | A string value indicating the address where problems with the server should be e-mailed (Default: `root@localhost`) |
 | SERVER_NAME | A string value indicating the server name (Default: `localhost`) |
 | SSL_CIPHER_SUITE | A string indicating the cipher suite to use. Uses OpenSSL [list of cipher suites](https://www.openssl.org/docs/manmaster/man3/SSL_CTX_set_ciphersuites.html) (Default: `"ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384"` |
-| SSL_ENGINE  | A string indicating the SSL Engine Operation Switch (Default: `off`) |
+| SSL_ENGINE  | A string indicating the SSL Engine Operation Switch (Default: `on`) |
 | SSL_HONOR_CIPHER_ORDER | A string indicating if the server should [honor the cipher list provided by the client](https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslhonorcipherorder) (Allowed values: `on`, `off`. Default: `off`) |
 | SSL_PORT  | Port number where the SSL enabled webserver is listening (Default: `443`) |
 | SSL_PROTOCOL | A string for configuring the [usable SSL/TLS protocol versions](https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslprotocol) (Default: `"all -SSLv3 -TLSv1 -TLSv1.1"`) |

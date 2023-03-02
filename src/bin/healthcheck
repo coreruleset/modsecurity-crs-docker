@@ -13,4 +13,4 @@ then
     port="${PORT}"
 fi
 
-curl -sk "${scheme}://${host}:${port}/healthz"
+curl -sk -A healthcheck "${scheme}://${host}:${port}/healthz"
