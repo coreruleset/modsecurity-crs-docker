@@ -13,8 +13,6 @@ ARG MODSEC_VERSION=3.0.8 \
     LUA_JIT_VERSION \
     LMDB_VERSION=0.9.29
 
-# Note: libpcre3-dev (PCRE 1) is required by the build description,
-# even though the build will use PCRE2.
 # Remove pcre2 support for openresty, until it gets update to pcre2.
 RUN set -eux; \
     echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections; \
@@ -30,7 +28,6 @@ RUN set -eux; \
         libgeoip-dev \
         liblua5.3-dev \
         libpcre3-dev \
-        libpcre2-dev \
         libtool \
         libxml2-dev \
         libyajl-dev \
@@ -73,7 +70,7 @@ RUN set -eux; \
     export LUAJIT_LIB="/usr/local/openresty/luajit/lib/"; \
     export LUAJIT_INC="../LuaJIT-${LUA_JIT_VERSION}/src/"; \
     COMPILEOPTIONS=$(openresty -V 2>&1| grep -i "arguments"|cut -d ":" -f2-); \
-    eval ./configure $COMPILEOPTIONS --add-dynamic-module=../../../ModSecurity-nginx; \
+    eval ./configure $COMPILEOPTIONS --add-dynamic-module=../../../ModSecurity-nginx --with-openssl=/usr/local/openresty/openssl; \
     make modules; \
     strip objs/ngx_http_modsecurity_module.so; \
     cp objs/ngx_http_modsecurity_module.so /usr/local/openresty/nginx/modules/; \ 
