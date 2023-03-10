@@ -42,7 +42,7 @@ group "default" {
         "apache-alpine",
         "nginx",
         "nginx-alpine",
-        "openresty",
+        "openresty-fat",
         "openresty-alpine-fat"
     ]
 }
