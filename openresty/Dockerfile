@@ -237,7 +237,15 @@ RUN set -eux; \
     ln -s /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC_VERSION} /usr/local/modsecurity/lib/libmodsecurity.so.3.0; \
     ln -s /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC_VERSION} /usr/local/modsecurity/lib/libmodsecurity.so.3; \
     ln -s /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC_VERSION} /usr/local/modsecurity/lib/libmodsecurity.so; \
+    ln -sv /opt/owasp-crs /etc/modsecurity.d/; \
     chmod -R g=u /var/log/ /var/run/ /usr/local/openresty/nginx/ /etc/modsecurity.d/
-    ln -sv /opt/owasp-crs /etc/modsecurity.d/
+
+EXPOSE 80
 
 HEALTHCHECK CMD /usr/local/bin/healthcheck
+
+# Openresty does not use NGINX dockerfile. 
+# This Dockerfile integrates the docker-entrypoint and envsubst logic from there into here.
+ENTRYPOINT ["/docker-entrypoint.sh"]
+
+CMD ["/usr/local/openresty/bin/openresty", "-g", "daemon off;"]
