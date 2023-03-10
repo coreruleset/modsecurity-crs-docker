@@ -35,5 +35,5 @@ build:
       "$BUILD"
   parallel:
     matrix:
-      - BUILD: ['openresty-alpine-fat']
-  timeout: 3 hours
+      - BUILD: ['openresty-alpine-fat', 'openresty-fat']
+  timeout: 4 hours
