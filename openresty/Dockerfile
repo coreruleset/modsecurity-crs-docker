@@ -225,7 +225,7 @@ RUN set -eux; \
     cd /tmp; \
     curl -fSL https://luarocks.github.io/luarocks/releases/luarocks-${RESTY_LUAROCKS_VERSION}.tar.gz -o luarocks-${RESTY_LUAROCKS_VERSION}.tar.gz; \
     tar xzf luarocks-${RESTY_LUAROCKS_VERSION}.tar.gz; \
-    luarocks-${RESTY_LUAROCKS_VERSION}; \
+    cd luarocks-${RESTY_LUAROCKS_VERSION}; \
     ./configure \
       --prefix=/usr/local/openresty/luajit \
       --with-lua=/usr/local/openresty/luajit \
