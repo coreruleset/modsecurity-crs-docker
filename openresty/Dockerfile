@@ -74,6 +74,7 @@ RUN set -eux; \
     eval ./configure $COMPILEOPTIONS --add-dynamic-module=../../../ModSecurity-nginx; \
     make modules; \
     strip objs/ngx_http_modsecurity_module.so; \
+    mkdir -p /usr/local/openresty/nginx/modules; \
     cp objs/ngx_http_modsecurity_module.so /usr/local/openresty/nginx/modules/; \ 
     mkdir /etc/modsecurity.d; \
     curl -sSL https://raw.githubusercontent.com/SpiderLabs/ModSecurity/v3/master/modsecurity.conf-recommended \
