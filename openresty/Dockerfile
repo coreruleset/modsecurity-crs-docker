@@ -221,6 +221,7 @@ RUN set -eux; \
         liblua5.3 \
         libxml2 \
         libyajl2 \
+        unzip \
         moreutils; \
     cd /tmp; \
     curl -fSL https://luarocks.github.io/luarocks/releases/luarocks-${RESTY_LUAROCKS_VERSION}.tar.gz -o luarocks-${RESTY_LUAROCKS_VERSION}.tar.gz; \
