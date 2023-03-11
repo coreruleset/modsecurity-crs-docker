@@ -85,13 +85,13 @@ RUN set -eux; \
 # Generate self-signed certificates (if needed)
 RUN mkdir -p /usr/share/TLS
 COPY openresty/openssl.conf /usr/share/TLS
-RUN /usr/local/openresty/openssl/bin/openssl req -x509 -days 365 -new \
+RUN /usr/local/openresty/openssl111/bin/openssl req -x509 -days 365 -new \
     -config /usr/share/TLS/openssl.conf \
     -keyout /usr/share/TLS/server.key \
     -out /usr/share/TLS/server.crt
 
 # Generate/Download Diffie-Hellman parameter files
-RUN openssl dhparam -out /usr/share/TLS/dhparam-1024.pem 1024
+RUN /usr/local/openresty/openssl111/bin/openssl dhparam -out /usr/share/TLS/dhparam-1024.pem 1024
 RUN curl -sSL https://ssl-config.mozilla.org/ffdhe2048.txt -o /usr/share/TLS/dhparam-2048.pem
 RUN curl -sSL https://ssl-config.mozilla.org/ffdhe4096.txt -o /usr/share/TLS/dhparam-4096.pem
 
