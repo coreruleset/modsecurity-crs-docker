@@ -74,6 +74,7 @@ RUN set -eux; \
     COMPILEOPTIONS=$(openresty -V 2>&1| grep -i "arguments"|cut -d ":" -f2-); \
     eval ./configure $COMPILEOPTIONS --add-dynamic-module=../../../ModSecurity-nginx; \
     make modules; \
+    mkdir -p /usr/local/openresty/nginx/modules; \
     cp objs/ngx_http_modsecurity_module.so /usr/local/openresty/nginx/modules/; \ 
     mkdir /etc/modsecurity.d; \
     wget --quiet https://raw.githubusercontent.com/SpiderLabs/ModSecurity/v3/master/modsecurity.conf-recommended \
