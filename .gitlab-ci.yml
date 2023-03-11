@@ -39,4 +39,10 @@ build:
       - BUILD: ['openresty-alpine-fat', 'openresty-fat']
         PLATFORM:
           ['linux/amd64', 'linux/i386', 'linux/arm64/v8', 'linux/arm/v7']
+      - BUILD: ['nginx', 'nginx-alpine']
+        PLATFORM:
+          ['linux/amd64', 'linux/i386', 'linux/arm64/v8', 'linux/arm/v7']
+      - BUILD: ['apache', 'apache-alpine']
+        PLATFORM:
+          ['linux/amd64', 'linux/i386', 'linux/arm64/v8', 'linux/arm/v7']
   timeout: 4 hours
