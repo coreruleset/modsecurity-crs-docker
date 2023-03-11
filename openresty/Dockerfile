@@ -28,6 +28,7 @@ RUN set -eux; \
         libgeoip-dev \
         liblua5.3-dev \
         libpcre3-dev \
+        libssl-dev \
         libtool \
         libxml2-dev \
         libyajl-dev \
