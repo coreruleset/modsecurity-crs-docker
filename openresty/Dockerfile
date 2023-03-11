@@ -118,7 +118,8 @@ RUN set -eux; \
 FROM openresty/openresty:${OPENRESTY_VERSION}-bullseye-fat
 
 ARG MODSEC_VERSION=3.0.8 \
-    LMDB_VERSION=0.9.29
+    LMDB_VERSION=0.9.29 \
+    RESTY_LUAROCKS_VERSION="3.9.0"
 
 LABEL maintainer="Felipe Zipitria <felipe.zipitria@owasp.org>"
 
@@ -192,8 +193,8 @@ COPY --from=build /usr/local/openresty/nginx/modules/ngx_http_modsecurity_module
 COPY --from=build /usr/share/TLS/server.key /usr/local/openresty/nginx/conf/server.key
 COPY --from=build /usr/share/TLS/server.crt /usr/local/openresty/nginx/conf/server.crt
 COPY --from=build /usr/local/lib/liblmdb.so /usr/local/lib/
-COPY --from=build /usr/share/TLS/server.key /etc/nginx/conf/server.key
-COPY --from=build /usr/share/TLS/server.crt /etc/nginx/conf/server.crt
+COPY --from=build /usr/share/TLS/server.key /usr/local/openresty/nginx/conf/server.key
+COPY --from=build /usr/share/TLS/server.crt /usr/local/openresty/nginx/conf/server.crt
 COPY --from=build /usr/share/TLS/dhparam-* /etc/ssl/certs/
 COPY --from=build /etc/modsecurity.d/unicode.mapping /etc/modsecurity.d/unicode.mapping
 COPY --from=build /etc/modsecurity.d/modsecurity.conf /etc/modsecurity.d/modsecurity.conf
@@ -221,12 +222,22 @@ RUN set -eux; \
         libxml2 \
         libyajl2 \
         moreutils; \
+    cd /tmp; \
+    curl -fSL https://luarocks.github.io/luarocks/releases/luarocks-${RESTY_LUAROCKS_VERSION}.tar.gz -o luarocks-${RESTY_LUAROCKS_VERSION}.tar.gz; \
+    tar xzf luarocks-${RESTY_LUAROCKS_VERSION}.tar.gz; \
+    luarocks-${RESTY_LUAROCKS_VERSION}; \
+    ./configure \
+      --prefix=/usr/local/openresty/luajit \
+      --with-lua=/usr/local/openresty/luajit \
+      --lua-suffix=jit-2.1.0-beta3 \
+      --with-lua-include=/usr/local/openresty/luajit/include/luajit-2.1; \
+    make build; \
+    make install; \
+    cd /tmp; \
+    rm -rf luarocks-${RESTY_LUAROCKS_VERSION} luarocks-${RESTY_LUAROCKS_VERSION}.tar.gz; \
     rm -rf /var/lib/apt/lists/*; \
     apt-get clean; \
-    # Possible TODO make it a variable if you want to build this Dockerfile yourself.
-    luarocks install lua-resty-openidc; \
     mkdir /var/log/nginx; \
-    mkdir /etc/nginx/ssl; \
     mkdir -p /tmp/modsecurity/data; \
     mkdir -p /tmp/modsecurity/upload; \
     mkdir -p /tmp/modsecurity/tmp; \
@@ -238,6 +249,17 @@ RUN set -eux; \
     ln -s /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC_VERSION} /usr/local/modsecurity/lib/libmodsecurity.so; \
     ln -sv /opt/owasp-crs /etc/modsecurity.d/; \
     chmod -R g=u /var/log/ /var/run/ /usr/local/openresty/nginx/ /etc/modsecurity.d/
+
+# Add LuaRocks paths
+# If OpenResty changes, these may need updating:
+#    /usr/local/openresty/bin/resty -e 'print(package.path)'
+#    /usr/local/openresty/bin/resty -e 'print(package.cpath)'
+ENV LUA_PATH="/usr/local/openresty/site/lualib/?.ljbc;/usr/local/openresty/site/lualib/?/init.ljbc;/usr/local/openresty/lualib/?.ljbc;/usr/local/openresty/lualib/?/init.ljbc;/usr/local/openresty/site/lualib/?.lua;/usr/local/openresty/site/lualib/?/init.lua;/usr/local/openresty/lualib/?.lua;/usr/local/openresty/lualib/?/init.lua;./?.lua;/usr/local/openresty/luajit/share/luajit-2.1.0-beta3/?.lua;/usr/local/share/lua/5.1/?.lua;/usr/local/share/lua/5.1/?/init.lua;/usr/local/openresty/luajit/share/lua/5.1/?.lua;/usr/local/openresty/luajit/share/lua/5.1/?/init.lua"
+
+ENV LUA_CPATH="/usr/local/openresty/site/lualib/?.so;/usr/local/openresty/lualib/?.so;./?.so;/usr/local/lib/lua/5.1/?.so;/usr/local/openresty/luajit/lib/lua/5.1/?.so;/usr/local/lib/lua/5.1/loadall.so;/usr/local/openresty/luajit/lib/lua/5.1/?.so"
+
+# Possible TODO make it a variable if you want to build this Dockerfile yourself.
+RUn luarocks install lua-resty-openidc; \
 
 EXPOSE 80
 
