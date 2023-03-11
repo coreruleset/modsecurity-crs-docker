@@ -70,7 +70,7 @@ RUN set -eux; \
     export LUAJIT_LIB="/usr/local/openresty/luajit/lib/"; \
     export LUAJIT_INC="../LuaJIT-${LUA_JIT_VERSION}/src/"; \
     COMPILEOPTIONS=$(openresty -V 2>&1| grep -i "arguments"|cut -d ":" -f2-); \
-    eval ./configure $COMPILEOPTIONS --add-dynamic-module=../../../ModSecurity-nginx --with-ld-opt="-L /usr/local/openresty/openssl111/lib -ldl -Wl,-rpath,/usr/local/openresty/openssl111/lib"; \
+    eval ./configure $COMPILEOPTIONS --add-dynamic-module=../../../ModSecurity-nginx; \
     make modules; \
     strip objs/ngx_http_modsecurity_module.so; \
     cp objs/ngx_http_modsecurity_module.so /usr/local/openresty/nginx/modules/; \ 
