@@ -67,7 +67,6 @@ An example can be seen in the [docker-compose](https://github.com/coreruleset/mo
 
 ### Common ENV Variables
 
-These variables are common to image variants and will set defaults based on the image name.
 | Name | Description|
 | -- | -- |
 | ACCESSLOG | Location of the custom log file (Default: `/var/log/apache2/access.log` and `/var/log/nginx/access.log`) |
