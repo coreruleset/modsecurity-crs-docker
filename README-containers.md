@@ -195,7 +195,7 @@ All these variables impact in configuration directives in the modsecurity engine
 | ALLOWED_REQUEST_CONTENT_TYPE_CHARSET | Allowed_request_content_type_charset (Default: `utf-8\|iso-8859-1\|iso-8859-15\|windows-1252`) |
 | ALLOWED_HTTP_VERSIONS | Allowed_http_versions (Default: `HTTP/1.0 HTTP/1.1 HTTP/2 HTTP/2.0`) |
 | RESTRICTED_EXTENSIONS | Restricted_extensions (Default: `.asa/ .asax/ .ascx/ .axd/ .backup/ .bak/ .bat/ .cdx/ .cer/ .cfg/ .cmd/ .com/ .config/ .conf/ .cs/ .csproj/ .csr/ .dat/ .db/ .dbf/ .dll/ .dos/ .htr/ .htw/ .ida/ .idc/ .idq/ .inc/ .ini/ .key/ .licx/ .lnk/ .log/ .mdb/ .old/ .pass/ .pdb/ .pol/ .printer/ .pwd/ .resources/ .resx/ .sql/ .sys/ .vb/ .vbs/ .vbproj/ .vsdisco/ .webinfo/ .xsd/ .xsx/`) |
-| RESTRICTED_HEADERS | Restricted_headers (Default: `/proxy/ /lock-token/ /content-range/ /if/`) |
+| RESTRICTED_HEADERS | Restricted_headers (Default: `/accept-charset/ /content-encoding/ /proxy/ /lock-token/ /content-range/ /if/ /x-http-method-override/ /x-http-method/ /x-method-override/`) |
 | STATIC_EXTENSIONS | Static_extensions (Default: `/.jpg/ /.jpeg/ /.png/ /.gif/ /.js/ /.css/ /.ico/ /.svg/ /.webp/`) |
 | MAX_NUM_ARGS | An int indicating the max_num_args (Default: `unlimited`) |
 | ARG_NAME_LENGTH | An int indicating the arg_name_length (Default: `unlimited`) |
