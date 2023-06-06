@@ -9,7 +9,7 @@
 
 ## Full documentation
 
-⚠️ We are limited to 25000 chars in the Docker Hub documentation. The full documentation is hosted on [GitHub](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/README.md). There you can find additional in-depth information.
+⚠️ We are limited to 25000 chars in the Docker Hub documentation. The full documentation is hosted on [GitHub](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/README.md).
 
 ## What is the Core Rule Set
 
