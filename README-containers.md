@@ -9,7 +9,7 @@
 
 ## Full documentation
 
-⚠️ We are limited to 25000 chars in the Docker Hub documentation. The full documentation is hosted on [GitHub](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/README.md). There you can find additional in-depth information.
+⚠️ We are limited to 25000 chars in the Docker Hub documentation. The full documentation is hosted on [GitHub](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/README.md).
 
 ## What is the Core Rule Set
 
@@ -24,7 +24,7 @@ The Core Rule Set (CRS) is a set of generic attack detection rules for use with 
 
 ## Supported variants
 
-We have support for [alpine linux](https://www.alpinelinux.org/) variants of the base images. Examples:
+We also build [alpine linux](https://www.alpinelinux.org/) variants of the base images, using the `-alpine` suffix. Examples:
 
 * `3-nginx-alpine-YYYYMMDDHHMM`, `3.3-nginx-alpine-YYYYMMDDHHMM`, `3.3.4-nginx-alpine-YYYYMMDDHHMM`, `nginx-alpine` ([master/nginx/Dockerfile-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile-alpine) – *last stable ModSecurity v3 on Nginx 1.22 official alpine stable base image, and latest stable Core Rule Set 3.3.4*
 * `3-apache-alpine-YYYYMMDDHHMM`, `3.3-apache-alpine-YYYYMMDDHHMM`, `3.3.4-apache-alpine-YYYYMMDDHHMM`, `apache-alpine` ([master/apache/Dockerfile-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/apache/Dockerfile-alpine)) – *last stable ModSecurity v2 on Apache 2.4.56 official alpine stable base image, and latest stable Core Rule Set 3.3.4*
