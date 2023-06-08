@@ -23,7 +23,7 @@ ModSecurity is an open source, cross platform web application firewall (WAF) eng
 
 ## Supported variants
 
-We have support for [alpine linux](https://www.alpinelinux.org/) variants of the base images. Just add `-alpine` and you will get it. Examples:
+We have support for [alpine linux](https://www.alpinelinux.org/) variants of the base images. Examples:
 
 * `3-nginx-alpine-YYYYMMDDHHMM`, `3.3-nginx-alpine-YYYYMMDDHHMM`, `3.3.4-nginx-alpine-YYYYMMDDHHMM`, `nginx-alpine` ([master/nginx/Dockerfile-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile-alpine) – *last stable ModSecurity v3 on Nginx 1.22 official alpine stable base image, and latest stable Core Rule Set 3.3.4*
 * `3-apache-alpine-YYYYMMDDHHMM`, `3.3-apache-alpine-YYYYMMDDHHMM`, `3.3.4-apache-alpine-YYYYMMDDHHMM`, `apache-alpine` ([master/apache/Dockerfile-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/apache/Dockerfile-alpine)) – *last stable ModSecurity v2 on Apache 2.4.56 official alpine stable base image, and latest stable Core Rule Set 3.3.4*
