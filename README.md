@@ -14,7 +14,7 @@ ModSecurity is an open source, cross platform web application firewall (WAF) eng
 
 ## Supported tags and respective `Dockerfile` links
 
-* `3-nginx-YYYYMMDDHHMM`, `3.3-nginx-YYYYMMDDHHMM`, `3.3.4-nginx-YYYYMMDDHHMM`, `nginx` ([master/nginx/Dockerfile](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile)) – *last stable ModSecurity v3 on Nginx 1.25 official stable base image, and latest stable Core Rule Set 3.3.4*
+* `3-nginx-YYYYMMDDHHMM`, `3.3-nginx-YYYYMMDDHHMM`, `3.3.4-nginx-YYYYMMDDHHMM`, `nginx` ([master/nginx/Dockerfile](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile)) – *last stable ModSecurity v3 on Nginx 1.24 official stable base image, and latest stable Core Rule Set 3.3.4*
 * `3-apache-YYYYMMDDHHMM`, `3.3-apache-YYYYMMDDHHMM`, `3.3.4-apache-YYYYMMDDHHMM`, `apache` ([master/apache/Dockerfile](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/apache/Dockerfile)) –*last stable ModSecurity v2 on Apache 2.4.56 official stable base image, and latest stable Core Rule Set 3.3.4*
 
 ⚠️ We changed tags to [support production usage](https://github.com/coreruleset/modsecurity-crs-docker/issues/67). Now, if you want to use the "rolling version", use the tag `owasp/modsecurity-crs:nginx` or `owasp/modsecurity-crs:apache`. If you need a stable long term image, use the one with the full CRS version, in addition to the build date in `YYYYMMDDHHMM` format, example `owasp/modsecurity-crs:3.3.4-nginx-202209141209` or `owasp/modsecurity-crs:3.3.4-apache-202209141209` for example. You have been warned.
@@ -25,7 +25,7 @@ ModSecurity is an open source, cross platform web application firewall (WAF) eng
 
 We have support for [alpine linux](https://www.alpinelinux.org/) variants of the base images. Just add `-alpine` and you will get it. Examples:
 
-* `3-nginx-alpine-YYYYMMDDHHMM`, `3.3-nginx-alpine-YYYYMMDDHHMM`, `3.3.4-nginx-alpine-YYYYMMDDHHMM`, `nginx-alpine` ([master/nginx/Dockerfile-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile-alpine) – *last stable ModSecurity v3 on Nginx 1.25 official alpine stable base image, and latest stable Core Rule Set 3.3.4*
+* `3-nginx-alpine-YYYYMMDDHHMM`, `3.3-nginx-alpine-YYYYMMDDHHMM`, `3.3.4-nginx-alpine-YYYYMMDDHHMM`, `nginx-alpine` ([master/nginx/Dockerfile-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile-alpine) – *last stable ModSecurity v3 on Nginx 1.24 official alpine stable base image, and latest stable Core Rule Set 3.3.4*
 * `3-apache-alpine-YYYYMMDDHHMM`, `3.3-apache-alpine-YYYYMMDDHHMM`, `3.3.4-apache-alpine-YYYYMMDDHHMM`, `apache-alpine` ([master/apache/Dockerfile-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/apache/Dockerfile-alpine)) – *last stable ModSecurity v2 on Apache 2.4.56 official alpine stable base image, and latest stable Core Rule Set 3.3.4*
 
 ⚠️ We changed tags to [support production usage](https://github.com/coreruleset/modsecurity-crs-docker/issues/67). Now, if you want to use the "rolling version", use the tag `owasp/modsecurity-crs:nginx-alpine` or `owasp/modsecurity-crs:apache-alpine`. If you need a stable long term image, use the one with the full CRS version, in addition to the build date in `YYYYMMDDHHMM` format, example `owasp/modsecurity-crs:3.3.4-nginx-alpine-202209141209` or `owasp/modsecurity-crs:3.3.4-apache-alpine-202209141209` for example. You have been warned.
