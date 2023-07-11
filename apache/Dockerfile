@@ -16,7 +16,7 @@ RUN set -eux; \
         libaprutil1-dev \
         libcurl4-gnutls-dev \
         libfuzzy-dev \
-        libpcre++-dev \
+        libpcre3-dev \
         libtool \
         libxml2-dev \
         libyajl-dev \
@@ -67,6 +67,7 @@ ENV APACHE_ALWAYS_TLS_REDIRECT=off \
     BACKEND_WS=ws://localhost:8080 \
     ERRORLOG='/proc/self/fd/2' \
     APACHE_LOGFORMAT='"%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""' \
+    APACHE_ERRORLOG_FORMAT='"[%{u}t] [%-m:%l] [pid %P:tid %T] %7F: %E: [client\ %a] %M% ,\ referer\ %{Referer}i"' \
     APACHE_METRICS_LOGFORMAT='"%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""' \
     H2_PROTOCOLS='h2 http/1.1' \
     LOGLEVEL=warn \

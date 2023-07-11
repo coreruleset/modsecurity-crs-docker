@@ -46,7 +46,7 @@ fi
 
 # Content-Types charsets that a client is allowed to send in a request.
 if [ -n "${ALLOWED_REQUEST_CONTENT_TYPE_CHARSET}" ]; then
-  sed -z -E -i 's/#SecAction[^"]+"id:900270.*\x27tx\.allowed_request_content_type_charset=[[:lower:][:digit:]|-]*\x27\"/SecAction \\\n  \"id:900270, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:\x27tx.allowed_request_content_type_charset='"${ALLOWED_REQUEST_CONTENT_TYPE_CHARSET}"'\x27\"/' "${setup_conf_path}"
+  sed -z -E -i 's/#SecAction[^"]+"id:900280.*\x27tx\.allowed_request_content_type_charset=[[:lower:][:digit:]|-]*\x27\"/SecAction \\\n  \"id:900280, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:\x27tx.allowed_request_content_type_charset='"${ALLOWED_REQUEST_CONTENT_TYPE_CHARSET}"'\x27\"/' "${setup_conf_path}"
 fi
 
 # Allowed HTTP versions.
