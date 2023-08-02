@@ -1,4 +1,4 @@
-ARG APACHE_VERSION=2.4
+ARG APACHE_VERSION=2.4.57
 
 FROM httpd:${APACHE_VERSION} as build
 
@@ -16,7 +16,7 @@ RUN set -eux; \
         libaprutil1-dev \
         libcurl4-gnutls-dev \
         libfuzzy-dev \
-        libpcre++-dev \
+        libpcre3-dev \
         libtool \
         libxml2-dev \
         libyajl-dev \
@@ -34,14 +34,6 @@ RUN set -eux; \
     make; \
     make install; \
     make clean
-
-# Generate self-signed certificates (if needed)
-RUN mkdir -p /usr/share/TLS
-COPY apache/openssl.conf /usr/share/TLS
-RUN openssl req -x509 -days 365 -new \
-    -config /usr/share/TLS/openssl.conf \
-    -keyout /usr/share/TLS/server.key \
-    -out /usr/share/TLS/server.crt
 
 FROM httpd:${APACHE_VERSION} as crs_release
 
@@ -75,6 +67,7 @@ ENV APACHE_ALWAYS_TLS_REDIRECT=off \
     BACKEND_WS=ws://localhost:8080 \
     ERRORLOG='/proc/self/fd/2' \
     APACHE_LOGFORMAT='"%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""' \
+    APACHE_ERRORLOG_FORMAT='"[%{u}t] [%-m:%l] [pid %P:tid %T] %7F: %E: [client\ %a] %M% ,\ referer\ %{Referer}i"' \
     APACHE_METRICS_LOGFORMAT='"%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""' \
     H2_PROTOCOLS='h2 http/1.1' \
     LOGLEVEL=warn \
@@ -146,11 +139,9 @@ ENV APACHE_ALWAYS_TLS_REDIRECT=off \
 COPY --from=build /usr/local/apache2/modules/mod_security2.so                  /usr/local/apache2/modules/mod_security2.so
 COPY --from=build /usr/local/apache2/ModSecurity-${MODSEC_VERSION}/modsecurity.conf-recommended  /etc/modsecurity.d/modsecurity.conf
 COPY --from=build /usr/local/apache2/ModSecurity-${MODSEC_VERSION}/unicode.mapping               /etc/modsecurity.d/unicode.mapping
-COPY --from=build /usr/share/TLS/server.key                                    /usr/local/apache2/conf/server.key
-COPY --from=build /usr/share/TLS/server.crt                                    /usr/local/apache2/conf/server.crt
 COPY --from=crs_release /opt/owasp-crs /opt/owasp-crs
 COPY src/etc/modsecurity.d/*.conf /etc/modsecurity.d/
-COPY src/bin/healthcheck /usr/local/bin/healthcheck
+COPY src/bin/* /usr/local/bin/
 COPY apache/conf/extra/*.conf /usr/local/apache2/conf/extra/
 COPY src/etc/modsecurity.d/*.conf /etc/modsecurity.d/
 COPY src/opt/modsecurity/activate-*.sh /opt/modsecurity/

@@ -1,4 +1,4 @@
-ARG NGINX_VERSION="1.22.1"
+ARG NGINX_VERSION="1.24.0"
 
 FROM nginx:${NGINX_VERSION} as build
 
@@ -67,18 +67,11 @@ RUN set -eux; \
     curl -sSL https://raw.githubusercontent.com/SpiderLabs/ModSecurity/v3/master/unicode.mapping \
          -o /etc/modsecurity.d/unicode.mapping
 
-# Generate self-signed certificates (if needed)
-RUN mkdir -p /usr/share/TLS
-COPY nginx/openssl.conf /usr/share/TLS
-RUN openssl req -x509 -days 365 -new \
-    -config /usr/share/TLS/openssl.conf \
-    -keyout /usr/share/TLS/server.key \
-    -out /usr/share/TLS/server.crt
-
 # Generate/Download Diffie-Hellman parameter files
-RUN openssl dhparam -out /usr/share/TLS/dhparam-1024.pem 1024
-RUN curl -sSL https://ssl-config.mozilla.org/ffdhe2048.txt -o /usr/share/TLS/dhparam-2048.pem
-RUN curl -sSL https://ssl-config.mozilla.org/ffdhe4096.txt -o /usr/share/TLS/dhparam-4096.pem
+RUN set -eux; \
+    mkdir -p /usr/share/TLS; \
+    curl -sSL https://ssl-config.mozilla.org/ffdhe2048.txt -o /usr/share/TLS/dhparam-2048.pem; \
+    curl -sSL https://ssl-config.mozilla.org/ffdhe4096.txt -o /usr/share/TLS/dhparam-4096.pem
 
 FROM nginx:${NGINX_VERSION} as crs_release
 
@@ -147,6 +140,7 @@ ENV ACCESSLOG=/var/log/nginx/access.log \
     NGINX_ALWAYS_TLS_REDIRECT=off \
     SET_REAL_IP_FROM="127.0.0.1" \
     REAL_IP_HEADER="X-REAL-IP" \
+    REAL_IP_PROXY_HEADER="X-REAL-IP" \
     REAL_IP_RECURSIVE="on" \
     PROXY_TIMEOUT=60s \
     PROXY_SSL_CERT=/etc/nginx/conf/server.crt \
@@ -174,8 +168,6 @@ ENV ACCESSLOG=/var/log/nginx/access.log \
 COPY --from=build /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC_VERSION} /usr/local/modsecurity/lib/
 COPY --from=build /etc/nginx/modules/ngx_http_modsecurity_module.so /etc/nginx/modules/ngx_http_modsecurity_module.so
 COPY --from=build /usr/local/lib/liblmdb.so /usr/local/lib/
-COPY --from=build /usr/share/TLS/server.key /etc/nginx/conf/server.key
-COPY --from=build /usr/share/TLS/server.crt /etc/nginx/conf/server.crt
 COPY --from=build /usr/share/TLS/dhparam-* /etc/ssl/certs/
 COPY --from=build /etc/modsecurity.d/unicode.mapping /etc/modsecurity.d/unicode.mapping
 COPY --from=build /etc/modsecurity.d/modsecurity.conf /etc/modsecurity.d/modsecurity.conf
@@ -188,7 +180,7 @@ COPY src/opt/modsecurity/activate-rules.sh /docker-entrypoint.d/95-activate-rule
 # We use the templating mechanism from the nginx image here,
 # as set up by owasp/modsecurity-docker
 COPY nginx/templates /etc/nginx/templates/
-COPY src/bin/healthcheck /usr/local/bin/healthcheck
+COPY src/bin/* /usr/local/bin/
 
 RUN set -eux; \
     echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections; \

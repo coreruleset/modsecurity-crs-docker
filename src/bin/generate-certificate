@@ -1,0 +1,60 @@
+#!/bin/sh
+
+# Prefix will be /usr/local/apache2 or /etc/nginx
+PREFIX="${1}/conf"
+KEY_FILE="${PREFIX}/server.key"
+CSR_FILE="${PREFIX}/server.csr"
+CERT_FILE="${PREFIX}/server.crt"
+OPENSSL_CONF="${PREFIX}/.openssl.conf"
+
+export OPENSSL_CONF
+
+# If key file exists, we assume the certificate is in place or
+# it was already mounted/copied
+if [ -f "${KEY_FILE}" ]; then
+    echo "${0}: using existing key / certificate"
+    # do not exit on docker scripts
+    return
+fi
+
+echo "${0}: generating new certificate"
+
+# Create directory if it does not exist
+if [ ! -d "${PREFIX}" ]; then
+    mkdir -p "${PREFIX}"
+fi
+
+# Openssl Config
+cat > "${OPENSSL_CONF}"<<EOF
+[req]
+default_bits=4096
+encrypt_key=no
+default_md=sha256
+distinguished_name=req_sub
+prompt=no
+
+[req_sub]
+commonName="localhost"
+emailAddress="none@none.com"
+countryName="US"
+stateOrProvinceName="NY"
+localityName="NY"
+organizationName="MyOrg"
+organizationalUnitName="MyUnit"
+EOF
+
+# Generates a new certificate on first run
+
+openssl ecparam \
+    -out "${KEY_FILE}" -name prime256v1 -genkey
+
+openssl req \
+    -new -key "${KEY_FILE}" -out "${CSR_FILE}"
+
+openssl req -x509 -nodes \
+    -days 365 -key "${KEY_FILE}" -in "${CSR_FILE}" \
+    -out "${CERT_FILE}"
+
+chmod 600 "${KEY_FILE}" "${CERT_FILE}"
+
+echo "${0}: generated ${KEY_FILE} and ${CERT_FILE}"

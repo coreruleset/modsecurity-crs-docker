@@ -55,11 +55,11 @@ services:
       #######################################################
       #- ENFORCE_BODYPROC_URLENCODED=1
       #- ALLOWED_METHODS=GET HEAD POST OPTIONS
-      #- ALLOWED_REQUEST_CONTENT_TYPE=application/x-www-form-urlencoded|multipart/form-data|text/xml|application/xml|application/soap+xml|application/x-amf|application/json|application/octet-stream|text/plain
-      #- ALLOWED_REQUEST_CONTENT_TYPE_CHARSET=utf-8|iso-8859-1|iso-8859-15|windows-1252
+      #- ALLOWED_REQUEST_CONTENT_TYPE='|application/x-www-form-urlencoded| |multipart/form-data| |multipart/related| |text/xml| |application/xml| |application/soap+xml| |application/json| |application/cloudevents+json| |application/cloudevents-batch+json|'
+      #- ALLOWED_REQUEST_CONTENT_TYPE_CHARSET='utf-8|iso-8859-1|iso-8859-15|windows-1252'
       #- ALLOWED_HTTP_VERSIONS=HTTP/1.0 HTTP/1.1 HTTP/2 HTTP/2.0
-      #- RESTRICTED_EXTENSIONS=.asa/ .asax/ .ascx/ .axd/ .backup/ .bak/ .bat/ .cdx/ .cer/ .cfg/ .cmd/ .com/ .config/ .conf/ .cs/ .csproj/ .csr/ .dat/ .db/ .dbf/ .dll/ .dos/ .htr/ .htw/ .ida/ .idc/ .idq/ .inc/ .ini/ .key/ .licx/ .lnk/ .log/ .mdb/ .old/ .pass/ .pdb/ .pol/ .printer/ .pwd/ .resources/ .resx/ .sql/ .sys/ .vb/ .vbs/ .vbproj/ .vsdisco/ .webinfo/ .xsd/ .xsx/
-      #- RESTRICTED_HEADERS=/proxy/ /lock-token/ /content-range/ /if/
+      #- RESTRICTED_EXTENSIONS=.asa/ .asax/ .ascx/ .axd/ .backup/ .bak/ .bat/ .cdx/ .cer/ .cfg/ .cmd/ .com/ .config/ .conf/ .cs/ .csproj/ .csr/ .dat/ .db/ .dbf/ .dll/ .dos/ .htr/ .htw/ .ida/ .idc/ .idq/ .inc/ .ini/ .key/ .licx/ .lnk/ .log/ .mdb/ .old/ .pass/ .pdb/ .pol/ .printer/ .pwd/ .rdb/ .resources/ .resx/ .sql/ .swp/ .sys/ .vb/ .vbs/ .vbproj/ .vsdisco/ .webinfo/ .xsd/ .xsx/
+      #- RESTRICTED_HEADERS=/accept-charset/ /content-encoding/ /proxy/ /lock-token/ /content-range/ /if/
       #- STATIC_EXTENSIONS=/.jpg/ /.jpeg/ /.png/ /.gif/ /.js/ /.css/ /.ico/ /.svg/ /.webp/
       #######################################################
       # CRS Variables with Default Value unlimited
@@ -84,3 +84,14 @@ services:
     #######################################################
     #  - ./server.crt:/usr/local/apache2/conf/server.crt
     #  - ./server.key:/usr/local/apache2/conf/server.key
+
+  crs-nginx:
+    extends: crs-apache
+    image: owasp/modsecurity-crs:nginx
+    #######################################################
+    # Add TLS server certificate and key
+    # (only available if SETPROXY was enabled during the
+    # parent ModSecurity image)
+    #######################################################
+    #  - ./server.crt:/etc/nginx/conf/server.crt
+    #  - ./server.key:/etc/nginx/conf/server.key
