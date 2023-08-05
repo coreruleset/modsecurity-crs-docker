@@ -7,15 +7,13 @@
 # and only if build args SETTLS and SETPROXY were set during
 # the build of the parent owasp/modsecurity:2.9-apache image.
 
-version: '3'
-
 services:
-  crs:
-    image: owasp/modsecurity-crs
+  crs-apache:
+    image: owasp/modsecurity-crs:apache
     ports:
-      - '80:80'
+      - "80:80"
       # only available if SETTLS was enabled:
-      - '443:443'
+      - "443:443"
 
     environment:
       - SERVERNAME=localhost
