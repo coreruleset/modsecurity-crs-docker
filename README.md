@@ -16,7 +16,6 @@ ModSecurity is an open source, cross platform web application firewall (WAF) eng
 
 * `3-nginx-YYYYMMDDHHMM`, `3.3-nginx-YYYYMMDDHHMM`, `3.3.5-nginx-YYYYMMDDHHMM`, `nginx` ([master/nginx/Dockerfile](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile)) – *last stable ModSecurity v3 on Nginx 1.24 official stable base image, and latest stable Core Rule Set 3.3.5*
 * `3-apache-YYYYMMDDHHMM`, `3.3-apache-YYYYMMDDHHMM`, `3.3.5-apache-YYYYMMDDHHMM`, `apache` ([master/apache/Dockerfile](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/apache/Dockerfile)) –*last stable ModSecurity v2 on Apache 2.4.56 official stable base image, and latest stable Core Rule Set 3.3.5*
-* `3-openresty-YYYYMMDDHHMM`, `3.3-5-openresty-YYYYMMDDHHMM`, `3.3.5-openresty-YYYYMMDDHHMM`, `openresty` ([master/openresty/Dockerfile-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/openresty/Dockerfile-alpine)) –*last stable ModSecurity v3 on Openresty 1.21 official stable base image, and latest stable Core Rule Set 3.3.5*
 
 ⚠️ We changed tags to [support production usage](https://github.com/coreruleset/modsecurity-crs-docker/issues/67). Now, if you want to use the "rolling version", use the tag `owasp/modsecurity-crs:nginx` or `owasp/modsecurity-crs:apache`. If you need a stable long term image, use the one with the full CRS version, in addition to the build date in `YYYYMMDDHHMM` format, example `owasp/modsecurity-crs:3.3.5-nginx-202209141209` or `owasp/modsecurity-crs:3.3.5-apache-202209141209` for example. You have been warned.
 
@@ -28,8 +27,9 @@ We also build [alpine linux](https://www.alpinelinux.org/) variants of the base 
 
 * `3-nginx-alpine-YYYYMMDDHHMM`, `3.3-nginx-alpine-YYYYMMDDHHMM`, `3.3.5-nginx-alpine-YYYYMMDDHHMM`, `nginx-alpine` ([master/nginx/Dockerfile-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile-alpine) – *last stable ModSecurity v3 on Nginx 1.24 official alpine stable base image, and latest stable Core Rule Set 3.3.5*
 * `3-apache-alpine-YYYYMMDDHHMM`, `3.3-apache-alpine-YYYYMMDDHHMM`, `3.3.5-apache-alpine-YYYYMMDDHHMM`, `apache-alpine` ([master/apache/Dockerfile-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/apache/Dockerfile-alpine)) – *last stable ModSecurity v2 on Apache 2.4.56 official alpine stable base image, and latest stable Core Rule Set 3.3.5*
+* `3-openresty-alpine-fat-YYYYMMDDHHMM`, `3.3-openresty-alpine-fat-YYYYMMDDHHMM`, `3.3.5-openresty-alpine-fat-YYYYMMDDHHMM`, `openresty-alpine-fat` ([master/openresty/Dockerfile-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/openresty/Dockerfile-alpine) – *last stable ModSecurity v3 on Openresty 1.21.4.2 official alpine stable base image with extra packages installed (Reason why the image includes -fat suffix.), and latest stable Core Rule Set 3.3.5*
 
-⚠️ We changed tags to [support production usage](https://github.com/coreruleset/modsecurity-crs-docker/issues/67). Now, if you want to use the "rolling version", use the tag `owasp/modsecurity-crs:nginx-alpine` or `owasp/modsecurity-crs:apache-alpine`. If you need a stable long term image, use the one with the full CRS version, in addition to the build date in `YYYYMMDDHHMM` format, example `owasp/modsecurity-crs:3.3.5-nginx-alpine-202209141209` or `owasp/modsecurity-crs:3.3.5-apache-alpine-202209141209` for example. You have been warned.
+⚠️ We changed tags to [support production usage](https://github.com/coreruleset/modsecurity-crs-docker/issues/67). Now, if you want to use the "rolling version", use the tag `owasp/modsecurity-crs:nginx-alpine` or `owasp/modsecurity-crs:apache-alpine` or `owasp/modsecurity-crs:openresty-alpine-fat`. If you need a stable long term image, use the one with the full CRS version, in addition to the build date in `YYYYMMDDHHMM` format, example `owasp/modsecurity-crs:3.3.5-nginx-alpine-202209141209` or `owasp/modsecurity-crs:3.3.5-apache-alpine-202209141209` or `owasp/modsecurity-crs:3.3.5-openresty-alpine-fat-202308051209` for example. You have been warned.
 
 ## Supported architectures
 
@@ -217,33 +217,7 @@ Note: Apache access and metric logs can be disabled by exporting the `nologging=
 
 ### Openresty ENV Variables
 
-| Name     | Description|
-| -------- | ------------------------------------------------------------------- |
-| ACCESSLOG  | A string value indicating the location of the access log file (Default: `/var/log/nginx/access.log`) |
-| BACKEND  | A string indicating the partial URL for the remote server of the `proxy_pass` directive (Default: `http://localhost:80`) |
-| DNS_SERVER  | A string indicating the name servers used to resolve names of upstream servers into addresses. For localhost backend this value should not be defined (Default: _not defined_) |
-| ERRORLOG  | A string value indicating the location of the error log file (Default: `/proc/self/fd/2`) |
-| LOGLEVEL  | A string value controlling the number of messages logged to the error_log (Default: `warn`) |
-| METRICS_ALLOW_FROM  | A string indicating a single range of IP adresses that can access the metrics (Default: `127.0.0.0/24`) |
-| METRICS_DENY_FROM  | A string indicating a range of IP adresses that cannot access the metrics (Default: `all`) |
-| METRICSLOG  | A string value indicating the location of metrics log file (Default: `/dev/null`) |
-| NGINX_ALWAYS_TLS_REDIRECT | A string value indicating if http should redirect to https (Allowed values: `on`, `off`. Default: `off`) |
-| PORT  | An integer value indicating the port where the webserver is listening to (Default: `80`) |
-| SET_REAL_IP_FROM | A string of comma separated IP, CIDR, or UNIX domain socket addresses that are trusted to replace addresses in `REAL_IP_HEADER` (Default: `127.0.0.1`). See [set_real_ip_from](http://nginx.org/en/docs/http/ngx_http_realip_module.html#set_real_ip_from) |
-| REAL_IP_HEADER | Name of the header containing the real IP value(s) (Default: `X-REAL-IP`). See [real_ip_header](http://nginx.org/en/docs/http/ngx_http_realip_module.html#real_ip_header) |
-| REAL_IP_RECURSIVE | A string value indicating whether to use recursive reaplacement on addresses in `REAL_IP_HEADER` (Allowed values: `on`, `off`. Default: `on`). See [real_ip_recursive](http://nginx.org/en/docs/http/ngx_http_realip_module.html#real_ip_recursive) |
-| PROXY_SSL_CERT  | A string value indicating the path to the server PEM-encoded X.509 certificate data file or token value identifier (Default: `/usr/local/openresty/nginx/conf/server.crt`) |
-| PROXY_SSL_CERT_KEY  | A string value indicating the path to the server PEM-encoded private key file (Default: `/usr/local/openresty/nginx/conf/server.key`) |
-| PROXY_SSL_CIPHERS | A String value indicating the enabled ciphers. The ciphers are specified in the format understood by the OpenSSL library. (Default: `ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;`|
-| PROXY_SSL_DH_BITS | A numeric value indicating the size (in bits) to use for the generated DH-params file (Default 2048) |
-| PROXY_SSL_OCSP_STAPLING | A string value indicating if ssl_stapling and ssl_stapling_verify should be enabled (Allowed values: `on`, `off`. Default: `off`) |
-| PROXY_SSL_PREFER_CIPHERS | A string value indicating if the server ciphers should be preferred over client ciphers when using the SSLv3 and TLS protocols (Allowed values: `on`, `off`. Default: `off`)|
-| PROXY_SSL_PROTOCOLS | A string value indicating the ssl protocols to enable (default: `TTLSv1.2 TLSv1.3`)|
-| PROXY_SSL_VERIFY  | A string value indicating if the client certificates should be verified (Allowed values: `on`, `off`. Default: `off`) |
-| PROXY_TIMEOUT  | Number of seconds for proxied requests to time out connections (Default: `60s`) |
-| SSL_PORT  | Port number where the SSL enabled webserver is listening (Default: `443`) |
-| TIMEOUT  | Number of seconds for a keep-alive client connection to stay open on the server side (Default: `60s`) |
-| WORKER_CONNECTIONS  | Maximum number of simultaneous connections that can be opened by a worker process (Default: `1024`) |
+Openresty uses the same ENV variables as the nginx version.
 
 ### ModSecurity ENV Variables
 
