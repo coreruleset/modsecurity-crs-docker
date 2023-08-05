@@ -195,7 +195,13 @@ COPY --from=build /etc/modsecurity.d/modsecurity.conf /etc/modsecurity.d/modsecu
 COPY --from=crs_release /opt/owasp-crs /opt/owasp-crs
 # We use the templating mechanism from the nginx image here,
 # as set up by owasp/modsecurity-docker
-COPY openresty/templates /usr/local/openresty/nginx/templates/
+# Everything from templates except the nginx confiugration is the same for openresty.
+COPY nginx/templates/conf.d /usr/local/openresty/nginx/templates/conf.d
+COPY nginx/templates/includes /usr/local/openresty/nginx/templates/includes
+COPY nginx/templates/modsecurity.d /usr/local/openresty/nginx/templates/modsecurity.d
+# Copy the nginx configuration separately
+COPY openresty/templates/nginx.conf.template /usr/local/openresty/nginx/templates
+# 
 COPY src/etc/modsecurity.d/modsecurity-override.conf /usr/local/openresty/nginx/templates/modsecurity.d/modsecurity-override.conf.template
 COPY src/etc/modsecurity.d/setup.conf /usr/local/openresty/nginx/templates/modsecurity.d/setup.conf.template
 COPY src/bin/healthcheck /usr/local/bin/healthcheck
