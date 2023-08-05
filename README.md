@@ -31,6 +31,10 @@ We also build [alpine linux](https://www.alpinelinux.org/) variants of the base 
 
 ⚠️ We changed tags to [support production usage](https://github.com/coreruleset/modsecurity-crs-docker/issues/67). Now, if you want to use the "rolling version", use the tag `owasp/modsecurity-crs:nginx-alpine` or `owasp/modsecurity-crs:apache-alpine` or `owasp/modsecurity-crs:openresty-alpine-fat`. If you need a stable long term image, use the one with the full CRS version, in addition to the build date in `YYYYMMDDHHMM` format, example `owasp/modsecurity-crs:3.3.5-nginx-alpine-202209141209` or `owasp/modsecurity-crs:3.3.5-apache-alpine-202209141209` or `owasp/modsecurity-crs:3.3.5-openresty-alpine-fat-202308051209` for example. You have been warned.
 
+### Notes regarding Openresty version of this image.
+
+The Openresty version of modsecurity-crs-docker currently only builds an image based on **Alpine Linux**. The Dockerfile for Openresty is located in the [docker-openresty github page](https://github.com/openresty/docker-openresty/blob/master/alpine/Dockerfile.fat).
+
 ## Supported architectures
 
 We added the [docker buildx](https://github.com/docker/buildx) support to our docker builds so additional architectures are supported now. As we create our containers based on the official apache, nginx and openresty ones, we can only support the architectures they support.
@@ -70,6 +74,13 @@ To build a specific target for a single platform only (replace target and platfo
 ```bash
 docker buildx bake -f docker-bake.hcl --set target.platforms=linux/amd64 nginx-alpine
 ```
+
+### Notes regarding Openresty version of the image.
+
+Openresty image builds currently support only these architectures:
+
+* linux/amd64
+* linux/arm64
 
 ## CRS Versions
 
