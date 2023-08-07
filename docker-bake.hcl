@@ -1,6 +1,6 @@
 # docker-bake.hcl
 variable "crs-version" {
-    default = "3.3.4"
+    default = "3.3.5"
 }
 
 variable "REPO" {
