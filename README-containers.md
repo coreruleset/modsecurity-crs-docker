@@ -93,6 +93,7 @@ These variables are common to image variants and will set defaults based on the 
 | BACKEND_WS | The IP/URL of the WebSocket service (Default: `ws://localhost:8080`) |
 | H2_PROTOCOLS | Protocols supported by the HTTP2 module (Default: `h2 http/1.1`) |
 | METRICSLOG | Path of the metrics log (Default: `/dev/null`) |
+| MUTEX | Configure mutex and lock file directory for all specified mutexes (see [Mutex](https://httpd.apache.org/docs/2.4/mod/core.html#mutex)) (Default: `default`) |
 | PROXY_ERROR_OVERRIDE | that errors from the backend services should be overridden by this proxy server (see [ProxyErrorOverride](https://httpd.apache.org/docs/2.4/mod/mod_proxy.html#proxyerroroverride) directive). (Allowed values: `on`, `off`. Default: `on`) |
 | PROXY_PRESERVE_HOST | Use of incoming Host HTTP request header for proxy request (Default: `on`) |
 | PROXY_SSL_CHECK_PEER_NAME | if the host name checking for remote server certificates is to be enabled (Default: `on`) |
