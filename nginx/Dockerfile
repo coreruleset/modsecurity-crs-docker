@@ -177,8 +177,7 @@ COPY src/etc/modsecurity.d/setup.conf /etc/nginx/templates/modsecurity.d/setup.c
 COPY nginx/docker-entrypoint.d/*.sh /docker-entrypoint.d/
 COPY src/opt/modsecurity/activate-plugins.sh /docker-entrypoint.d/94-activate-plugins.sh
 COPY src/opt/modsecurity/activate-rules.sh /docker-entrypoint.d/95-activate-rules.sh
-# We use the templating mechanism from the nginx image here,
-# as set up by owasp/modsecurity-docker
+# We use the templating mechanism from the nginx image here.
 COPY nginx/templates /etc/nginx/templates/
 COPY src/bin/* /usr/local/bin/
 
