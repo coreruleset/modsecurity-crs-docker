@@ -99,6 +99,7 @@ ENV APACHE_ALWAYS_TLS_REDIRECT=off \
     MODSEC_RESP_BODY_LIMIT_ACTION="ProcessPartial" \
     MODSEC_RESP_BODY_MIMETYPE="text/plain text/html text/xml" \
     MODSEC_RULE_ENGINE=on \
+    MODSEC_SERVER_SIGNATURE="Apache" \
     MODSEC_STATUS_ENGINE="Off" \
     MODSEC_TAG=modsecurity \
     MODSEC_TMP_DIR=/tmp/modsecurity/tmp \
@@ -118,6 +119,8 @@ ENV APACHE_ALWAYS_TLS_REDIRECT=off \
     REQ_HEADER_FORWARDED_PROTO='https' \
     SERVER_ADMIN=root@localhost \
     SERVER_NAME=localhost \
+    SERVER_SIGNATURE=Off \
+    SERVER_TOKENS=Full \
     SSL_CIPHER_SUITE="ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384" \
     SSL_ENGINE=on \
     SSL_HONOR_CIPHER_ORDER=off \
@@ -173,7 +176,8 @@ RUN set -eux; \
     mkdir -p /var/log/apache2/; \
     ln -s /opt/owasp-crs /etc/modsecurity.d/; \
     sed -i -E 's|(Listen) [0-9]+|\1 ${PORT}|' /usr/local/apache2/conf/httpd.conf; \
-    sed -i -E 's|(ServerTokens) Full|\1 Prod|' /usr/local/apache2/conf/extra/httpd-default.conf; \
+    sed -i -E 's|(ServerTokens) Full|\1 ${SERVER_TOKENS}|' /usr/local/apache2/conf/extra/httpd-default.conf; \
+    sed -i -E 's|(ServerSignature) Off|\1 ${SERVER_SIGNATURE}|' /usr/local/apache2/conf/extra/httpd-default.conf; \
     sed -i -E 's|#(ServerName) www.example.com:80|\1 ${SERVER_NAME}|' /usr/local/apache2/conf/httpd.conf; \
     sed -i -E 's|(ServerAdmin) you@example.com|\1 ${SERVER_ADMIN}|' /usr/local/apache2/conf/httpd.conf; \
     sed -i -E 's|^(\s*CustomLog)(\s+\S+)+|\1 ${ACCESSLOG} modsec "env=!nologging"|g' /usr/local/apache2/conf/httpd.conf; \
