@@ -213,7 +213,7 @@ Note: Apache access and metric logs can be disabled by exporting the `nologging=
 | PROXY_SSL_PROTOCOLS | A string value indicating the ssl protocols to enable (default: `TTLSv1.2 TLSv1.3`)|
 | PROXY_SSL_VERIFY  | A string value indicating if the client certificates should be verified (Allowed values: `on`, `off`. Default: `off`) |
 | PROXY_TIMEOUT  | Number of seconds for proxied requests to time out connections (Default: `60s`) |
-| SERVER_TOKENS | A string value indicating the server header of HTTP responses and the version number in the footer on error pages. (Allowed values: `on`, `off`. Default: `off`). |
+| SERVER_TOKENS | A boolean value for enabling / disabling emission of server identifying information in the `Server` HTTP response header and on error pages. (Allowed values: `on`, `off`, `build`. Default: `off`). |
 | SSL_PORT  | Port number where the SSL enabled webserver is listening (Default: `443`) |
 | TIMEOUT  | Number of seconds for a keep-alive client connection to stay open on the server side (Default: `60s`) |
 | WORKER_CONNECTIONS  | Maximum number of simultaneous connections that can be opened by a worker process (Default: `1024`) |
