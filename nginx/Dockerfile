@@ -152,6 +152,7 @@ ENV ACCESSLOG=/var/log/nginx/access.log \
     PROXY_SSL_VERIFY=off \
     PROXY_SSL_OCSP_STAPLING=off \
     SERVER_NAME=localhost \
+    SERVER_TOKENS=off \
     SSL_PORT=443 \
     TIMEOUT=60s \
     WORKER_CONNECTIONS=1024 \
