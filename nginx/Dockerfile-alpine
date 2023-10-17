@@ -2,7 +2,7 @@ ARG NGINX_VERSION="1.24.0"
 
 FROM nginx:${NGINX_VERSION}-alpine as build
 
-ARG MODSEC_VERSION=3.0.9
+ARG MODSEC_VERSION=3.0.10
 
 # Note: pcre-dev (PCRE 1) is required by the build description,
 # even though the build will use PCRE2.
@@ -90,7 +90,7 @@ RUN set -eux; \
 
 FROM nginx:${NGINX_VERSION}-alpine
 
-ARG MODSEC_VERSION=3.0.9
+ARG MODSEC_VERSION=3.0.10
 
 LABEL maintainer="Felipe Zipitria <felipe.zipitria@owasp.org>"
 
@@ -146,6 +146,7 @@ ENV ACCESSLOG=/var/log/nginx/access.log \
     PROXY_SSL_VERIFY=off \
     PROXY_SSL_OCSP_STAPLING=off \
     SERVER_NAME=localhost \
+    SERVER_TOKENS=off \
     SSL_PORT=443 \
     TIMEOUT=60s \
     WORKER_CONNECTIONS=1024 \
@@ -165,8 +166,7 @@ COPY --from=build /usr/share/TLS/dhparam-* /etc/ssl/certs/
 COPY --from=build /etc/modsecurity.d/unicode.mapping /etc/modsecurity.d/unicode.mapping
 COPY --from=build /etc/modsecurity.d/modsecurity.conf /etc/modsecurity.d/modsecurity.conf
 COPY --from=crs_release /opt/owasp-crs /opt/owasp-crs
-# We use the templating mechanism from the nginx image here,
-# as set up by owasp/modsecurity-docker
+# We use the templating mechanism from the nginx image here.
 COPY nginx/templates /etc/nginx/templates/
 COPY src/etc/modsecurity.d/modsecurity-override.conf /etc/nginx/templates/modsecurity.d/modsecurity-override.conf.template
 COPY src/etc/modsecurity.d/setup.conf /etc/nginx/templates/modsecurity.d/setup.conf.template
