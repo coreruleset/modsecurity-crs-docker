@@ -2,7 +2,7 @@ ARG NGINX_VERSION="1.24.0"
 
 FROM nginx:${NGINX_VERSION} as build
 
-ARG MODSEC_VERSION=3.0.10 \
+ARG MODSEC_VERSION=3.0.11 \
     LMDB_VERSION=0.9.29
 
 # Note: libpcre3-dev (PCRE 1) is required by the build description,
@@ -95,7 +95,7 @@ RUN set -eux; \
 
 FROM nginx:${NGINX_VERSION}
 
-ARG MODSEC_VERSION=3.0.10 \
+ARG MODSEC_VERSION=3.0.11 \
     LMDB_VERSION=0.9.29
 
 LABEL maintainer="Felipe Zipitria <felipe.zipitria@owasp.org>"
