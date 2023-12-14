@@ -103,7 +103,7 @@ ModSecurity is an open source, cross platform Web Application Firewall (WAF) eng
 
 If using the [Nginx environment variables](https://github.com/coreruleset/modsecurity-crs-docker#nginx-env-variables) is not enough for your use case, you can mount your own `nginx.conf` file as the new template for generating the base config.
 
-An example can be seen in the [docker-compose](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/docker-compose.yml) file.
+An example can be seen in the [docker-compose](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/docker-compose.yaml) file.
 
 > 💬 What happens if I want to make changes in a different file, like `/etc/nginx/conf.d/default.conf`?
 > You mount your local file, e.g. `nginx/default.conf` as the new template: `/etc/nginx/templates/conf.d/default.conf.template`. You can do this similarly with other files. Files in the templates directory will be copied and subdirectories will be preserved.
