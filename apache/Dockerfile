@@ -20,7 +20,7 @@ RUN set -eux; \
         libtool \
         libxml2-dev \
         libyajl-dev \
-        lua5.2-dev \
+        lua5.3-dev \
         make \
         pkgconf \
         wget
@@ -161,6 +161,7 @@ RUN set -eux; \
         iproute2 \
         libcurl3-gnutls \
         libfuzzy2 \
+        liblua5.3 \
         libxml2 \
         libyajl2; \
     update-ca-certificates -f; \

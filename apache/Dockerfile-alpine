@@ -27,8 +27,8 @@ RUN set -eux; \
     libtool \
     lmdb-dev \
     libxml2-dev \
+    lua5.3-dev \
     yajl-dev \
-    lua-dev \
     make \
     openssl \
     openssl-dev \
@@ -166,6 +166,7 @@ RUN set -eux; \
         iproute2 \
         libfuzzy2 \
         libxml2 \
+        lua5.3 \
         moreutils \
         openssl \
         sed \

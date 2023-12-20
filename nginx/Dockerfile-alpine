@@ -25,6 +25,7 @@ RUN set -eux; \
         libxml2-dev \
         linux-headers \
         lmdb-dev \
+        lua5.3-dev \
         make \
         openssl \
         openssl-dev \
@@ -185,6 +186,7 @@ RUN set -eux; \
         libstdc++ \
         libxml2-dev \
         lmdb-dev \
+        lua5.3 \
         moreutils \
         openssl \
         tzdata \
