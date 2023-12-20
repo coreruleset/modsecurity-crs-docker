@@ -36,9 +36,9 @@ We also build [alpine linux](https://www.alpinelinux.org/) variants of the base 
 ## Supported architectures
 
 * linux/amd64
-* linux/i386
-* linux/arm64
 * linux/arm/v7
+* linux/arm64/v8
+* linux/i386
 
 ## Quick reference
 

@@ -57,9 +57,9 @@ docker buildx bake -f ./docker-bake.hcl --print
 We are building now for these architectures:
 
 * linux/amd64
-* linux/i386
-* linux/arm64
 * linux/arm/v7
+* linux/arm64/v8
+* linux/i386
 
 You can find additional examples on how to use `buildx` in this repository's GitHub act
 We added the [docker buildx](https://github.com/docker/buildx) support to our docker builds so additional architectures are supported now. As we create our containers based on the official apache and nginx ones, we can only support the architectures they support.
@@ -67,7 +67,7 @@ We added the [docker buildx](https://github.com/docker/buildx) support to our do
 To build a specific target for a single platform only (replace target and platform strings in the example with the your choices):
 
 ```bash
-docker buildx bake -f docker-bake.hcl --set target.platforms=linux/amd64 nginx-alpine
+docker buildx bake -f docker-bake.hcl --set "*.platform=linux/amd64" nginx-alpine
 ```
 
 ## CRS Versions
