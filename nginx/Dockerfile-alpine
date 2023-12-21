@@ -1,8 +1,9 @@
-ARG NGINX_VERSION="1.24.0"
+ARG NGINX_VERSION="1.25.3"
 
 FROM nginx:${NGINX_VERSION}-alpine as build
 
-ARG MODSEC_VERSION=3.0.11
+ARG MODSEC_VERSION=3.0.11 \
+    LUA_VERSION=5.3
 
 # Note: pcre-dev (PCRE 1) is required by the build description,
 # even though the build will use PCRE2.
@@ -25,7 +26,7 @@ RUN set -eux; \
         libxml2-dev \
         linux-headers \
         lmdb-dev \
-        lua5.3-dev \
+        lua${LUA_VERSION}-dev \
         make \
         openssl \
         openssl-dev \
@@ -91,7 +92,8 @@ RUN set -eux; \
 
 FROM nginx:${NGINX_VERSION}-alpine
 
-ARG MODSEC_VERSION=3.0.11
+ARG MODSEC_VERSION=3.0.11 \
+    LUA_VERSION=5.3
 
 LABEL maintainer="Felipe Zipitria <felipe.zipitria@owasp.org>"
 
@@ -186,7 +188,7 @@ RUN set -eux; \
         libstdc++ \
         libxml2-dev \
         lmdb-dev \
-        lua5.3 \
+        lua${LUA_VERSION} \
         moreutils \
         openssl \
         tzdata \
