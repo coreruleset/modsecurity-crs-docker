@@ -1,8 +1,9 @@
-ARG APACHE_VERSION=2.4.57
+ARG APACHE_VERSION=2.4.58
 
 FROM httpd:${APACHE_VERSION}-alpine as build
 
-ARG MODSEC_VERSION=2.9.7
+ARG MODSEC_VERSION=2.9.7 \
+    LUA_VERSION=5.3
 
 # see https://httpd.apache.org/docs/2.4/install.html#requirements
 RUN set -eux; \
@@ -27,7 +28,7 @@ RUN set -eux; \
     libtool \
     lmdb-dev \
     libxml2-dev \
-    lua5.3-dev \
+    lua${LUA_VERSION}-dev \
     yajl-dev \
     make \
     openssl \
@@ -67,7 +68,8 @@ RUN set -eux; \
 
 FROM httpd:${APACHE_VERSION}-alpine
 
-ARG MODSEC_VERSION=2.9.7
+ARG MODSEC_VERSION=2.9.7 \
+    LUA_VERSION=5.3
 
 LABEL maintainer="Felipe Zipitria <felipe.zipitria@owasp.org>"
 
@@ -169,7 +171,7 @@ RUN set -eux; \
         iproute2 \
         libfuzzy2 \
         libxml2 \
-        lua5.3 \
+        lua${LUA_VERSION} \
         moreutils \
         openssl \
         sed \
