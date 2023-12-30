@@ -48,6 +48,7 @@ services:
       # If needed: add own httpd-proxy.conf (only available if SETPROXY
       # was enabled during build of parent ModSecurity image)
       #  - ./httpd-proxy.conf:/usr/local/apache2/conf/extra/httpd-proxy.conf
+      
       #######################################################
       # Various CRS Variables with Default Values
       #######################################################
@@ -93,4 +94,3 @@ services:
     #######################################################
     #  - ./server.crt:/etc/nginx/conf/server.crt
     #  - ./server.key:/etc/nginx/conf/server.key
-
