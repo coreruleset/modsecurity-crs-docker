@@ -11,9 +11,9 @@ services:
   crs-apache:
     image: owasp/modsecurity-crs:apache
     ports:
-      - "80:80"
+      - '80:80'
       # only available if SETTLS was enabled:
-      - "443:443"
+      - '443:443'
 
     environment:
       - SERVERNAME=localhost
@@ -93,3 +93,4 @@ services:
     #######################################################
     #  - ./server.crt:/etc/nginx/conf/server.crt
     #  - ./server.key:/etc/nginx/conf/server.key
+
