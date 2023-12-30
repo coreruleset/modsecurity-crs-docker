@@ -3,8 +3,8 @@
 # Also specify the LUA version used. (Comes with the latest Openresty src bundle.)
 ARG OPENRESTY_VERSION="1.21.4.3" \
     NGINX_VERSION="1.21.4" \
-    LUA_JIT_VERSION="2.1-20230410"
-    MODSEC_VERSION=3.0.11
+    LUA_JIT_VERSION="2.1-20230410" \
+    MODSEC_VERSION="3.0.11"
 
 FROM openresty/openresty:${OPENRESTY_VERSION}-alpine-fat as build
 
