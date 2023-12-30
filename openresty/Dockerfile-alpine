@@ -1,13 +1,13 @@
 # Current latest Openresty version is here.
 # Also specify the Nginx core used. (Openresty, adds their own version numbers after the nginx one, so we can't use the same number for both openresty and nginx)
 # Also specify the LUA version used. (Comes with the latest Openresty src bundle.)
-ARG OPENRESTY_VERSION="1.21.4.2" \
+ARG OPENRESTY_VERSION="1.21.4.3" \
     NGINX_VERSION="1.21.4" \
     LUA_JIT_VERSION="2.1-20230410"
 
 FROM openresty/openresty:${OPENRESTY_VERSION}-alpine-fat as build
 
-ARG MODSEC_VERSION=3.0.9 \
+ARG MODSEC_VERSION=3.0.11 \
     OPENRESTY_VERSION \
     NGINX_VERSION \
     LUA_JIT_VERSION 
@@ -116,7 +116,7 @@ RUN set -eux; \
 
 FROM openresty/openresty:${OPENRESTY_VERSION}-alpine-fat
 
-ARG MODSEC_VERSION=3.0.9
+ARG MODSEC_VERSION=3.0.11
 
 LABEL maintainer="Felipe Zipitria <felipe.zipitria@owasp.org>"
 
