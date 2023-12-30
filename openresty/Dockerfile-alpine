@@ -62,7 +62,7 @@ RUN set -eux; \
     strip /usr/local/modsecurity/lib/lib*.so*
 
 # We use latest version of the ModSecurity nginx connector.
-# Instead of Nginx download the bundled openresty for this version of openresty base image. We can use the openresty already installed on the base image and get the compile options from there. For building the nginx module we can use the bundled nginx.
+# Download Openresty bundle for the specific version. We can then get the compilation options for nginx from the installed Openresty in the docker image to be used with the 'configure' script inside the openresty bundle to configure the ModSecurity-nginx module and then build it. I did not find the configure script inside the Openresty Docker image.
 # Specify the LUAJIT_LIB-s that are already installed in the base image.
 # Use the includes from the bundled version. This is where LUA_JIT_VERSION comes in to play because the version CAN differ from release to release.
 RUN set -eux; \
