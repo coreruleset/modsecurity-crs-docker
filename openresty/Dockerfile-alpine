@@ -161,6 +161,7 @@ ENV ACCESSLOG=/var/log/nginx/access.log \
     NGINX_ALWAYS_TLS_REDIRECT=off \
     SET_REAL_IP_FROM="127.0.0.1" \
     REAL_IP_HEADER="X-REAL-IP" \
+    REAL_IP_PROXY_HEADER="X-REAL-IP" \
     REAL_IP_RECURSIVE="on" \
     PROXY_TIMEOUT=60s \
     PROXY_SSL_CERT=/usr/local/openresty/nginx/conf/server.crt \
