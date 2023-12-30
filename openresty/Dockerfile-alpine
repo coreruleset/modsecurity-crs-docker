@@ -1,18 +1,19 @@
 # Current latest Openresty version is here.
-# Also specify the Nginx core used. (Openresty, adds their own version numbers after the nginx one, so we can't use the same number for both openresty and nginx)
+# Also specify the nginx core used. (Openresty, adds their own version numbers after the nginx one, so we can't use the same number for both Openresty and nginx)
 # Also specify the LUA version used. (Comes with the latest Openresty src bundle.)
 ARG OPENRESTY_VERSION="1.21.4.3" \
     NGINX_VERSION="1.21.4" \
     LUA_JIT_VERSION="2.1-20230410"
+    MODSEC_VERSION=3.0.11
 
 FROM openresty/openresty:${OPENRESTY_VERSION}-alpine-fat as build
 
-ARG MODSEC_VERSION=3.0.11 \
+ARG MODSEC_VERSION \
     OPENRESTY_VERSION \
     NGINX_VERSION \
     LUA_JIT_VERSION 
 
-# Remove pcre2 support for openresty, until it gets update to pcre2.
+# Remove pcre2 compliation of ModSecurity for openresty, until openresty gets updated to support pcre2. Relevant github issue: https://github.com/openresty/lua-nginx-module/issues/1984
 RUN set -eux; \
     apk add --no-cache --virtual .build-deps \
         autoconf \
@@ -48,7 +49,7 @@ RUN set -eux; \
 
 WORKDIR /sources
 
-# Download modsecurity and compile it.
+# Download ModSecurity and compile it.
 RUN set -eux; \
     git clone https://github.com/SpiderLabs/ModSecurity --branch v"${MODSEC_VERSION}" --depth 1 --recursive; \
     cd ModSecurity; \
@@ -60,10 +61,10 @@ RUN set -eux; \
     make install; \
     strip /usr/local/modsecurity/lib/lib*.so*
 
-# We use master Modsec version
+# We use latest version of the ModSecurity nginx connector.
 # Instead of Nginx download the bundled openresty for this version of openresty base image. We can use the openresty already installed on the base image and get the compile options from there. For building the nginx module we can use the bundled nginx.
 # Specify the LUAJIT_LIB-s that are already installed in the base image.
-# use the includes from the bundled version. This is where LUA JIT VERSION is important. Because it differs from release to release (probably).
+# Use the includes from the bundled version. This is where LUA_JIT_VERSION comes in to play because the version CAN differ from release to release.
 RUN set -eux; \
     git clone -b master --depth 1 https://github.com/SpiderLabs/ModSecurity-nginx.git; \
     wget --quiet https://openresty.org/download/openresty-"${OPENRESTY_VERSION}".tar.gz; \
@@ -116,9 +117,9 @@ RUN set -eux; \
 
 FROM openresty/openresty:${OPENRESTY_VERSION}-alpine-fat
 
-ARG MODSEC_VERSION=3.0.11
+ARG MODSEC_VERSION
 
-LABEL maintainer="Felipe Zipitria <felipe.zipitria@owasp.org>"
+LABEL maintainer="Taavi Ansper <taaviansperr@gmail.com>"
 
 ENV ACCESSLOG=/var/log/nginx/access.log \
     BACKEND=http://localhost:80 \
@@ -193,15 +194,13 @@ COPY --from=build /usr/share/TLS/dhparam-* /etc/ssl/certs/
 COPY --from=build /etc/modsecurity.d/unicode.mapping /etc/modsecurity.d/unicode.mapping
 COPY --from=build /etc/modsecurity.d/modsecurity.conf /etc/modsecurity.d/modsecurity.conf
 COPY --from=crs_release /opt/owasp-crs /opt/owasp-crs
-# We use the templating mechanism from the nginx image here,
-# as set up by owasp/modsecurity-docker
-# Everything from templates except the nginx confiugration is the same for openresty.
+# We use the templating mechanism from the nginx image here.
+# Everything from templates except the nginx configuration, is the same for Openresty.
 COPY nginx/templates/conf.d /usr/local/openresty/nginx/templates/conf.d
 COPY nginx/templates/includes /usr/local/openresty/nginx/templates/includes
 COPY nginx/templates/modsecurity.d /usr/local/openresty/nginx/templates/modsecurity.d
 # Copy the nginx configuration separately
 COPY openresty/templates/nginx.conf.template /usr/local/openresty/nginx/templates
-# 
 COPY src/etc/modsecurity.d/modsecurity-override.conf /usr/local/openresty/nginx/templates/modsecurity.d/modsecurity-override.conf.template
 COPY src/etc/modsecurity.d/setup.conf /usr/local/openresty/nginx/templates/modsecurity.d/setup.conf.template
 COPY src/bin/healthcheck /usr/local/bin/healthcheck
@@ -227,7 +226,6 @@ RUN set -eux; \
         sed \
         yajl; \
     # Install lua modules here
-    # Possible TODO make it a variable if you want to build this Dockerfile yourself.
     luarocks install lua-resty-openidc; \
     mkdir /var/log/nginx; \
     mkdir -p /tmp/modsecurity/data; \
@@ -246,7 +244,7 @@ EXPOSE 80
 
 HEALTHCHECK CMD /usr/local/bin/healthcheck
 
-# Openresty does not use NGINX dockerfile. 
+# The Openresty image is not based on the nginx image.
 # This Dockerfile integrates the docker-entrypoint and envsubst logic from there into here.
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
