@@ -2,7 +2,7 @@ ARG NGINX_VERSION="1.24.0"
 
 FROM nginx:${NGINX_VERSION} as build
 
-ARG MODSEC_VERSION=3.0.8 \
+ARG MODSEC_VERSION=3.0.11 \
     LMDB_VERSION=0.9.29
 
 # Note: libpcre3-dev (PCRE 1) is required by the build description,
@@ -95,7 +95,7 @@ RUN set -eux; \
 
 FROM nginx:${NGINX_VERSION}
 
-ARG MODSEC_VERSION=3.0.8 \
+ARG MODSEC_VERSION=3.0.11 \
     LMDB_VERSION=0.9.29
 
 LABEL maintainer="Felipe Zipitria <felipe.zipitria@owasp.org>"
@@ -152,6 +152,7 @@ ENV ACCESSLOG=/var/log/nginx/access.log \
     PROXY_SSL_VERIFY=off \
     PROXY_SSL_OCSP_STAPLING=off \
     SERVER_NAME=localhost \
+    SERVER_TOKENS=off \
     SSL_PORT=443 \
     TIMEOUT=60s \
     WORKER_CONNECTIONS=1024 \
@@ -177,8 +178,7 @@ COPY src/etc/modsecurity.d/setup.conf /etc/nginx/templates/modsecurity.d/setup.c
 COPY nginx/docker-entrypoint.d/*.sh /docker-entrypoint.d/
 COPY src/opt/modsecurity/activate-plugins.sh /docker-entrypoint.d/94-activate-plugins.sh
 COPY src/opt/modsecurity/activate-rules.sh /docker-entrypoint.d/95-activate-rules.sh
-# We use the templating mechanism from the nginx image here,
-# as set up by owasp/modsecurity-docker
+# We use the templating mechanism from the nginx image here.
 COPY nginx/templates /etc/nginx/templates/
 COPY src/bin/* /usr/local/bin/
 

@@ -1,5 +1,7 @@
 # Nginx configuration for both HTTP and SSL
 
+server_tokens ${SERVER_TOKENS};
+
 map $http_upgrade $connection_upgrade {
     default upgrade;
     '' close;

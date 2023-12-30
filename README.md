@@ -168,6 +168,7 @@ docker run -p 8080:80 -e SERVER_NAME=myhost my-modsec
 | METRICS_ALLOW_FROM  | A string indicating a range of IP adresses that can access the metrics (Default: `127.0.0.0/255.0.0.0 ::1/128`) |
 | METRICS_DENY_FROM  | A string indicating a range of IP adresses that cannot access the metrics (Default: `All`) |
 | METRICSLOG  | A string indicating the path of the metrics log (Default: `/dev/null`) |
+| MUTEX | Configure mutex and lock file directory for all specified mutexes (see [Mutex](https://httpd.apache.org/docs/2.4/mod/core.html#mutex)) (Default: `default`) |
 | PORT  | An integer value indicating the port where the webserver is listening to (Default: `80`) |
 | PROXY_ERROR_OVERRIDE  | A string indicating that errors from the backend services should be overridden by this proxy server (see [ProxyErrorOverride](https://httpd.apache.org/docs/2.4/mod/mod_proxy.html#proxyerroroverride) directive). (Allowed values: `on`, `off`. Default: `on`) |
 | PROXY_PRESERVE_HOST  | A string indicating the use of incoming Host HTTP request header for proxy request (Default: `on`) |
@@ -181,6 +182,8 @@ docker run -p 8080:80 -e SERVER_NAME=myhost my-modsec
 | REQ_HEADER_FORWARDED_PROTO  | A string indicating the transfer protocol of the initial request (Default: `https`) |
 | SERVER_ADMIN  | A string value indicating the address where problems with the server should be e-mailed (Default: `root@localhost`) |
 | SERVER_NAME | A string value indicating the server name (Default: `localhost`) |
+| SERVER_SIGNATURE | A string value configuring the footer on server-generated documents (Allowed values: `On`, `Off`, `EMail`. Default: `Off`) |
+| SERVER_TOKENS | Option defining the server information presented to clients in the `Server` HTTP response header. Also see `MODSEC_SERVER_SIGNATURE`. (Allowed values: `Full`,  `Prod[uctOnly]`, `Major`, `Minor`, `Min[imal]`, `OS`. Default: `Full`). |
 | SSL_CIPHER_SUITE | A string indicating the cipher suite to use. Uses OpenSSL [list of cipher suites](https://www.openssl.org/docs/manmaster/man3/SSL_CTX_set_ciphersuites.html) (Default: `"ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384"` |
 | SSL_ENGINE  | A string indicating the SSL Engine Operation Switch (Default: `on`) |
 | SSL_HONOR_CIPHER_ORDER | A string indicating if the server should [honor the cipher list provided by the client](https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslhonorcipherorder) (Allowed values: `on`, `off`. Default: `off`) |
@@ -222,6 +225,7 @@ Note: Apache access and metric logs can be disabled by exporting the `nologging=
 | PROXY_SSL_PROTOCOLS | A string value indicating the ssl protocols to enable (default: `TTLSv1.2 TLSv1.3`)|
 | PROXY_SSL_VERIFY  | A string value indicating if the client certificates should be verified (Allowed values: `on`, `off`. Default: `off`) |
 | PROXY_TIMEOUT  | Number of seconds for proxied requests to time out connections (Default: `60s`) |
+| SERVER_TOKENS | A boolean value for enabling / disabling emission of server identifying information in the `Server` HTTP response header and on error pages. (Allowed values: `on`, `off`, `build`. Default: `off`). |
 | SSL_PORT  | Port number where the SSL enabled webserver is listening (Default: `443`) |
 | TIMEOUT  | Number of seconds for a keep-alive client connection to stay open on the server side (Default: `60s`) |
 | WORKER_CONNECTIONS  | Maximum number of simultaneous connections that can be opened by a worker process (Default: `1024`) |
@@ -258,6 +262,7 @@ All these variables impact in configuration directives in the modsecurity engine
 | MODSEC_RESP_BODY_LIMIT_ACTION  | A string value for the action when `SecResponseBodyLimit` is reached (Default: `ProcessPartial`). Accepted values: `Reject`, `ProcessPartial`. See [SecResponseBodyLimitAction](https://github.com/SpiderLabs/ModSecurity/wiki/Reference-Manual-(v2.x)#secresponsebodylimitaction) for additional information. |
 | MODSEC_RESP_BODY_MIMETYPE  | A string with the list of mime types that will be analyzed in the response (Default: `'text/plain text/html text/xml'`). You might consider adding `application/json` documented [here](https://github.com/SpiderLabs/ModSecurity/wiki/Reference-Manual-\(v2.x\)#secresponsebodymimetype). |
 | MODSEC_RULE_ENGINE  | A string value enabling ModSecurity itself (Default: `On`). Accepted values: `On`, `Off`, `DetectionOnly`. See [SecRuleEngine](https://github.com/SpiderLabs/ModSecurity/wiki/Reference-Manual-%28v2.x%29#secruleengine) for additional information. |
+| MODSEC_SERVER_SIGNATURE  | Sets the directive [SecServerSignature](https://github.com/SpiderLabs/ModSecurity/wiki/Reference-Manual-%28v2.x%29#secserversignature) and instructs ModSecurity to change the data presented in the "Server:" response header token when Apache `ServerTokens` directive is set to `Full`. Also see Apache `SERVER_TOKENS`. Only supported in ModSecurity 2.x, will have not effect on 3.x. (Default: `Apache`). |
 | MODSEC_STATUS_ENGINE  | A string used to configure the status engine, which sends statistical information (Default: `Off`). Accepted values: `On`, `Off`. See [SecStatusEngine](https://github.com/SpiderLabs/ModSecurity/wiki/Reference-Manual-%28v2.x%29#SecStatusEngine) for additional information. |
 | MODSEC_TAG  | A string indicating the default tag action, which will be inherited by the rules in the same configuration context (Default: `modsecurity`) |
 | MODSEC_TMP_DIR  | A string indicating the path where temporary files will be created (Default: `/tmp/modsecurity/tmp`) |

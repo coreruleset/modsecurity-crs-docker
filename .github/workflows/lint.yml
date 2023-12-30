@@ -13,10 +13,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 1
-      - name: Check README-containers.md lenght
+      - name: Check README-containers.md length
         run: |
           count=$(wc -m <README-containers.md)
           if [[ ${count} -ge 25000 ]]; then

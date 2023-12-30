@@ -93,6 +93,7 @@ These variables are common to image variants and will set defaults based on the 
 | BACKEND_WS | The IP/URL of the WebSocket service (Default: `ws://localhost:8080`) |
 | H2_PROTOCOLS | Protocols supported by the HTTP2 module (Default: `h2 http/1.1`) |
 | METRICSLOG | Path of the metrics log (Default: `/dev/null`) |
+| MUTEX | Configure mutex and lock file directory for all specified mutexes (see [Mutex](https://httpd.apache.org/docs/2.4/mod/core.html#mutex)) (Default: `default`) |
 | PROXY_ERROR_OVERRIDE | that errors from the backend services should be overridden by this proxy server (see [ProxyErrorOverride](https://httpd.apache.org/docs/2.4/mod/mod_proxy.html#proxyerroroverride) directive). (Allowed values: `on`, `off`. Default: `on`) |
 | PROXY_PRESERVE_HOST | Use of incoming Host HTTP request header for proxy request (Default: `on`) |
 | PROXY_SSL_CHECK_PEER_NAME | if the host name checking for remote server certificates is to be enabled (Default: `on`) |
@@ -205,33 +206,3 @@ All these variables impact in configuration directives in the modsecurity engine
 | MAX_FILE_SIZE | An int indicating the max_file_size (Default: `unlimited`) |
 | COMBINED_FILE_SIZES | An int indicating the combined_file_sizes (Default: `unlimited`) |
 | CRS_ENABLE_TEST_MARKER | A bool indicating whether to write test markers to the log file (Used for running the CRS test suite. Default: `0`) |
-
-## ModSecurity CRS Tuning
-
-There are two possible ways to pass CRS tuning rules to the container:
-
-* To map the ModSecurity tuning file(s) via volumes into the container during the run command
-* To copy the ModSecurity tuning file(s) into the created container and then start the container
-
-### Map ModSecurity tuning file via volume
-
-```bash
-docker run -dti --rm \
-   -p 80:80 \
-   -v /path/to/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf:/etc/modsecurity.d/owasp-crs/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf \
-   -v /path/to/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf:/etc/modsecurity.d/owasp-crs/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf \
-   owasp/modsecurity-crs:apache
-```
-
-### Copy ModSecurity tuning file into created container
-
-This example can be helpful when no volume mounts are possible (some CI pipelines).
-
-```bash
-docker create -ti --name modseccrs \
-   -p 80:80 \
-   owasp/modsecurity-crs:apache
-docker cp /path/to/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf \
-   modseccrs:/etc/modsecurity.d/owasp-crs/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf
-docker start modseccrs
-```
