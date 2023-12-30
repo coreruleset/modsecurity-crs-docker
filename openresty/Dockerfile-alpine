@@ -200,14 +200,16 @@ COPY nginx/templates/conf.d /usr/local/openresty/nginx/templates/conf.d
 COPY nginx/templates/includes /usr/local/openresty/nginx/templates/includes
 COPY nginx/templates/modsecurity.d /usr/local/openresty/nginx/templates/modsecurity.d
 # Copy the nginx configuration separately
-COPY openresty/templates/nginx.conf.template /usr/local/openresty/nginx/templates
 COPY src/etc/modsecurity.d/modsecurity-override.conf /usr/local/openresty/nginx/templates/modsecurity.d/modsecurity-override.conf.template
 COPY src/etc/modsecurity.d/setup.conf /usr/local/openresty/nginx/templates/modsecurity.d/setup.conf.template
 COPY src/bin/healthcheck /usr/local/bin/healthcheck
-COPY openresty/docker-entrypoint.d/*.sh /docker-entrypoint.d/
 COPY src/opt/modsecurity/activate-plugins.sh /docker-entrypoint.d/94-activate-plugins.sh
 COPY src/opt/modsecurity/activate-rules.sh /docker-entrypoint.d/95-activate-rules.sh
+
+# Openresty specific block.
+COPY openresty/templates/nginx.conf.template /usr/local/openresty/nginx/templates
 COPY openresty/docker-entrypoint.sh /
+COPY openresty/docker-entrypoint.d/*.sh /docker-entrypoint.d/
 
 
 RUN set -eux; \
