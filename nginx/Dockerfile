@@ -1,9 +1,10 @@
-ARG NGINX_VERSION="1.24.0"
+ARG NGINX_VERSION="1.25.3"
 
 FROM nginx:${NGINX_VERSION} as build
 
 ARG MODSEC_VERSION=3.0.11 \
-    LMDB_VERSION=0.9.29
+    LMDB_VERSION=0.9.29 \
+    LUA_VERSION=5.3
 
 # Note: libpcre3-dev (PCRE 1) is required by the build description,
 # even though the build will use PCRE2.
@@ -19,7 +20,7 @@ RUN set -eux; \
         libcurl4-gnutls-dev \
         libfuzzy-dev \
         libgeoip-dev \
-        liblua5.3-dev \
+        liblua${LUA_VERSION}-dev \
         libpcre3-dev \
         libpcre2-dev \
         libtool \
@@ -96,7 +97,8 @@ RUN set -eux; \
 FROM nginx:${NGINX_VERSION}
 
 ARG MODSEC_VERSION=3.0.11 \
-    LMDB_VERSION=0.9.29
+    LMDB_VERSION=0.9.29 \
+    LUA_VERSION=5.3
 
 LABEL maintainer="Felipe Zipitria <felipe.zipitria@owasp.org>"
 
@@ -190,7 +192,7 @@ RUN set -eux; \
         curl \
         libcurl4-gnutls-dev \
         libfuzzy2 \
-        liblua5.3 \
+        liblua${LUA_VERSION} \
         libxml2 \
         libyajl2 \
         moreutils; \

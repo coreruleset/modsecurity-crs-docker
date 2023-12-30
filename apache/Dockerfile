@@ -1,8 +1,9 @@
-ARG APACHE_VERSION=2.4.57
+ARG APACHE_VERSION=2.4.58
 
 FROM httpd:${APACHE_VERSION} as build
 
-ARG MODSEC_VERSION=2.9.7
+ARG MODSEC_VERSION=2.9.7 \
+    LUA_VERSION=5.3
 
 RUN set -eux; \
     echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections; \
@@ -20,7 +21,7 @@ RUN set -eux; \
         libtool \
         libxml2-dev \
         libyajl-dev \
-        lua5.2-dev \
+        lua${LUA_VERSION}-dev \
         make \
         pkgconf \
         wget
@@ -57,7 +58,8 @@ RUN set -eux; \
 
 FROM httpd:${APACHE_VERSION}
 
-ARG MODSEC_VERSION=2.9.7
+ARG MODSEC_VERSION=2.9.7 \
+    LUA_VERSION=5.3
 
 LABEL maintainer="Felipe Zipitria <felipe.zipitria@owasp.org>"
 
@@ -161,6 +163,7 @@ RUN set -eux; \
         iproute2 \
         libcurl3-gnutls \
         libfuzzy2 \
+        liblua${LUA_VERSION} \
         libxml2 \
         libyajl2; \
     update-ca-certificates -f; \
