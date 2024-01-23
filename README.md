@@ -45,7 +45,7 @@ docker buildx create --use --platform linux/amd64,linux/i386,linux/arm64,linux/a
 docker buildx bake -f docker-bake.hcl
 ```
 
-We require a version of `buildx` >= v0.9.1. [Visit the official documentation](https://docs.docker.com/build/buildx/install/) for instructions on installing and upgrading `buildx`. You can check which version you have using:
+We require a version of `buildx` >= v0.9.1. [Visit the official documentation](https://docs.docker.com/build/architecture/#install-buildx) for instructions on installing and upgrading `buildx`. You can check which version you have using:
 
 ```bash
 docker buildx version
