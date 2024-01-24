@@ -174,8 +174,6 @@ All these variables impact in configuration directives in the modsecurity engine
 
 | Name | Description|
 | -- | -- |
-| USER | Name (or #number) of the user to run httpd or nginx as (Default: `www-data` (httpd), `nginx` (nginx)) |
-| GROUP | Name (or #number) of the group to run httpd as (Default: `www-data`) |
 | BACKEND | Backend address (and optional port) of the backend server. (Default: the container's default router, port 81) (Examples: 192.0.2.2, 192.0.2.2:80, <http://172.17.0.1:8000>) |
 
 ### CRS specific
