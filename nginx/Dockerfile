@@ -1,10 +1,10 @@
-ARG NGINX_VERSION="1.25.3"
+ARG NGINX_VERSION="n/a"
 
 FROM nginx:${NGINX_VERSION} as build
 
-ARG MODSEC_VERSION=3.0.11 \
-    LMDB_VERSION=0.9.29 \
-    LUA_VERSION=5.3
+ARG MODSEC3_VERSION="n/a"
+ARG LMDB_VERSION="n/a"
+ARG LUA_VERSION="n/a"
 
 # Note: libpcre3-dev (PCRE 1) is required by the build description,
 # even though the build will use PCRE2.
@@ -42,7 +42,7 @@ RUN set -eux; \
     strip /usr/local/lib/liblmdb*.so*
 
 RUN set -eux; \
-    git clone https://github.com/SpiderLabs/ModSecurity --branch v"${MODSEC_VERSION}" --depth 1 --recursive; \
+    git clone https://github.com/SpiderLabs/ModSecurity --branch "v${MODSEC3_VERSION}" --depth 1 --recursive; \
     cd ModSecurity; \
     ARCH=$(gcc -print-multiarch); \
     sed -ie "s/i386-linux-gnu/${ARCH}/g" build/ssdeep.m4; \
@@ -96,9 +96,9 @@ RUN set -eux; \
 
 FROM nginx:${NGINX_VERSION}
 
-ARG MODSEC_VERSION=3.0.11 \
-    LMDB_VERSION=0.9.29 \
-    LUA_VERSION=5.3
+ARG MODSEC3_VERSION="n/a"
+ARG LMDB_VERSION="n/a"
+ARG LUA_VERSION="n/a"
 
 LABEL maintainer="Felipe Zipitria <felipe.zipitria@owasp.org>"
 
@@ -166,7 +166,7 @@ ENV ACCESSLOG=/var/log/nginx/access.log \
     ANOMALY_OUTBOUND=4 \
     BLOCKING_PARANOIA=1
 
-COPY --from=build /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC_VERSION} /usr/local/modsecurity/lib/
+COPY --from=build /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC3_VERSION} /usr/local/modsecurity/lib/
 COPY --from=build /etc/nginx/modules/ngx_http_modsecurity_module.so /etc/nginx/modules/ngx_http_modsecurity_module.so
 COPY --from=build /usr/local/lib/liblmdb.so /usr/local/lib/
 COPY --from=build /usr/share/TLS/dhparam-* /etc/ssl/certs/
@@ -204,9 +204,9 @@ RUN set -eux; \
     chown -R nginx:nginx /tmp/modsecurity; \
     # Comment out the SecDisableBackendCompression option since it is not supported in V3
     sed -i 's/^\(SecDisableBackendCompression .*\)/# \1/' /etc/nginx/templates/modsecurity.d/modsecurity-override.conf.template; \
-    ln -s /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC_VERSION} /usr/local/modsecurity/lib/libmodsecurity.so.3.0; \
-    ln -s /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC_VERSION} /usr/local/modsecurity/lib/libmodsecurity.so.3; \
-    ln -s /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC_VERSION} /usr/local/modsecurity/lib/libmodsecurity.so; \
+    ln -s /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC3_VERSION} /usr/local/modsecurity/lib/libmodsecurity.so.3.0; \
+    ln -s /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC3_VERSION} /usr/local/modsecurity/lib/libmodsecurity.so.3; \
+    ln -s /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC3_VERSION} /usr/local/modsecurity/lib/libmodsecurity.so; \
     chgrp -R 0 /var/cache/nginx/ /var/log/ /var/run/ /usr/share/nginx/ /etc/nginx/ /etc/modsecurity.d/; \
     chmod -R g=u /var/cache/nginx/ /var/log/ /var/run/ /usr/share/nginx/ /etc/nginx/ /etc/modsecurity.d/; \
     ln -sv /opt/owasp-crs /etc/modsecurity.d/
