@@ -3,15 +3,13 @@
 # Also specify the LUA version used. (Comes with the latest Openresty src bundle.)
 ARG OPENRESTY_VERSION="1.25.3.1" \
     NGINX_VERSION="1.25.3" \
-    LUA_JIT_VERSION="2.1-20231117" \
     MODSEC_VERSION="3.0.11"
 
 FROM openresty/openresty:${OPENRESTY_VERSION}-alpine-fat as build
 
 ARG MODSEC_VERSION \
     OPENRESTY_VERSION \
-    NGINX_VERSION \
-    LUA_JIT_VERSION 
+    NGINX_VERSION
 
 # Note: pcre-dev (PCRE 1) is required by the build description,
 # even though the build will use PCRE2.
@@ -64,8 +62,7 @@ RUN set -eux; \
 
 # We use latest version of the ModSecurity nginx connector.
 # Download Openresty bundle for the specific version. We can then get the compilation options for nginx from the installed Openresty in the docker image to be used with the 'configure' script inside the openresty bundle to configure the ModSecurity-nginx module and then build it. I did not find the configure script inside the Openresty Docker image.
-# Specify the LUAJIT_LIB-s that are already installed in the base image.
-# Use the includes from the bundled version. This is where LUA_JIT_VERSION comes in to play because the version CAN differ from release to release.
+# Specify the LUAJIT_LIB and LUAJIT_INC that are already installed in the base image.
 RUN set -eux; \
     git clone -b master --depth 1 https://github.com/SpiderLabs/ModSecurity-nginx.git; \
     wget --quiet https://openresty.org/download/openresty-"${OPENRESTY_VERSION}".tar.gz; \
