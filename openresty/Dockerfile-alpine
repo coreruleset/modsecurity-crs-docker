@@ -72,7 +72,7 @@ RUN set -eux; \
     tar -xzf openresty-"${OPENRESTY_VERSION}".tar.gz; \
     cd ./openresty-"${OPENRESTY_VERSION}"/bundle/nginx-${NGINX_VERSION}; \
     export LUAJIT_LIB="/usr/local/openresty/luajit/lib/"; \
-    export LUAJIT_INC="../LuaJIT-${LUA_JIT_VERSION}/src/"; \
+    export LUAJIT_INC="../LuaJIT-${LUA_JIT_VERSION}/"; \
     COMPILEOPTIONS=$(openresty -V 2>&1| grep -i "arguments"|cut -d ":" -f2-); \
     eval ./configure $COMPILEOPTIONS --add-dynamic-module=../../../ModSecurity-nginx; \
     make modules; \
