@@ -12,38 +12,63 @@
 The Core Rule Set (CRS) is a set of generic attack detection rules for use with ModSecurity or compatible web application firewalls.
 ModSecurity is an open source, cross platform web application firewall (WAF) engine for Apache, IIS and Nginx.
 
-## Supported tags and respective `Dockerfile` links
+## Supported Tags
 
-* `3-nginx-YYYYMMDDHHMM`, `3.3-nginx-YYYYMMDDHHMM`, `3.3.5-nginx-YYYYMMDDHHMM`, `nginx` ([master/nginx/Dockerfile](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile)) – *last stable ModSecurity v3 on Nginx 1.25.3 official stable base image, and latest stable Core Rule Set 3.3.5*
-* `3-apache-YYYYMMDDHHMM`, `3.3-apache-YYYYMMDDHHMM`, `3.3.5-apache-YYYYMMDDHHMM`, `apache` ([master/apache/Dockerfile](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/apache/Dockerfile)) –*last stable ModSecurity v2 on Apache 2.4.58 official stable base image, and latest stable Core Rule Set 3.3.5*
+### Stable Tags
 
-⚠️ We changed tags to [support production usage](https://github.com/coreruleset/modsecurity-crs-docker/issues/67). Now, if you want to use the "rolling version", use the tag `owasp/modsecurity-crs:nginx` or `owasp/modsecurity-crs:apache`. If you need a stable long term image, use the one with the full CRS version, in addition to the build date in `YYYYMMDDHHMM` format, example `owasp/modsecurity-crs:3.3.5-nginx-202209141209` or `owasp/modsecurity-crs:3.3.5-apache-202209141209` for example. You have been warned.
+Stable Tags are composed of:
+   * CRS version, in the fromat `<major>[.<minor>[.<patch]]`
+   * web server variant
+   * OS variant (optional)
+   * date, in the format `YYYYMMDDHHMM`
 
-🆕 We added healthchecks to the images. Containers already return HTTP status code 200 when accessing the `/healthz` URI. When a container has a healthcheck specified, it has a _health status_ in addition to its normal status. This status is initially `starting`. Whenever a health check passes, it becomes `healthy` (whatever state it was previously in). After a certain number of consecutive failures, it becomes `unhealthy`. See <https://docs.docker.com/engine/reference/builder/#healthcheck> for more information.
+The stable tag format is `<CRS version>-<web server>[-<os>]-<date>`.
+Examples:
+   * `3-nginx-202401121309`
+   * `3.3-apache-alpine-202401121309`
+   * `3.3.5-openresty-alpine-fat-202401121309`
 
-## Supported variants
+### Rolling Tags
 
-We also build [alpine linux](https://www.alpinelinux.org/) variants of the base images, using the `-alpine` suffix. Examples:
+Rolling tags are updated whenever a new stable tag release occurs. Rolling tags can be practical but should not be used in production.
 
-* `3-nginx-alpine-YYYYMMDDHHMM`, `3.3-nginx-alpine-YYYYMMDDHHMM`, `3.3.5-nginx-alpine-YYYYMMDDHHMM`, `nginx-alpine` ([master/nginx/Dockerfile-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile-alpine) – *last stable ModSecurity v3 on Nginx 1.25.3 official alpine stable base image, and latest stable Core Rule Set 3.3.5*
-* `3-apache-alpine-YYYYMMDDHHMM`, `3.3-apache-alpine-YYYYMMDDHHMM`, `3.3.5-apache-alpine-YYYYMMDDHHMM`, `apache-alpine` ([master/apache/Dockerfile-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/apache/Dockerfile-alpine)) – *last stable ModSecurity v2 on Apache 2.4.58 official alpine stable base image, and latest stable Core Rule Set 3.3.5*
+Rolling Tags are composed of:
+   * web server variant
+   * OS variant (optional)
 
-⚠️ We changed tags to [support production usage](https://github.com/coreruleset/modsecurity-crs-docker/issues/67). Now, if you want to use the "rolling version", use the tag `owasp/modsecurity-crs:nginx-alpine` or `owasp/modsecurity-crs:apache-alpine` or `owasp/modsecurity-crs:openresty-alpine-fat`. If you need a stable long term image, use the one with the full CRS version, in addition to the build date in `YYYYMMDDHHMM` format (e.g., `owasp/modsecurity-crs:3.3.5-nginx-alpine-202209141209`).
+The stable tag format is `<web server>[-<os>]`.
+Examples:
+   * `nginx`
+   * `apache-alpine`
+   * `openresty-alpine-fat`
 
-### Notes regarding Openresty version of this image.
+## OS Variants
+
+* nginx – *latest stable ModSecurity v3 on Nginx 1.25.3 official stable base image, and latest stable Core Rule Set 3.3.5*
+   * [nginx](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile)
+   * [nginx-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile-alpine)
+* Openresty - *last stable ModSecurity v3 on Nginx 1.25.3 official stable base image, and latest stable Core Rule Set 3.3.5*
+   * [openresty-alpine-fat](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/openresty/Dockerfile-alpine)
+* Apache httpd – *last stable ModSecurity v2 on Apache 2.4.58 official stable base image, and latest stable Core Rule Set 3.3.5*
+   * [apache](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/apache/Dockerfile)
+   * [apache-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/apache/Dockerfile-alpine)
+
+### Notes regarding Openresty version of this image
 
 We currently only provide a version of the Openresty image based on **Alpine Linux**. The Dockerfile for Openresty resides in the [docker-openresty repository](https://github.com/openresty/docker-openresty/blob/master/alpine/Dockerfile.fat).
 
 ## Supported architectures
 
-We added the [docker buildx](https://github.com/docker/buildx) support to our docker builds so additional architectures are supported now. As we create our containers based on the official Apache httpd, nginx and Openresty ones, we can only support the architectures they support.
+Our builds are based on the official Apache httpd, nginx and Openresty images, which means we can only support the architectures they support.
 
-There is a new file `docker-bake.hcl` used for this purpose. To build for new platforms, just use this example:
+We currently provide images for the following architectures:
 
-```bash
-docker buildx create --use --platform linux/amd64,linux/i386,linux/arm64,linux/arm/v7
-docker buildx bake -f docker-bake.hcl
-```
+* linux/amd64
+* linux/arm/v7
+* linux/arm64/v8
+* linux/i386
+
+### Building
 
 We require a version of `buildx` >= v0.9.1. [Visit the official documentation](https://docs.docker.com/build/architecture/#install-buildx) for instructions on installing and upgrading `buildx`. You can check which version you have using:
 
@@ -58,15 +83,12 @@ If you want to see the targets of the build, use:
 docker buildx bake -f ./docker-bake.hcl --print
 ```
 
-We are building now for these architectures:
+To build for any platforms of your choosing, just use this example:
 
-* linux/amd64
-* linux/arm/v7
-* linux/arm64/v8
-* linux/i386
-
-You can find additional examples on how to use `buildx` in this repository's GitHub act
-We added the [docker buildx](https://github.com/docker/buildx) support to our docker builds so additional architectures are supported now. As we create our containers based on the official apache and nginx ones, we can only support the architectures they support.
+```bash
+docker buildx create --use --platform linux/amd64,linux/i386,linux/arm64,linux/arm/v7
+docker buildx bake -f docker-bake.hcl
+```
 
 To build a specific target for a single platform only (replace target and platform strings in the example with the your choices):
 
@@ -74,12 +96,16 @@ To build a specific target for a single platform only (replace target and platfo
 docker buildx bake -f docker-bake.hcl --set "*.platform=linux/amd64" nginx-alpine
 ```
 
-### Notes regarding Openresty version of the image.
+### Notes regarding Openresty version of the image
 
 Openresty image builds currently support only these architectures:
 
 * linux/amd64
 * linux/arm64
+
+## Container Health Checks
+
+🆕 We add healthchecks to the images, so that containers return HTTP status code 200 from the `/healthz` endpoint. When a container has a healthcheck specified, it has a _health status_ in addition to its normal status. This status is initially `starting`. Whenever a health check passes, it becomes `healthy` (whatever state it was previously in). After a certain number of consecutive failures, it becomes `unhealthy`. See <https://docs.docker.com/engine/reference/builder/#healthcheck> for more information.
 
 ## CRS Versions
 
