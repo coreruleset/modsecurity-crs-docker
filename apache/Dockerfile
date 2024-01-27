@@ -1,9 +1,9 @@
-ARG APACHE_VERSION=2.4.58
+ARG HTTPD_VERSION="n/a"
 
-FROM httpd:${APACHE_VERSION} as build
+FROM httpd:${HTTPD_VERSION} as build
 
-ARG MODSEC_VERSION=2.9.7 \
-    LUA_VERSION=5.3
+ARG MODSEC2_VERSION="n/a"
+ARG LUA_VERSION="n/a"
 
 RUN set -eux; \
     echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections; \
@@ -27,16 +27,16 @@ RUN set -eux; \
         wget
 
 RUN set -eux; \
-    wget --quiet https://github.com/SpiderLabs/ModSecurity/archive/refs/tags/v${MODSEC_VERSION}.tar.gz; \
-    tar -zxvf v${MODSEC_VERSION}.tar.gz; \
-    cd ModSecurity-${MODSEC_VERSION}; \
+    wget --quiet https://github.com/SpiderLabs/ModSecurity/archive/refs/tags/v${MODSEC2_VERSION}.tar.gz; \
+    tar -zxvf v${MODSEC2_VERSION}.tar.gz; \
+    cd ModSecurity-${MODSEC2_VERSION}; \
     ./autogen.sh; \
     ./configure --with-yajl --with-ssdeep; \
     make; \
     make install; \
     make clean
 
-FROM httpd:${APACHE_VERSION} as crs_release
+FROM httpd:${HTTPD_VERSION} as crs_release
 
 ARG CRS_RELEASE
 
@@ -56,10 +56,10 @@ RUN set -eux; \
     rm -f v${CRS_RELEASE}.tar.gz coreruleset-${CRS_RELEASE}.tar.gz.asc; \
     mv -v /opt/owasp-crs/crs-setup.conf.example /opt/owasp-crs/crs-setup.conf
 
-FROM httpd:${APACHE_VERSION}
+FROM httpd:${HTTPD_VERSION}
 
-ARG MODSEC_VERSION=2.9.7 \
-    LUA_VERSION=5.3
+ARG MODSEC2_VERSION="n/a"
+ARG LUA_VERSION="n/a"
 
 LABEL maintainer="Felipe Zipitria <felipe.zipitria@owasp.org>"
 
@@ -141,8 +141,8 @@ ENV APACHE_ALWAYS_TLS_REDIRECT=off \
     BLOCKING_PARANOIA=1
 
 COPY --from=build /usr/local/apache2/modules/mod_security2.so                  /usr/local/apache2/modules/mod_security2.so
-COPY --from=build /usr/local/apache2/ModSecurity-${MODSEC_VERSION}/modsecurity.conf-recommended  /etc/modsecurity.d/modsecurity.conf
-COPY --from=build /usr/local/apache2/ModSecurity-${MODSEC_VERSION}/unicode.mapping               /etc/modsecurity.d/unicode.mapping
+COPY --from=build /usr/local/apache2/ModSecurity-${MODSEC2_VERSION}/modsecurity.conf-recommended  /etc/modsecurity.d/modsecurity.conf
+COPY --from=build /usr/local/apache2/ModSecurity-${MODSEC2_VERSION}/unicode.mapping               /etc/modsecurity.d/unicode.mapping
 COPY --from=crs_release /opt/owasp-crs /opt/owasp-crs
 COPY src/etc/modsecurity.d/*.conf /etc/modsecurity.d/
 COPY src/bin/* /usr/local/bin/
