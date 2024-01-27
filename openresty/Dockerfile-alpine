@@ -1,9 +1,9 @@
 # Current latest Openresty version is here.
 # Also specify the nginx core used. (Openresty, adds their own version numbers after the nginx one, so we can't use the same number for both Openresty and nginx)
 # Also specify the LUA version used. (Comes with the latest Openresty src bundle.)
-ARG OPENRESTY_VERSION="1.21.4.3" \
-    NGINX_VERSION="1.21.4" \
-    LUA_JIT_VERSION="2.1-20230410" \
+ARG OPENRESTY_VERSION="1.25.3.1" \
+    NGINX_VERSION="1.25.3" \
+    LUA_JIT_VERSION="2.1-20231117" \
     MODSEC_VERSION="3.0.11"
 
 FROM openresty/openresty:${OPENRESTY_VERSION}-alpine-fat as build
@@ -13,7 +13,8 @@ ARG MODSEC_VERSION \
     NGINX_VERSION \
     LUA_JIT_VERSION 
 
-# Remove pcre2 compliation of ModSecurity for openresty, until openresty gets updated to support pcre2. Relevant github issue: https://github.com/openresty/lua-nginx-module/issues/1984
+# Note: pcre-dev (PCRE 1) is required by the build description,
+# even though the build will use PCRE2.
 RUN set -eux; \
     apk add --no-cache --virtual .build-deps \
         autoconf \
@@ -39,8 +40,8 @@ RUN set -eux; \
         make \
         patch \
         pkgconfig \
-        pcre \
         pcre-dev \
+        pcre2-dev \
         yajl-dev \
         gd \
         gd-dev \
@@ -55,9 +56,9 @@ RUN set -eux; \
     cd ModSecurity; \
     ARCH=$(gcc -print-multiarch); \
     sed -ie "s/i386-linux-gnu/${ARCH}/g" build/ssdeep.m4; \
-    sed -ie "s/i386-linux-gnu/${ARCH}/g" build/pcre.m4; \
+    sed -ie "s/i386-linux-gnu/${ARCH}/g" build/pcre2.m4; \
     ./build.sh; \
-    ./configure --with-yajl --with-ssdeep --with-lmdb --with-geoip --enable-silent-rules --with-pcre=/usr/bin/pcre-config; \
+    ./configure --with-yajl --with-ssdeep --with-lmdb --with-geoip --enable-silent-rules --with-pcre2; \
     make install; \
     strip /usr/local/modsecurity/lib/lib*.so*
 
@@ -225,6 +226,7 @@ RUN set -eux; \
         moreutils \
         tzdata \
         pcre \
+        pcre2 \
         # Alpine needs GNU 'sed' because the 'sed' program shipped with busybox does not support 'z' parameter for separating lines with a 'NUL' character.
         sed \
         yajl; \
