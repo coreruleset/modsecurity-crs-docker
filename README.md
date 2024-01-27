@@ -32,7 +32,7 @@ We also build [alpine linux](https://www.alpinelinux.org/) variants of the base 
 
 ### Notes regarding Openresty version of this image.
 
-The Openresty version of modsecurity-crs-docker currently only builds an image based on **Alpine Linux**. The Dockerfile for Openresty is located in the [docker-openresty github page](https://github.com/openresty/docker-openresty/blob/master/alpine/Dockerfile.fat).
+We currently only provide a version of the Openresty image based on **Alpine Linux**. The Dockerfile for Openresty resides in the [docker-openresty repository](https://github.com/openresty/docker-openresty/blob/master/alpine/Dockerfile.fat).
 
 ## Supported architectures
 
