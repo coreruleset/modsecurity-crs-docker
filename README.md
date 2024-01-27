@@ -28,11 +28,15 @@ We also build [alpine linux](https://www.alpinelinux.org/) variants of the base 
 * `3-nginx-alpine-YYYYMMDDHHMM`, `3.3-nginx-alpine-YYYYMMDDHHMM`, `3.3.5-nginx-alpine-YYYYMMDDHHMM`, `nginx-alpine` ([master/nginx/Dockerfile-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile-alpine) – *last stable ModSecurity v3 on Nginx 1.25.3 official alpine stable base image, and latest stable Core Rule Set 3.3.5*
 * `3-apache-alpine-YYYYMMDDHHMM`, `3.3-apache-alpine-YYYYMMDDHHMM`, `3.3.5-apache-alpine-YYYYMMDDHHMM`, `apache-alpine` ([master/apache/Dockerfile-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/apache/Dockerfile-alpine)) – *last stable ModSecurity v2 on Apache 2.4.58 official alpine stable base image, and latest stable Core Rule Set 3.3.5*
 
-⚠️ We changed tags to [support production usage](https://github.com/coreruleset/modsecurity-crs-docker/issues/67). Now, if you want to use the "rolling version", use the tag `owasp/modsecurity-crs:nginx-alpine` or `owasp/modsecurity-crs:apache-alpine`. If you need a stable long term image, use the one with the full CRS version, in addition to the build date in `YYYYMMDDHHMM` format, example `owasp/modsecurity-crs:3.3.5-nginx-alpine-202209141209` or `owasp/modsecurity-crs:3.3.5-apache-alpine-202209141209` for example. You have been warned.
+⚠️ We changed tags to [support production usage](https://github.com/coreruleset/modsecurity-crs-docker/issues/67). Now, if you want to use the "rolling version", use the tag `owasp/modsecurity-crs:nginx-alpine` or `owasp/modsecurity-crs:apache-alpine` or `owasp/modsecurity-crs:openresty-alpine-fat`. If you need a stable long term image, use the one with the full CRS version, in addition to the build date in `YYYYMMDDHHMM` format (e.g., `owasp/modsecurity-crs:3.3.5-nginx-alpine-202209141209`).
+
+### Notes regarding Openresty version of this image.
+
+We currently only provide a version of the Openresty image based on **Alpine Linux**. The Dockerfile for Openresty resides in the [docker-openresty repository](https://github.com/openresty/docker-openresty/blob/master/alpine/Dockerfile.fat).
 
 ## Supported architectures
 
-We added the [docker buildx](https://github.com/docker/buildx) support to our docker builds so additional architectures are supported now. As we create our containers based on the official apache and nginx ones, we can only support the architectures they support.
+We added the [docker buildx](https://github.com/docker/buildx) support to our docker builds so additional architectures are supported now. As we create our containers based on the official Apache httpd, nginx and Openresty ones, we can only support the architectures they support.
 
 There is a new file `docker-bake.hcl` used for this purpose. To build for new platforms, just use this example:
 
@@ -69,6 +73,13 @@ To build a specific target for a single platform only (replace target and platfo
 ```bash
 docker buildx bake -f docker-bake.hcl --set "*.platform=linux/amd64" nginx-alpine
 ```
+
+### Notes regarding Openresty version of the image.
+
+Openresty image builds currently support only these architectures:
+
+* linux/amd64
+* linux/arm64
 
 ## CRS Versions
 
@@ -217,6 +228,10 @@ Note: Apache access and metric logs can be disabled by exporting the `nologging=
 | SSL_PORT  | Port number where the SSL enabled webserver is listening (Default: `443`) |
 | TIMEOUT  | Number of seconds for a keep-alive client connection to stay open on the server side (Default: `60s`) |
 | WORKER_CONNECTIONS  | Maximum number of simultaneous connections that can be opened by a worker process (Default: `1024`) |
+
+### Openresty ENV Variables
+
+Openresty uses the same environment variables as the nginx version.
 
 ### ModSecurity ENV Variables
 

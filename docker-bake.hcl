@@ -41,7 +41,8 @@ group "default" {
         "apache",
         "apache-alpine",
         "nginx",
-        "nginx-alpine"
+        "nginx-alpine",
+        "openresty-alpine-fat"
     ]
 }
 
@@ -85,5 +86,14 @@ target "nginx-alpine" {
     dockerfile="nginx/Dockerfile-alpine"
     tags = concat(tag("nginx-alpine"),
         vtag("${crs-version}", "-nginx-alpine")
+    )
+}
+
+target "openresty-alpine-fat" {
+    inherits = ["platforms-base"]
+    platforms = ["linux/amd64", "linux/arm64/v8"]
+    dockerfile="openresty/Dockerfile-alpine"
+    tags = concat(tag("openresty-alpine-fat"),
+        vtag("${crs-version}", "-openresty-alpine-fat")
     )
 }
