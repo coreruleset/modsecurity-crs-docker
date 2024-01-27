@@ -274,8 +274,6 @@ All these variables impact in configuration directives in the modsecurity engine
 
 | Name     | Description|
 | -------- | ------------------------------------------------------------------- |
-| USER | A string value indicating the name (or #number) of the user to run httpd or nginx as (Default: `www-data` (httpd), `nginx` (nginx)) |
-| GROUP | A string value indicating the name (or #number) of the group to run httpd as (Default: `www-data`) |
 | BACKEND  | The backend address (and optional port) of the backend server. (Default: the container's default router, port 81) (Examples: 192.0.2.2, 192.0.2.2:80, <http://172.17.0.1:8000>) |
 
 ### CRS specific
@@ -374,8 +372,6 @@ docker run -dti -p 80:80 --rm \
    -e TIMEOUT=60 \
    -e LOGLEVEL=warn \
    -e ERRORLOG='/proc/self/fd/2' \
-   -e USER=daemon \
-   -e GROUP=daemon \
    -e SERVER_ADMIN=root@localhost \
    -e SERVER_NAME=localhost \
    -e PORT=80 \

@@ -134,8 +134,6 @@ ENV APACHE_ALWAYS_TLS_REDIRECT=off \
     SSL_USE_STAPLING=On \
     TIMEOUT=60 \
     WORKER_CONNECTIONS=400 \
-    USER=www-data \
-    GROUP=www-data \
     # CRS specific variables
     PARANOIA=1 \
     ANOMALY_INBOUND=5 \
