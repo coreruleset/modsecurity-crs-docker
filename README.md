@@ -231,7 +231,7 @@ Note: Apache access and metric logs can be disabled by exporting the `nologging=
 
 ### Openresty ENV Variables
 
-Openresty uses the same ENV variables as the nginx version.
+Openresty uses the same environment variables as the nginx version.
 
 ### ModSecurity ENV Variables
 
