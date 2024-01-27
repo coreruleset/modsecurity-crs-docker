@@ -176,7 +176,6 @@ ENV ACCESSLOG=/var/log/nginx/access.log \
     # Change this from normal nginx setup. Do not add /usr/lib or /lib
     LD_LIBRARY_PATH=/usr/local/lib:/usr/local/openresty \
     NGINX_ENVSUBST_OUTPUT_DIR=/usr/local/openresty/nginx/conf \
-    # overridden variables
     USER=root \
     # CRS specific variables
     PARANOIA=1 \
