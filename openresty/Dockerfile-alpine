@@ -1,6 +1,5 @@
 # Current latest Openresty version is here.
 # Also specify the nginx core used. (Openresty, adds their own version numbers after the nginx one, so we can't use the same number for both Openresty and nginx)
-# Also specify the LUA version used. (Comes with the latest Openresty src bundle.)
 ARG OPENRESTY_VERSION="1.25.3.1" \
     NGINX_VERSION="1.25.3" \
     MODSEC_VERSION="3.0.11"
