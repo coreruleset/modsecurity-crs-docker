@@ -14,6 +14,8 @@ server {
     set $upstream ${BACKEND};
     set $always_redirect ${NGINX_ALWAYS_TLS_REDIRECT};
 
+    PROXY_SSL_CONFIG
+
     location / {
         client_max_body_size 0;
 
@@ -37,22 +39,25 @@ server {
     server_name ${SERVER_NAME};
     set $upstream ${BACKEND};
 
-    ssl_certificate ${PROXY_SSL_CERT};
-    ssl_certificate_key ${PROXY_SSL_CERT_KEY};
+    ssl_certificate ${SSL_CERT};
+    ssl_certificate_key ${SSL_CERT_KEY};
     ssl_session_timeout 1d;
     ssl_session_cache shared:MozSSL:10m;
     ssl_session_tickets off;
 
-    ssl_dhparam /etc/ssl/certs/dhparam-${PROXY_SSL_DH_BITS}.pem;
+    ssl_dhparam /etc/ssl/certs/dhparam-${SSL_DH_BITS}.pem;
 
-    ssl_protocols ${PROXY_SSL_PROTOCOLS};
-    ssl_ciphers ${PROXY_SSL_CIPHERS};
-    ssl_prefer_server_ciphers ${PROXY_SSL_PREFER_CIPHERS};
+    ssl_protocols ${SSL_PROTOCOLS};
+    ssl_ciphers ${SSL_CIPHERS};
+    ssl_prefer_server_ciphers ${SSL_PREFER_CIPHERS};
 
-    ssl_stapling ${PROXY_SSL_OCSP_STAPLING};
-    ssl_stapling_verify ${PROXY_SSL_OCSP_STAPLING};
+    ssl_stapling ${SSL_OCSP_STAPLING};
+    ssl_stapling_verify ${SSL_OCSP_STAPLING};
 
-    ssl_verify_client ${PROXY_SSL_VERIFY};
+    ssl_verify_client ${SSL_VERIFY};
+    ssl_verify_depth ${SSL_VERIFY_DEPTH};
+
+    PROXY_SSL_CONFIG
 
     location / {
         client_max_body_size 0;

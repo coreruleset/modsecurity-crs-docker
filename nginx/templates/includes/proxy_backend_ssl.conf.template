@@ -1,0 +1,8 @@
+proxy_ssl_certificate ${PROXY_SSL_CERT};
+proxy_ssl_certificate_key ${PROXY_SSL_CERT_KEY};
+
+proxy_ssl_protocols ${PROXY_SSL_PROTOCOLS};
+proxy_ssl_ciphers ${PROXY_SSL_CIPHERS};
+
+proxy_ssl_verify ${PROXY_SSL_VERIFY};
+proxy_ssl_verify_depth ${PROXY_SSL_VERIFY_DEPTH};

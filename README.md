@@ -145,37 +145,6 @@ An example can be seen in the [docker-compose](https://github.com/coreruleset/mo
 > 💬 What happens if I want to make changes in a different file, like `/etc/nginx/conf.d/default.conf`?
 > You mount your local file, e.g. `nginx/default.conf` as the new template: `/etc/nginx/templates/conf.d/default.conf.template`. You can do this similarly with other files. Files in the templates directory will be copied and subdirectories will be preserved.
 
-### TLS/HTTPS
-
-TLS is configured by default on port 443. Note: The default configuration generates a self signed certificate on first run. To use your own certificates (recommended) `COPY` or mount (`-v`) your `server.crt` and `server.key` into `/usr/local/apache2/conf/` or `/etc/nginx/conf/`. Remember to publish the HTTPS port when running the image.
-
-```bash
-docker build -t my-modsec .
-docker run -p 8443:443 my-modsec
-```
-
-We use sane intermediate defaults taken from the [Mozilla SSL config tool](https://ssl-config.mozilla.org/). Please check it and choose the best that match your needs.
-
-You can use variables on nginx and apache to always redirect from http to https if needed (see APACHE_ALWAYS_TLS_REDIRECT and NGINX_ALWAYS_TLS_REDIRECT below).
-
-### Proxying
-
-ModSecurity is often used as a reverse proxy. This allows one to use ModSecurity without modifying the webserver hosting the underlying application (and also protect web servers that modsecurity cannot currently embedd into). The proxy is set by default to true and the location is defined by BACKEND environment variable. The SSL is enabled by default.
-
-```bash
-docker build -t my-modsec . -f
-docker run -p 8080:80 -e PROXY_SSL=on -e BACKEND=http://example.com my-modsec
-```
-
-### ServerName
-
-It is often convenient to set your servername. To do this simply use the `SERVER_NAME` environment variable passed to docker run. By default the servername provided is `localhost`.
-
-```bash
-docker build -t modsec .
-docker run -p 8080:80 -e SERVER_NAME=myhost my-modsec
-```
-
 ### Apache ENV Variables
 
 | Name     | Description|
@@ -197,11 +166,14 @@ docker run -p 8080:80 -e SERVER_NAME=myhost my-modsec
 | PORT  | An integer value indicating the port where the webserver is listening to (Default: `80`) |
 | PROXY_ERROR_OVERRIDE  | A string indicating that errors from the backend services should be overridden by this proxy server (see [ProxyErrorOverride](https://httpd.apache.org/docs/2.4/mod/mod_proxy.html#proxyerroroverride) directive). (Allowed values: `on`, `off`. Default: `on`) |
 | PROXY_PRESERVE_HOST  | A string indicating the use of incoming Host HTTP request header for proxy request (Default: `on`) |
-| PROXY_SSL_CERT_KEY  | A string indicating the path to the server PEM-encoded private key file (Default: `/usr/local/apache2/conf/server.key`) |
-| PROXY_SSL_CERT  | A string indicating the path to the server PEM-encoded X.509 certificate data file or token identifier (Default: `/usr/local/apache2/conf/server.crt`) |
+| PROXY_SSL  | A string indicating SSL Proxy Engine Operation Switch (Default: `on`) |
+| PROXY_SSL_CA_CERT  | A string indicating the path to the PEM-encoded list of accepted CA certificates for the proxied server (Default: `/etc/ssl/certs/ca-certificates.ca`) |
+| PROXY_SSL_CERT  | A string indicating the path to the PEM-encoded X.509 certificate data file or token identifier of the proxied server (Default: `/usr/local/apache2/conf/proxy.crt`) |
+| PROXY_SSL_CERT_KEY  | A string indicating the path to the PEM-encoded private key file of the proxied server (Default: `/usr/local/apache2/conf/proxy.key`) |
 | PROXY_SSL_CHECK_PEER_NAME  | A string indicating if the host name checking for remote server certificates is to be enabled (Default: `on`) |
+| PROXY_SSL_CIPHER_SUITE | A string indicating the cipher suite to connect to the backend via TLS. (Default `"ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384"` |
+| PROXY_SSL_PROTOCOL | A string for configuring the [proxy client SSL/TLS protocol versions](https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslproxyprotocol) (Default: `"all -SSLv3 -TLSv1 -TLSv1.1"`) |
 | PROXY_SSL_VERIFY  | A string value indicating the type of remote server Certificate verification (Default: `none`) |
-| PROXY_SSL  | A string indicating SSL Proxy Engine Operation Switch (Default: `off`) |
 | PROXY_TIMEOUT  | Number of seconds for proxied requests to time out (Default: `60`) |
 | REMOTEIP_INT_PROXY  | A string indicating the client intranet IP addresses trusted to present the RemoteIPHeader value (Default: `10.1.0.0/16`) |
 | REQ_HEADER_FORWARDED_PROTO  | A string indicating the transfer protocol of the initial request (Default: `https`) |
@@ -209,13 +181,13 @@ docker run -p 8080:80 -e SERVER_NAME=myhost my-modsec
 | SERVER_NAME | A string value indicating the server name (Default: `localhost`) |
 | SERVER_SIGNATURE | A string value configuring the footer on server-generated documents (Allowed values: `On`, `Off`, `EMail`. Default: `Off`) |
 | SERVER_TOKENS | Option defining the server information presented to clients in the `Server` HTTP response header. Also see `MODSEC_SERVER_SIGNATURE`. (Allowed values: `Full`,  `Prod[uctOnly]`, `Major`, `Minor`, `Min[imal]`, `OS`. Default: `Full`). |
+| SSL_CERT  | A string indicating the path to the PEM-encoded X.509 certificate data file or token identifier of the server (Default: `/usr/local/apache2/conf/proxy.crt`) |
+| SSL_CERT_KEY  | A string indicating the path to the PEM-encoded private key file of the server (Default: `/usr/local/apache2/conf/proxy.key`) |
 | SSL_CIPHER_SUITE | A string indicating the cipher suite to use. Uses OpenSSL [list of cipher suites](https://www.openssl.org/docs/manmaster/man3/SSL_CTX_set_ciphersuites.html) (Default: `"ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384"` |
 | SSL_ENGINE  | A string indicating the SSL Engine Operation Switch (Default: `on`) |
 | SSL_HONOR_CIPHER_ORDER | A string indicating if the server should [honor the cipher list provided by the client](https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslhonorcipherorder) (Allowed values: `on`, `off`. Default: `off`) |
 | SSL_PORT  | Port number where the SSL enabled webserver is listening (Default: `443`) |
 | SSL_PROTOCOL | A string for configuring the [usable SSL/TLS protocol versions](https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslprotocol) (Default: `"all -SSLv3 -TLSv1 -TLSv1.1"`) |
-| SSL_PROXY_PROTOCOL | A string for configuring the [proxy client SSL/TLS protocol versions](https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslproxyprotocol) (Default: `"all -SSLv3 -TLSv1 -TLSv1.1"`) |
-| SSL_PROXY_CIPHER_SUITE | A string indicating the cipher suite to connect to the backend via TLS. (Default `"ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384"` |
 | SSL_SESSION_TICKETS | A string to enable or disable the use of [TLS session tickets](https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslsessiontickets) (RFC 5077). (Default: `off`) |
 | SSL_USE_STAPLING | A string indicating if [OSCP Stapling](https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslusestapling) should be used (Allowed values: `on`, `off`. Default: `on`) |
 | TIMEOUT  | Number of seconds before receiving and sending timeout (Default: `60`) |
@@ -241,17 +213,26 @@ Note: Apache access and metric logs can be disabled by exporting the `nologging=
 | REAL_IP_HEADER | Name of the header containing the real IP value(s) (Default: `X-REAL-IP`). See [real_ip_header](http://nginx.org/en/docs/http/ngx_http_realip_module.html#real_ip_header) |
 | REAL_IP_PROXY_HEADER | Name of the header containing `$remote_addr` to be passed to proxy (Default: `X-REAL-IP`). See [proxy_set_header](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_set_header) |
 | REAL_IP_RECURSIVE | A string value indicating whether to use recursive reaplacement on addresses in `REAL_IP_HEADER` (Allowed values: `on`, `off`. Default: `on`). See [real_ip_recursive](http://nginx.org/en/docs/http/ngx_http_realip_module.html#real_ip_recursive) |
+| PROXY_SSL  | A string indicating SSL Proxy Engine Operation Switch (Default: `on`) |
 | PROXY_SSL_CERT  | A string value indicating the path to the server PEM-encoded X.509 certificate data file or token value identifier (Default: `/etc/nginx/conf/server.crt`) |
 | PROXY_SSL_CERT_KEY  | A string value indicating the path to the server PEM-encoded private key file (Default: `/etc/nginx/conf/server.key`) |
 | PROXY_SSL_CIPHERS | A String value indicating the enabled ciphers. The ciphers are specified in the format understood by the OpenSSL library. (Default: `ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;`|
-| PROXY_SSL_DH_BITS | A numeric value indicating the size (in bits) to use for the generated DH-params file (Default 2048) |
-| PROXY_SSL_OCSP_STAPLING | A string value indicating if ssl_stapling and ssl_stapling_verify should be enabled (Allowed values: `on`, `off`. Default: `off`) |
-| PROXY_SSL_PREFER_CIPHERS | A string value indicating if the server ciphers should be preferred over client ciphers when using the SSLv3 and TLS protocols (Allowed values: `on`, `off`. Default: `off`)|
 | PROXY_SSL_PROTOCOLS | A string value indicating the ssl protocols to enable (default: `TTLSv1.2 TLSv1.3`)|
 | PROXY_SSL_VERIFY  | A string value indicating if the client certificates should be verified (Allowed values: `on`, `off`. Default: `off`) |
+| PROXY_SSL_VERIFY_DEPTH  | An integer value indicating the verification depth for the client certificate chain (Default: `1`) |
 | PROXY_TIMEOUT  | Number of seconds for proxied requests to time out connections (Default: `60s`) |
+| SERVER_NAME | A string value indicating the server name (Default: `localhost`) |
 | SERVER_TOKENS | A boolean value for enabling / disabling emission of server identifying information in the `Server` HTTP response header and on error pages. (Allowed values: `on`, `off`, `build`. Default: `off`). |
+| SSL_CERT  | A string value indicating the path to the server PEM-encoded X.509 certificate data file or token value identifier (Default: `/etc/nginx/conf/server.crt`) |
+| SSL_CERT_KEY  | A string value indicating the path to the server PEM-encoded private key file (Default: `/etc/nginx/conf/server.key`) |
+| SSL_CIPHERS | A String value indicating the enabled ciphers. The ciphers are specified in the format understood by the OpenSSL library. (Default: `ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;`|
+| SSL_DH_BITS | A numeric value indicating the size (in bits) to use for the generated DH-params file (Default 2048) |
+| SSL_OCSP_STAPLING | A string value indicating if ssl_stapling and ssl_stapling_verify should be enabled (Allowed values: `on`, `off`. Default: `off`) |
 | SSL_PORT  | Port number where the SSL enabled webserver is listening (Default: `443`) |
+| SSL_PREFER_CIPHERS | A string value indicating if the server ciphers should be preferred over client ciphers when using the SSLv3 and TLS protocols (Allowed values: `on`, `off`. Default: `off`)|
+| SSL_PROTOCOLS | A string value indicating the ssl protocols to enable (default: `TTLSv1.2 TLSv1.3`)|
+| SSL_VERIFY  | A string value indicating if the client certificates should be verified (Allowed values: `on`, `off`. Default: `off`) |
+| SSL_VERIFY_DEPTH  | An integer value indicating the verification depth for the client certificate chain (Default: `1`) |
 | TIMEOUT  | Number of seconds for a keep-alive client connection to stay open on the server side (Default: `60s`) |
 | WORKER_CONNECTIONS  | Maximum number of simultaneous connections that can be opened by a worker process (Default: `1024`) |
 
@@ -296,12 +277,6 @@ All these variables impact in configuration directives in the modsecurity engine
 | MODSEC_DEFAULT_PHASE1_ACTION | ModSecurity string with the contents for the default action in phase 1 (Default: `'phase:1,log,auditlog,pass,tag:\'\${MODSEC_TAG}\''`) |
 | MODSEC_DEFAULT_PHASE2_ACTION | ModSecurity string with the contents for the default action in phase 2 (Default: `'phase:2,log,auditlog,pass,tag:\'\${MODSEC_TAG}\''`) |
 
-### Overridden
-
-| Name     | Description|
-| -------- | ------------------------------------------------------------------- |
-| BACKEND  | The backend address (and optional port) of the backend server. (Default: the container's default router, port 81) (Examples: 192.0.2.2, 192.0.2.2:80, <http://172.17.0.1:8000>) |
-
 ### CRS specific
 
 | Name     | Description|
@@ -331,14 +306,53 @@ All these variables impact in configuration directives in the modsecurity engine
 | COMBINED_FILE_SIZES | An integer indicating the combined_file_sizes (Default: `unlimited`) |
 | CRS_ENABLE_TEST_MARKER | A boolean indicating whether to write test markers to the log file (Used for running the CRS test suite. Default: `0`) |
 
-## Notes regarding reverse proxy
+## TLS/HTTPS
 
-In order to more easily test drive the CRS ruleset, we include support for an technique called [Reverse Proxy](https://en.wikipedia.org/wiki/Reverse_proxy). Using this technique, you keep your pre-existing web server online at a non-standard host and port, and then configure the CRS container to accept public traffic. The CRS container then proxies the traffic to your pre-existing webserver. This way, you can test out CRS with any web server. Some notes:
+> [!IMPORTANT]  
+> The default configuration generates a self signed certificate on first run. To use your own certificates (recommended) `COPY` or mount (`-v`) your `server.crt` and `server.key` into `/usr/local/apache2/conf/` or `/etc/nginx/conf/`. Remember to publish the HTTPS port when running the image.
+>
+> ```bash
+> docker build -t my-modsec .
+> docker run -p 8443:443 my-modsec
+> ```
 
-* Proxy is not enabled by default. You'll need to pass the `-e PROXY=1` environment variable to enable it.
-* You'll want to configure your typical webserver to listen on your docker interface only (i.e. 172.17.0.1:81) so that public traffic doesn't reach it.
-* Do not use 127.0.0.1 as an UPSTREAM address. The loopback interface inside the docker container is not the same interface as the one on docker host.
-* Note that traffic coming through this proxy will look like it's coming from the wrong address. You may want to configure your pre-existing webserver to use the `X-Forwarded-For` HTTP header to populate the remote address field for traffic from the proxy.
+TLS is configured on port `443` and enabled by default.
+
+We use sane intermediate defaults taken from the [Mozilla SSL config tool](https://ssl-config.mozilla.org/). Please review the defaults and choose the ones that best match your needs.
+
+You can set the `*_ALWAYS_TLS_REDIRECT` environment variables to always redirect from `http` to `https`.
+
+## Proxy Configuration
+
+The owasp/modsecurity-crs container images in their default configuration (i.e., without manual changes to / overrides of configuration files) act as reverse proxies and require a running backend at the address specified through the `BACKEND` environment variable.
+
+> [!IMPORTANT]
+> Make sure to set the `BACKEND` variable to an address where a web server is listening. Otherwise nothing useful will happen when you send requests to the owasp/modsecurity-crs container (at least not with the default configurational).
+
+ModSecurity is often used in a reverse proxy setup with the following porperties:
+- reverse proxy acts as public end point
+- reverse proxy performs TLS termination (necessary for ModSecurity to inspect content)
+- ModSecurity runs on the reverse proxy to filter traffic
+- only benign traffic is passed to the backend
+
+This allows one to use ModSecurity without modifying the webserver hosting the underlying application and also protects web servers that ModSecurity cannot currently be embedd into.
+
+Tips:
+* the application web server (the one receiving traffic from the reverse proxy) should not listen on a public interface. Only the reverse proxy should be exposed to the public. With Docker, this could meain setting up a network for both containers and only exposing the reverse proxy with `-p 8080:80`, for example. `docker compose` takes care of this automatically. See the `docker-compose.yaml` for an example setup.
+
+```bash
+docker build -t my-modsec . -f
+docker run -p 8080:80 -e BACKEND=http://example.com my-modsec
+```
+
+## ServerName
+
+It is often convenient to set your server name (set to `localhost` by defualt). To do this simply use the `SERVER_NAME` environment variable.
+
+```bash
+docker build -t modsec .
+docker run -p 8080:80 -e SERVER_NAME=myhost my-modsec
+```
 
 ## ModSecurity CRS Tuning
 
@@ -394,7 +408,6 @@ docker run -dti -p 80:80 --rm \
    -e TOTAL_ARG_LENGTH=6400 \
    -e MAX_FILE_SIZE=100000 \
    -e COMBINED_FILE_SIZES=1000000 \
-   -e PROXY=1 \
    -e TIMEOUT=60 \
    -e LOGLEVEL=warn \
    -e ERRORLOG='/proc/self/fd/2' \
