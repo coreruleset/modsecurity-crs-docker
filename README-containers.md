@@ -11,10 +11,6 @@
 
 ⚠️ We are limited to 25000 chars in the Docker Hub documentation. The full documentation is hosted on [GitHub](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/README.md).
 
-## What is the Core Rule Set
-
-The Core Rule Set (CRS) is a set of generic attack detection rules for use with ModSecurity or compatible web application firewalls.
-
 ## Supported Tags
 
 ### Stable Tags
@@ -73,35 +69,6 @@ Openresty image builds currently support only these architectures:
 
 * linux/amd64
 * linux/arm64
-
-## Container Health Checks
-
-🆕 We add healthchecks to the images, so that containers return HTTP status code 200 from the `/healthz` endpoint. When a container has a healthcheck specified, it has a _health status_ in addition to its normal status. This status is initially `starting`. Whenever a health check passes, it becomes `healthy` (whatever state it was previously in). After a certain number of consecutive failures, it becomes `unhealthy`. See <https://docs.docker.com/engine/reference/builder/#healthcheck> for more information.
-
-## Quick reference
-
-* **Where to get help**: the [Core Rule Set Slack Channel](https://owasp.org/slack/invite) (#coreruleset on owasp.slack.com), or [Stack Overflow](https://stackoverflow.com/questions/tagged/mod-security)
-
-* **Where to file issues**: the [Core Rule Set Docker Repo](https://github.com/coreruleset/modsecurity-crs-docker)
-
-* **Maintained By**: The Core Rule Set Project maintainers
-
-## What is ModSecurity
-
-See [ModSecurity](https://modsecurity.org).
-
-### Nginx based images breaking change
-
-| ⚠️ WARNING |
-|:--|
-| Nginx based images are now based on upstream nginx. This changed the way the config file for nginx is generated. |
-
-If using the [Nginx environment variables](#nginx-env-variables) is not enough for your use case, you can mount your own `nginx.conf` file as the new template for generating the base config.
-
-An example can be seen in the [docker-compose](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/docker-compose.yml) file.
-
-> 💬 What happens if I want to make changes in a different file, like `/etc/nginx/conf.d/default.conf`?
-> You mount your local file, e.g. `nginx/default.conf` as the new template: `/etc/nginx/templates/conf.d/default.conf.template`. You can do this similarly with other files. Files in the templates directory will be copied and subdirectories will be preserved.
 
 ### Common ENV Variables
 
