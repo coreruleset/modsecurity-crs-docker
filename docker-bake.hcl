@@ -58,9 +58,9 @@ function "tag" {
 function "vtag" {
     params = [semver, variant]
     result = concat(
-        tag("${major(semver)}${variant}-${formatdate("YYYYMMDDHHMM", timestamp())}"),
-        tag("${minor(semver)}${variant}-${formatdate("YYYYMMDDHHMM", timestamp())}"),
-        tag("${patch(semver)}${variant}-${formatdate("YYYYMMDDHHMM", timestamp())}")
+        tag("${major(semver)}-${variant}-${formatdate("YYYYMMDDHHMM", timestamp())}"),
+        tag("${minor(semver)}-${variant}-${formatdate("YYYYMMDDHHMM", timestamp())}"),
+        tag("${patch(semver)}-${variant}-${formatdate("YYYYMMDDHHMM", timestamp())}")
     )
 }
 
@@ -80,6 +80,9 @@ target "platforms-base" {
     inherits = ["docker-metadata-action"]
     context="."    
     platforms = ["linux/amd64", "linux/arm64/v8", "linux/arm/v7", "linux/i386"]
+    labels = {
+        "org.opencontainers.image.source" = "https://github.com/coreruleset/modsecurity-crs-docker"
+    }
     args = {
         CRS_RELEASE = "${crs-version}"
         MODSEC2_VERSION = "${modsec2-version}"
@@ -96,7 +99,7 @@ target "apache" {
         HTTPD_VERSION = "${httpd-version}"
     }
     tags = concat(tag("apache"),
-        vtag("${crs-version}", "-apache")
+        vtag("${crs-version}", "apache")
     )
 }
 
@@ -107,7 +110,7 @@ target "apache-alpine" {
         HTTPD_VERSION = "${httpd-version}"
     }
     tags = concat(tag("apache-alpine"),
-        vtag("${crs-version}", "-apache-alpine")
+        vtag("${crs-version}", "apache-alpine")
     )
 }
 
@@ -118,7 +121,7 @@ target "nginx" {
         NGINX_VERSION = "${nginx-version}"
     }
     tags = concat(tag("nginx"),
-        vtag("${crs-version}", "-nginx")
+        vtag("${crs-version}", "nginx")
     )
 }
 
@@ -129,7 +132,7 @@ target "nginx-alpine" {
         NGINX_VERSION = "${nginx-version}"
     }
     tags = concat(tag("nginx-alpine"),
-        vtag("${crs-version}", "-nginx-alpine")
+        vtag("${crs-version}", "nginx-alpine")
     )
 }
 
@@ -142,6 +145,6 @@ target "openresty-alpine-fat" {
         NGINX_VERSION = "${nginx-version}"
     }
     tags = concat(tag("openresty-alpine-fat"),
-        vtag("${crs-version}", "-openresty-alpine-fat")
+        vtag("${crs-version}", "openresty-alpine-fat")
     )
 }
