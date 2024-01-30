@@ -58,8 +58,8 @@ RUN set -eux; \
 
 FROM httpd:${HTTPD_VERSION}
 
-ARG MODSEC2_VERSION="n/a"
-ARG LUA_VERSION="n/a"
+ARG MODSEC2_VERSION
+ARG LUA_VERSION
 
 LABEL maintainer="Felipe Zipitria <felipe.zipitria@owasp.org>"
 

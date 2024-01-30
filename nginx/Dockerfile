@@ -1,10 +1,12 @@
 ARG NGINX_VERSION="n/a"
 
-FROM nginx:${NGINX_VERSION} as build
+FROM nginxinc/nginx-unprivileged:${NGINX_VERSION} as build
 
 ARG MODSEC3_VERSION="n/a"
 ARG LMDB_VERSION="n/a"
 ARG LUA_VERSION="n/a"
+
+USER root
 
 # Note: libpcre3-dev (PCRE 1) is required by the build description,
 # even though the build will use PCRE2.
@@ -74,9 +76,11 @@ RUN set -eux; \
     curl -sSL https://ssl-config.mozilla.org/ffdhe2048.txt -o /usr/share/TLS/dhparam-2048.pem; \
     curl -sSL https://ssl-config.mozilla.org/ffdhe4096.txt -o /usr/share/TLS/dhparam-4096.pem
 
-FROM nginx:${NGINX_VERSION} as crs_release
+FROM nginxinc/nginx-unprivileged:${NGINX_VERSION} as crs_release
 
 ARG CRS_RELEASE
+
+USER root
 
 # hadolint ignore=DL3008,SC2016
 RUN set -eux; \
@@ -86,7 +90,13 @@ RUN set -eux; \
       curl \
       gnupg; \
     mkdir /opt/owasp-crs; \
-    curl -SL https://github.com/coreruleset/coreruleset/archive/v${CRS_RELEASE}.tar.gz -o v${CRS_RELEASE}.tar.gz; \
+    chown nginx:nginx /opt/owasp-crs
+
+USER nginx
+
+WORKDIR /sources
+
+RUN curl -SL https://github.com/coreruleset/coreruleset/archive/v${CRS_RELEASE}.tar.gz -o v${CRS_RELEASE}.tar.gz; \
     curl -SL https://github.com/coreruleset/coreruleset/releases/download/v${CRS_RELEASE}/coreruleset-${CRS_RELEASE}.tar.gz.asc -o coreruleset-${CRS_RELEASE}.tar.gz.asc; \
     gpg --fetch-key https://coreruleset.org/security.asc; \
     gpg --verify coreruleset-${CRS_RELEASE}.tar.gz.asc v${CRS_RELEASE}.tar.gz; \
@@ -94,11 +104,11 @@ RUN set -eux; \
     rm -f v${CRS_RELEASE}.tar.gz coreruleset-${CRS_RELEASE}.tar.gz.asc; \
     mv -v /opt/owasp-crs/crs-setup.conf.example /opt/owasp-crs/crs-setup.conf
 
-FROM nginx:${NGINX_VERSION}
+FROM nginxinc/nginx-unprivileged:${NGINX_VERSION}
 
-ARG MODSEC3_VERSION="n/a"
-ARG LMDB_VERSION="n/a"
-ARG LUA_VERSION="n/a"
+ARG MODSEC3_VERSION
+ARG LMDB_VERSION
+ARG LUA_VERSION
 
 LABEL maintainer="Felipe Zipitria <felipe.zipitria@owasp.org>"
 
@@ -190,6 +200,8 @@ COPY src/opt/modsecurity/activate-rules.sh /docker-entrypoint.d/95-activate-rule
 COPY nginx/templates /etc/nginx/templates/
 COPY src/bin/* /usr/local/bin/
 
+USER root
+
 RUN set -eux; \
     echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections; \
     apt-get update -qq; \
@@ -205,18 +217,18 @@ RUN set -eux; \
     rm -rf /var/lib/apt/lists/*; \
     apt-get clean; \
     mkdir /etc/nginx/ssl; \
-    mkdir -p /tmp/modsecurity/data; \
-    mkdir -p /tmp/modsecurity/upload; \
-    mkdir -p /tmp/modsecurity/tmp; \
-    mkdir -p /usr/local/modsecurity; \
-    chown -R nginx:nginx /tmp/modsecurity; \
     # Comment out the SecDisableBackendCompression option since it is not supported in V3
     sed -i 's/^\(SecDisableBackendCompression .*\)/# \1/' /etc/nginx/templates/modsecurity.d/modsecurity-override.conf.template; \
     ln -s /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC3_VERSION} /usr/local/modsecurity/lib/libmodsecurity.so.3.0; \
     ln -s /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC3_VERSION} /usr/local/modsecurity/lib/libmodsecurity.so.3; \
     ln -s /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC3_VERSION} /usr/local/modsecurity/lib/libmodsecurity.so; \
-    chgrp -R 0 /var/cache/nginx/ /var/log/ /var/run/ /usr/share/nginx/ /etc/nginx/ /etc/modsecurity.d/; \
-    chmod -R g=u /var/cache/nginx/ /var/log/ /var/run/ /usr/share/nginx/ /etc/nginx/ /etc/modsecurity.d/; \
-    ln -sv /opt/owasp-crs /etc/modsecurity.d/
+    ln -sv /opt/owasp-crs /etc/modsecurity.d/; \
+    chown nginx:nginx /opt/owasp-crs /etc/modsecurity.d
+
+USER nginx
+
+RUN mkdir -p /tmp/modsecurity/data; \
+    mkdir -p /tmp/modsecurity/upload; \
+    mkdir -p /tmp/modsecurity/tmp
 
 HEALTHCHECK CMD /usr/local/bin/healthcheck

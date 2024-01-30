@@ -1,9 +1,11 @@
 ARG NGINX_VERSION="n/a"
 
-FROM nginx:${NGINX_VERSION}-alpine as build
+FROM nginxinc/nginx-unprivileged:${NGINX_VERSION}-alpine as build
 
 ARG MODSEC3_VERSION="n/a"
 ARG LUA_VERSION="n/a"
+
+USER root
 
 # Note: pcre-dev (PCRE 1) is required by the build description,
 # even though the build will use PCRE2.
@@ -71,9 +73,11 @@ RUN set -eux; \
     curl -sSL https://ssl-config.mozilla.org/ffdhe2048.txt -o /usr/share/TLS/dhparam-2048.pem; \
     curl -sSL https://ssl-config.mozilla.org/ffdhe4096.txt -o /usr/share/TLS/dhparam-4096.pem
 
-FROM nginx:${NGINX_VERSION}-alpine as crs_release
+FROM nginxinc/nginx-unprivileged:${NGINX_VERSION}-alpine as crs_release
 
 ARG CRS_RELEASE
+
+USER root
 
 # hadolint ignore=DL3008,SC2016
 RUN set -eux; \
@@ -82,7 +86,13 @@ RUN set -eux; \
     curl \
     gnupg; \
     mkdir /opt/owasp-crs; \
-    curl -SL https://github.com/coreruleset/coreruleset/archive/v${CRS_RELEASE}.tar.gz -o v${CRS_RELEASE}.tar.gz; \
+    chown nginx:nginx /opt/owasp-crs
+
+USER nginx
+
+WORKDIR /sources
+
+RUN curl -SL https://github.com/coreruleset/coreruleset/archive/v${CRS_RELEASE}.tar.gz -o v${CRS_RELEASE}.tar.gz; \
     curl -SL https://github.com/coreruleset/coreruleset/releases/download/v${CRS_RELEASE}/coreruleset-${CRS_RELEASE}.tar.gz.asc -o coreruleset-${CRS_RELEASE}.tar.gz.asc; \
     gpg --fetch-key https://coreruleset.org/security.asc; \
     gpg --verify coreruleset-${CRS_RELEASE}.tar.gz.asc v${CRS_RELEASE}.tar.gz; \
@@ -90,7 +100,7 @@ RUN set -eux; \
     rm -f v${CRS_RELEASE}.tar.gz coreruleset-${CRS_RELEASE}.tar.gz.asc; \
     mv -v /opt/owasp-crs/crs-setup.conf.example /opt/owasp-crs/crs-setup.conf
 
-FROM nginx:${NGINX_VERSION}-alpine
+FROM nginxinc/nginx-unprivileged:${NGINX_VERSION}-alpine
 
 ARG MODSEC3_VERSION
 ARG LUA_VERSION
@@ -175,15 +185,16 @@ COPY --from=build /usr/share/TLS/dhparam-* /etc/ssl/certs/
 COPY --from=build /etc/modsecurity.d/unicode.mapping /etc/modsecurity.d/unicode.mapping
 COPY --from=build /etc/modsecurity.d/modsecurity.conf /etc/modsecurity.d/modsecurity.conf
 COPY --from=crs_release /opt/owasp-crs /opt/owasp-crs
-# We use the templating mechanism from the nginx image here.
-COPY nginx/templates /etc/nginx/templates/
 COPY src/etc/modsecurity.d/modsecurity-override.conf /etc/nginx/templates/modsecurity.d/modsecurity-override.conf.template
 COPY src/etc/modsecurity.d/setup.conf /etc/nginx/templates/modsecurity.d/setup.conf.template
-COPY src/bin/* /usr/local/bin/
 COPY nginx/docker-entrypoint.d/*.sh /docker-entrypoint.d/
 COPY src/opt/modsecurity/activate-plugins.sh /docker-entrypoint.d/94-activate-plugins.sh
 COPY src/opt/modsecurity/activate-rules.sh /docker-entrypoint.d/95-activate-rules.sh
+# We use the templating mechanism from the nginx image here.
+COPY nginx/templates /etc/nginx/templates/
+COPY src/bin/* /usr/local/bin/
 
+USER root
 
 RUN set -eux; \
     apk add --no-cache \
@@ -203,19 +214,20 @@ RUN set -eux; \
         # Alpine needs GNU 'sed' because the 'sed' program shipped with busybox does not support 'z' parameter for separating lines with a 'NUL' character.
         sed \
         yajl; \
-    mkdir /etc/nginx/ssl/; \
-    mkdir -p /tmp/modsecurity/data; \
-    mkdir -p /tmp/modsecurity/upload; \
-    mkdir -p /tmp/modsecurity/tmp; \
-    chown -R nginx:nginx /usr/share/nginx /tmp/modsecurity; \
+    mkdir /etc/nginx/ssl; \
     # Comment out the SecDisableBackendCompression option since it is not supported in V3
     sed -i 's/^\(SecDisableBackendCompression .*\)/# \1/' /etc/nginx/templates/modsecurity.d/modsecurity-override.conf.template; \
     ln -s /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC3_VERSION} /usr/local/modsecurity/lib/libmodsecurity.so.3.0; \
     ln -s /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC3_VERSION} /usr/local/modsecurity/lib/libmodsecurity.so.3; \
     ln -s /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC3_VERSION} /usr/local/modsecurity/lib/libmodsecurity.so; \
     ln -sv /opt/owasp-crs /etc/modsecurity.d/; \
-    chgrp -R 0 /var/cache/nginx/ /var/log/ /var/run/ /usr/share/nginx/ /etc/nginx/ /etc/modsecurity.d/; \
-    chmod -R g=u /var/cache/nginx/ /var/log/ /var/run/ /usr/share/nginx/ /etc/nginx/ /etc/modsecurity.d/
+    chown nginx:nginx /opt/owasp-crs /etc/modsecurity.d
+
+USER nginx
+
+RUN mkdir -p /tmp/modsecurity/data; \
+    mkdir -p /tmp/modsecurity/upload; \
+    mkdir -p /tmp/modsecurity/tmp
 
 WORKDIR /usr/share/nginx/html
 
