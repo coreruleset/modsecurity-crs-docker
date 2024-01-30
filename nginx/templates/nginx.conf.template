@@ -10,7 +10,7 @@ events {
 http {
     include /etc/nginx/mime.types;
     default_type application/octet-stream;
-    keepalive_timeout ${TIMEOUT};
+    keepalive_timeout ${KEEPALIVE_TIMEOUT};
     sendfile on;
 
     resolver DNS_SERVER valid=5s;

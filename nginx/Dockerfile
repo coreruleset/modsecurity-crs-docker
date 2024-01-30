@@ -65,9 +65,9 @@ RUN set -eux; \
     strip objs/ngx_http_modsecurity_module.so; \
     cp objs/ngx_http_modsecurity_module.so /etc/nginx/modules/; \
     mkdir /etc/modsecurity.d; \
-    curl -sSL https://raw.githubusercontent.com/SpiderLabs/ModSecurity/v3/master/modsecurity.conf-recommended \
+    curl -sSL https://raw.githubusercontent.com/owasp-modsecurity/ModSecurity/v3/master/modsecurity.conf-recommended \
          -o /etc/modsecurity.d/modsecurity.conf; \
-    curl -sSL https://raw.githubusercontent.com/SpiderLabs/ModSecurity/v3/master/unicode.mapping \
+    curl -sSL https://raw.githubusercontent.com/owasp-modsecurity/ModSecurity/v3/master/unicode.mapping \
          -o /etc/modsecurity.d/unicode.mapping
 
 # Generate/Download Diffie-Hellman parameter files
@@ -116,6 +116,7 @@ ENV ACCESSLOG=/var/log/nginx/access.log \
     BACKEND=http://localhost:80 \
     DNS_SERVER= \
     ERRORLOG=/var/log/nginx/error.log \
+    KEEPALIVE_TIMEOUT=60s \
     LOGLEVEL=warn \
     METRICS_ALLOW_FROM='127.0.0.0/24' \
     METRICS_DENY_FROM='all' \
@@ -154,19 +155,26 @@ ENV ACCESSLOG=/var/log/nginx/access.log \
     REAL_IP_HEADER="X-REAL-IP" \
     REAL_IP_PROXY_HEADER="X-REAL-IP" \
     REAL_IP_RECURSIVE="on" \
-    PROXY_TIMEOUT=60s \
-    PROXY_SSL_CERT=/etc/nginx/conf/server.crt \
-    PROXY_SSL_CERT_KEY=/etc/nginx/conf/server.key \
-    PROXY_SSL_DH_BITS=2048 \
-    PROXY_SSL_PROTOCOLS="TLSv1.2 TLSv1.3" \
+    PROXY_SSL=off \
+    PROXY_SSL_CERT=/etc/nginx/conf/proxy.crt \
+    PROXY_SSL_CERT_KEY=/etc/nginx/conf/proxy.key \
     PROXY_SSL_CIPHERS="ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384" \
-    PROXY_SSL_PREFER_CIPHERS=off \
+    PROXY_SSL_PROTOCOLS="TLSv1.2 TLSv1.3" \
     PROXY_SSL_VERIFY=off \
-    PROXY_SSL_OCSP_STAPLING=off \
+    PROXY_SSL_VERIFY_DEPTH=1 \
+    PROXY_TIMEOUT=60s \
     SERVER_NAME=localhost \
     SERVER_TOKENS=off \
+    SSL_CERT=/etc/nginx/conf/server.crt \
+    SSL_CERT_KEY=/etc/nginx/conf/server.key \
+    SSL_CIPHERS="ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384" \
+    SSL_DH_BITS=2048 \
+    SSL_OCSP_STAPLING=on \
     SSL_PORT=443 \
-    TIMEOUT=60s \
+    SSL_PREFER_CIPHERS=off \
+    SSL_PROTOCOLS="TLSv1.2 TLSv1.3" \
+    SSL_VERIFY=off \
+    SSL_VERIFY_DEPTH=1 \
     WORKER_CONNECTIONS=1024 \
     LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib \
     NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx \

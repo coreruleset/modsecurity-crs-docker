@@ -27,7 +27,7 @@ RUN set -eux; \
         wget
 
 RUN set -eux; \
-    wget --quiet https://github.com/SpiderLabs/ModSecurity/archive/refs/tags/v${MODSEC2_VERSION}.tar.gz; \
+    wget --quiet https://github.com/owasp-modsecurity/ModSecurity/archive/refs/tags/v${MODSEC2_VERSION}.tar.gz; \
     tar -zxvf v${MODSEC2_VERSION}.tar.gz; \
     cd ModSecurity-${MODSEC2_VERSION}; \
     ./autogen.sh; \
@@ -64,19 +64,19 @@ ARG LUA_VERSION
 LABEL maintainer="Felipe Zipitria <felipe.zipitria@owasp.org>"
 
 ENV APACHE_ALWAYS_TLS_REDIRECT=off \
+    APACHE_LOGFORMAT='"%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""' \
+    APACHE_ERRORLOG_FORMAT='"[%{u}t] [%-m:%l] [pid %P:tid %T] %7F: %E: [client\ %a] %M% ,\ referer\ %{Referer}i"' \
+    APACHE_METRICS_LOGFORMAT='"%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""' \
     ACCESSLOG=/var/log/apache2/access.log \
     BACKEND=http://localhost:80 \
     BACKEND_WS=ws://localhost:8080 \
     ERRORLOG='/proc/self/fd/2' \
-    APACHE_LOGFORMAT='"%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""' \
-    APACHE_ERRORLOG_FORMAT='"[%{u}t] [%-m:%l] [pid %P:tid %T] %7F: %E: [client\ %a] %M% ,\ referer\ %{Referer}i"' \
-    APACHE_METRICS_LOGFORMAT='"%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""' \
     H2_PROTOCOLS='h2 http/1.1' \
     LOGLEVEL=warn \
     METRICS_ALLOW_FROM='127.0.0.0/255.0.0.0 ::1/128' \
     METRICS_DENY_FROM='All' \
-    METRICSLOG='/dev/null' \
     MUTEX='default' \
+    METRICSLOG='/dev/null' \
     MODSEC_AUDIT_ENGINE="RelevantOnly" \
     MODSEC_AUDIT_LOG_FORMAT=JSON \
     MODSEC_AUDIT_LOG_TYPE=Serial \
@@ -110,12 +110,14 @@ ENV APACHE_ALWAYS_TLS_REDIRECT=off \
     PORT=80 \
     PROXY_ERROR_OVERRIDE=on \
     PROXY_PRESERVE_HOST=on \
+    PROXY_SSL=off \
     PROXY_SSL_CA_CERT=/etc/ssl/certs/ca-certificates.crt \
-    PROXY_SSL_CERT_KEY=/usr/local/apache2/conf/server.key \
-    PROXY_SSL_CERT=/usr/local/apache2/conf/server.crt \
+    PROXY_SSL_CERT=/usr/local/apache2/conf/proxy.crt \
+    PROXY_SSL_CERT_KEY=/usr/local/apache2/conf/proxy.key \
     PROXY_SSL_CHECK_PEER_NAME=off \
+    PROXY_SSL_CIPHERS="ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384" \
+    PROXY_SSL_PROTOCOLS="all -SSLv3 -TLSv1 -TLSv1.1" \
     PROXY_SSL_VERIFY=none \
-    PROXY_SSL=on \
     PROXY_TIMEOUT=60 \
     REMOTEIP_INT_PROXY='10.1.0.0/16' \
     REQ_HEADER_FORWARDED_PROTO='https' \
@@ -123,15 +125,15 @@ ENV APACHE_ALWAYS_TLS_REDIRECT=off \
     SERVER_NAME=localhost \
     SERVER_SIGNATURE=Off \
     SERVER_TOKENS=Full \
-    SSL_CIPHER_SUITE="ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384" \
+    SSL_CERT=/usr/local/apache2/conf/server.crt \
+    SSL_CERT_KEY=/usr/local/apache2/conf/server.key \
+    SSL_CIPHERS="ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384" \
     SSL_ENGINE=on \
     SSL_HONOR_CIPHER_ORDER=off \
     SSL_PORT=443 \
-    SSL_PROTOCOL="all -SSLv3 -TLSv1 -TLSv1.1" \
-    SSL_PROXY_PROTOCOL="all -SSLv3 -TLSv1 -TLSv1.1" \
-    SSL_PROXY_CIPHER_SUITE="ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384" \
+    SSL_PROTOCOLS="all -SSLv3 -TLSv1 -TLSv1.1" \
     SSL_SESSION_TICKETS=off \
-    SSL_USE_STAPLING=On \
+    SSL_OCSP_STAPLING=On \
     TIMEOUT=60 \
     WORKER_CONNECTIONS=400 \
     # CRS specific variables
