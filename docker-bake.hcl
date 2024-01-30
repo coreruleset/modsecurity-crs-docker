@@ -1,6 +1,6 @@
 # docker-bake.hcl
 variable "modsec3-version" {
-    default = "3.0.11"
+    default = "3.0.12"
 }
 
 variable "modsec2-version" {
