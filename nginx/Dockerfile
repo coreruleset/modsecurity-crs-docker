@@ -63,9 +63,9 @@ RUN set -eux; \
     strip objs/ngx_http_modsecurity_module.so; \
     cp objs/ngx_http_modsecurity_module.so /etc/nginx/modules/; \
     mkdir /etc/modsecurity.d; \
-    curl -sSL https://raw.githubusercontent.com/SpiderLabs/ModSecurity/v3/master/modsecurity.conf-recommended \
+    curl -sSL https://raw.githubusercontent.com/owasp-modsecurity/ModSecurity/v3/master/modsecurity.conf-recommended \
          -o /etc/modsecurity.d/modsecurity.conf; \
-    curl -sSL https://raw.githubusercontent.com/SpiderLabs/ModSecurity/v3/master/unicode.mapping \
+    curl -sSL https://raw.githubusercontent.com/owasp-modsecurity/ModSecurity/v3/master/unicode.mapping \
          -o /etc/modsecurity.d/unicode.mapping
 
 # Generate/Download Diffie-Hellman parameter files
@@ -106,6 +106,7 @@ ENV ACCESSLOG=/var/log/nginx/access.log \
     BACKEND=http://localhost:80 \
     DNS_SERVER= \
     ERRORLOG=/var/log/nginx/error.log \
+    KEEPALIVE_TIMEOUT=60s \
     LOGLEVEL=warn \
     METRICS_ALLOW_FROM='127.0.0.0/24' \
     METRICS_DENY_FROM='all' \
@@ -164,7 +165,6 @@ ENV ACCESSLOG=/var/log/nginx/access.log \
     SSL_PROTOCOLS="TLSv1.2 TLSv1.3" \
     SSL_VERIFY=off \
     SSL_VERIFY_DEPTH=1 \
-    KEEPALIVE_TIMEOUT=60s \
     WORKER_CONNECTIONS=1024 \
     LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib \
     NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx \

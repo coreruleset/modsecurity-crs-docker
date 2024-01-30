@@ -60,9 +60,9 @@ RUN set -eux; \
     make modules; \
     cp objs/ngx_http_modsecurity_module.so /etc/nginx/modules/; \
     mkdir /etc/modsecurity.d; \
-    wget --quiet https://raw.githubusercontent.com/SpiderLabs/ModSecurity/v3/master/modsecurity.conf-recommended \
+    wget --quiet https://raw.githubusercontent.com/owasp-modsecurity/ModSecurity/v3/master/modsecurity.conf-recommended \
         -O /etc/modsecurity.d/modsecurity.conf; \
-    wget --quiet https://raw.githubusercontent.com/SpiderLabs/ModSecurity/v3/master/unicode.mapping \
+    wget --quiet https://raw.githubusercontent.com/owasp-modsecurity/ModSecurity/v3/master/unicode.mapping \
         -O /etc/modsecurity.d/unicode.mapping
 
 # Generate/Download Diffie-Hellman parameter files

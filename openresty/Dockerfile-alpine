@@ -72,9 +72,9 @@ RUN set -eux; \
     make modules; \
     cp objs/ngx_http_modsecurity_module.so /usr/local/openresty/nginx/modules/; \ 
     mkdir /etc/modsecurity.d; \
-    wget --quiet https://raw.githubusercontent.com/SpiderLabs/ModSecurity/v3/master/modsecurity.conf-recommended \
+    wget --quiet https://raw.githubusercontent.com/owasp-modsecurity/ModSecurity/v3/master/modsecurity.conf-recommended \
         -O /etc/modsecurity.d/modsecurity.conf; \
-    wget --quiet https://raw.githubusercontent.com/SpiderLabs/ModSecurity/v3/master/unicode.mapping \
+    wget --quiet https://raw.githubusercontent.com/owasp-modsecurity/ModSecurity/v3/master/unicode.mapping \
         -O /etc/modsecurity.d/unicode.mapping
 
 
@@ -120,6 +120,7 @@ ENV ACCESSLOG=/var/log/nginx/access.log \
     BACKEND=http://localhost:80 \
     DNS_SERVER= \
     ERRORLOG=/var/log/nginx/error.log \
+    KEEPALIVE_TIMEOUT=60s \
     LOGLEVEL=warn \
     METRICS_ALLOW_FROM='127.0.0.0/24' \
     METRICS_DENY_FROM='all' \
@@ -178,7 +179,6 @@ ENV ACCESSLOG=/var/log/nginx/access.log \
     SSL_PROTOCOLS="TLSv1.2 TLSv1.3" \
     SSL_VERIFY=off \
     SSL_VERIFY_DEPTH=1 \
-    KEEPALIVE_TIMEOUT=60s \
     WORKER_CONNECTIONS=1024 \
     # Change this from normal nginx setup. Do not add /usr/lib or /lib
     LD_LIBRARY_PATH=/usr/local/lib:/usr/local/openresty \

@@ -37,7 +37,7 @@ RUN set -eux; \
     zlib-dev
 
 RUN set -eux; \
-    wget --quiet https://github.com/SpiderLabs/ModSecurity/archive/refs/tags/v${MODSEC2_VERSION}.tar.gz; \
+    wget --quiet https://github.com/owasp-modsecurity/ModSecurity/archive/refs/tags/v${MODSEC2_VERSION}.tar.gz; \
     tar -zxvf v${MODSEC2_VERSION}.tar.gz; \
     cd ModSecurity-${MODSEC2_VERSION}; \
     ./autogen.sh; \
