@@ -1,10 +1,12 @@
-ARG NGINX_VERSION="1.25.3"
+ARG NGINX_VERSION="n/a"
 
-FROM nginx:${NGINX_VERSION} as build
+FROM nginxinc/nginx-unprivileged:${NGINX_VERSION} as build
 
-ARG MODSEC_VERSION=3.0.11 \
-    LMDB_VERSION=0.9.29 \
-    LUA_VERSION=5.3
+ARG MODSEC3_VERSION="n/a"
+ARG LMDB_VERSION="n/a"
+ARG LUA_VERSION="n/a"
+
+USER root
 
 # Note: libpcre3-dev (PCRE 1) is required by the build description,
 # even though the build will use PCRE2.
@@ -42,7 +44,7 @@ RUN set -eux; \
     strip /usr/local/lib/liblmdb*.so*
 
 RUN set -eux; \
-    git clone https://github.com/SpiderLabs/ModSecurity --branch v"${MODSEC_VERSION}" --depth 1 --recursive; \
+    git clone https://github.com/SpiderLabs/ModSecurity --branch "v${MODSEC3_VERSION}" --depth 1 --recursive; \
     cd ModSecurity; \
     ARCH=$(gcc -print-multiarch); \
     sed -ie "s/i386-linux-gnu/${ARCH}/g" build/ssdeep.m4; \
@@ -63,9 +65,9 @@ RUN set -eux; \
     strip objs/ngx_http_modsecurity_module.so; \
     cp objs/ngx_http_modsecurity_module.so /etc/nginx/modules/; \
     mkdir /etc/modsecurity.d; \
-    curl -sSL https://raw.githubusercontent.com/SpiderLabs/ModSecurity/v3/master/modsecurity.conf-recommended \
+    curl -sSL https://raw.githubusercontent.com/owasp-modsecurity/ModSecurity/v3/master/modsecurity.conf-recommended \
          -o /etc/modsecurity.d/modsecurity.conf; \
-    curl -sSL https://raw.githubusercontent.com/SpiderLabs/ModSecurity/v3/master/unicode.mapping \
+    curl -sSL https://raw.githubusercontent.com/owasp-modsecurity/ModSecurity/v3/master/unicode.mapping \
          -o /etc/modsecurity.d/unicode.mapping
 
 # Generate/Download Diffie-Hellman parameter files
@@ -74,9 +76,11 @@ RUN set -eux; \
     curl -sSL https://ssl-config.mozilla.org/ffdhe2048.txt -o /usr/share/TLS/dhparam-2048.pem; \
     curl -sSL https://ssl-config.mozilla.org/ffdhe4096.txt -o /usr/share/TLS/dhparam-4096.pem
 
-FROM nginx:${NGINX_VERSION} as crs_release
+FROM nginxinc/nginx-unprivileged:${NGINX_VERSION} as crs_release
 
 ARG CRS_RELEASE
+
+USER root
 
 # hadolint ignore=DL3008,SC2016
 RUN set -eux; \
@@ -86,7 +90,13 @@ RUN set -eux; \
       curl \
       gnupg; \
     mkdir /opt/owasp-crs; \
-    curl -SL https://github.com/coreruleset/coreruleset/archive/v${CRS_RELEASE}.tar.gz -o v${CRS_RELEASE}.tar.gz; \
+    chown nginx:nginx /opt/owasp-crs
+
+USER nginx
+
+WORKDIR /sources
+
+RUN curl -SL https://github.com/coreruleset/coreruleset/archive/v${CRS_RELEASE}.tar.gz -o v${CRS_RELEASE}.tar.gz; \
     curl -SL https://github.com/coreruleset/coreruleset/releases/download/v${CRS_RELEASE}/coreruleset-${CRS_RELEASE}.tar.gz.asc -o coreruleset-${CRS_RELEASE}.tar.gz.asc; \
     gpg --fetch-key https://coreruleset.org/security.asc; \
     gpg --verify coreruleset-${CRS_RELEASE}.tar.gz.asc v${CRS_RELEASE}.tar.gz; \
@@ -94,11 +104,11 @@ RUN set -eux; \
     rm -f v${CRS_RELEASE}.tar.gz coreruleset-${CRS_RELEASE}.tar.gz.asc; \
     mv -v /opt/owasp-crs/crs-setup.conf.example /opt/owasp-crs/crs-setup.conf
 
-FROM nginx:${NGINX_VERSION}
+FROM nginxinc/nginx-unprivileged:${NGINX_VERSION}
 
-ARG MODSEC_VERSION=3.0.11 \
-    LMDB_VERSION=0.9.29 \
-    LUA_VERSION=5.3
+ARG MODSEC3_VERSION
+ARG LMDB_VERSION
+ARG LUA_VERSION
 
 LABEL maintainer="Felipe Zipitria <felipe.zipitria@owasp.org>"
 
@@ -106,6 +116,7 @@ ENV ACCESSLOG=/var/log/nginx/access.log \
     BACKEND=http://localhost:80 \
     DNS_SERVER= \
     ERRORLOG=/var/log/nginx/error.log \
+    KEEPALIVE_TIMEOUT=60s \
     LOGLEVEL=warn \
     METRICS_ALLOW_FROM='127.0.0.0/24' \
     METRICS_DENY_FROM='all' \
@@ -144,31 +155,36 @@ ENV ACCESSLOG=/var/log/nginx/access.log \
     REAL_IP_HEADER="X-REAL-IP" \
     REAL_IP_PROXY_HEADER="X-REAL-IP" \
     REAL_IP_RECURSIVE="on" \
-    PROXY_TIMEOUT=60s \
-    PROXY_SSL_CERT=/etc/nginx/conf/server.crt \
-    PROXY_SSL_CERT_KEY=/etc/nginx/conf/server.key \
-    PROXY_SSL_DH_BITS=2048 \
-    PROXY_SSL_PROTOCOLS="TLSv1.2 TLSv1.3" \
+    PROXY_SSL=off \
+    PROXY_SSL_CERT=/etc/nginx/conf/proxy.crt \
+    PROXY_SSL_CERT_KEY=/etc/nginx/conf/proxy.key \
     PROXY_SSL_CIPHERS="ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384" \
-    PROXY_SSL_PREFER_CIPHERS=off \
+    PROXY_SSL_PROTOCOLS="TLSv1.2 TLSv1.3" \
     PROXY_SSL_VERIFY=off \
-    PROXY_SSL_OCSP_STAPLING=off \
+    PROXY_SSL_VERIFY_DEPTH=1 \
+    PROXY_TIMEOUT=60s \
     SERVER_NAME=localhost \
     SERVER_TOKENS=off \
+    SSL_CERT=/etc/nginx/conf/server.crt \
+    SSL_CERT_KEY=/etc/nginx/conf/server.key \
+    SSL_CIPHERS="ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384" \
+    SSL_DH_BITS=2048 \
+    SSL_OCSP_STAPLING=on \
     SSL_PORT=443 \
-    TIMEOUT=60s \
+    SSL_PREFER_CIPHERS=off \
+    SSL_PROTOCOLS="TLSv1.2 TLSv1.3" \
+    SSL_VERIFY=off \
+    SSL_VERIFY_DEPTH=1 \
     WORKER_CONNECTIONS=1024 \
     LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib \
     NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx \
-    # overridden variables
-    USER=nginx \
     # CRS specific variables
     PARANOIA=1 \
     ANOMALY_INBOUND=5 \
     ANOMALY_OUTBOUND=4 \
     BLOCKING_PARANOIA=1
 
-COPY --from=build /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC_VERSION} /usr/local/modsecurity/lib/
+COPY --from=build /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC3_VERSION} /usr/local/modsecurity/lib/
 COPY --from=build /etc/nginx/modules/ngx_http_modsecurity_module.so /etc/nginx/modules/ngx_http_modsecurity_module.so
 COPY --from=build /usr/local/lib/liblmdb.so /usr/local/lib/
 COPY --from=build /usr/share/TLS/dhparam-* /etc/ssl/certs/
@@ -183,6 +199,8 @@ COPY src/opt/modsecurity/activate-rules.sh /docker-entrypoint.d/95-activate-rule
 # We use the templating mechanism from the nginx image here.
 COPY nginx/templates /etc/nginx/templates/
 COPY src/bin/* /usr/local/bin/
+
+USER root
 
 RUN set -eux; \
     echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections; \
@@ -199,18 +217,18 @@ RUN set -eux; \
     rm -rf /var/lib/apt/lists/*; \
     apt-get clean; \
     mkdir /etc/nginx/ssl; \
-    mkdir -p /tmp/modsecurity/data; \
-    mkdir -p /tmp/modsecurity/upload; \
-    mkdir -p /tmp/modsecurity/tmp; \
-    mkdir -p /usr/local/modsecurity; \
-    chown -R nginx:nginx /tmp/modsecurity; \
     # Comment out the SecDisableBackendCompression option since it is not supported in V3
     sed -i 's/^\(SecDisableBackendCompression .*\)/# \1/' /etc/nginx/templates/modsecurity.d/modsecurity-override.conf.template; \
-    ln -s /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC_VERSION} /usr/local/modsecurity/lib/libmodsecurity.so.3.0; \
-    ln -s /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC_VERSION} /usr/local/modsecurity/lib/libmodsecurity.so.3; \
-    ln -s /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC_VERSION} /usr/local/modsecurity/lib/libmodsecurity.so; \
-    chgrp -R 0 /var/cache/nginx/ /var/log/ /var/run/ /usr/share/nginx/ /etc/nginx/ /etc/modsecurity.d/; \
-    chmod -R g=u /var/cache/nginx/ /var/log/ /var/run/ /usr/share/nginx/ /etc/nginx/ /etc/modsecurity.d/; \
-    ln -sv /opt/owasp-crs /etc/modsecurity.d/
+    ln -s /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC3_VERSION} /usr/local/modsecurity/lib/libmodsecurity.so.3.0; \
+    ln -s /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC3_VERSION} /usr/local/modsecurity/lib/libmodsecurity.so.3; \
+    ln -s /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC3_VERSION} /usr/local/modsecurity/lib/libmodsecurity.so; \
+    ln -sv /opt/owasp-crs /etc/modsecurity.d/; \
+    chown nginx:nginx /opt/owasp-crs /etc/modsecurity.d
+
+USER nginx
+
+RUN mkdir -p /tmp/modsecurity/data; \
+    mkdir -p /tmp/modsecurity/upload; \
+    mkdir -p /tmp/modsecurity/tmp
 
 HEALTHCHECK CMD /usr/local/bin/healthcheck
