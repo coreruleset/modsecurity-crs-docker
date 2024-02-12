@@ -71,9 +71,10 @@ jobs:
 
       - name: Sign the images with GitHub OIDC Token
         env:
-          DIGEST: ${{ steps.build-and-push.outputs.digest }}
-          TAGS: ${{ steps.build-and-push.outputs.tags }}
+          METADATA: ${{ steps.build-and-push.outputs.metadata }}
         run: |
+          DIGEST=$(echo ${METADATA} | jq -r '.digest')
+          TAGS=$(echo ${METADATA} | jq -r '.tags[]')
           images=""
           for tag in ${TAGS}; do
             images+="${tag}@${DIGEST} "
