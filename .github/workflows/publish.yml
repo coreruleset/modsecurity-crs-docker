@@ -24,6 +24,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write # needed for signing the images with GitHub OIDC Token
     strategy:
       matrix:
         target: ${{ fromJson(needs.prepare.outputs.targets) }}
@@ -32,6 +33,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
+      
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3.4.0
 
       # https://github.com/docker/setup-qemu-action
       - name: Set up QEMU
@@ -57,21 +61,21 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 'Build and push to Docker Hub: ${{ matrix.target }}'
+        id: build-and-push
         uses: docker/bake-action@v4.1.0
         with:
           files: |
             ./docker-bake.hcl
           targets: ${{ matrix.target }}
           push: true
-        env:
-          REPO: "owasp/modsecurity-crs"
 
-      - name: 'Build and push to GitHub: ${{ matrix.target }}'
-        uses: docker/bake-action@v4.1.0
-        with:
-          files: |
-            ./docker-bake.hcl
-          push: true
-          targets: ${{ matrix.target }}
+      - name: Sign the images with GitHub OIDC Token
         env:
-          REPO: "ghcr.io/coreruleset/modsecurity-crs"
+          DIGEST: ${{ steps.build-and-push.outputs.digest }}
+          TAGS: ${{ steps.build-and-push.outputs.tags }}
+        run: |
+          images=""
+          for tag in ${TAGS}; do
+            images+="${tag}@${DIGEST} "
+          done
+          cosign sign --yes ${images}

@@ -35,6 +35,10 @@ variable "REPO" {
     default = "owasp/modsecurity-crs"
 }
 
+variable "GHCR_REPO" {
+    default = "ghcr.io/coreruleset/modsecurity-crs"
+}
+
 function "major" {
     params = [version]
     result = split(".", version)[0]
@@ -52,7 +56,7 @@ function "patch" {
 
 function "tag" {
     params = [tag]
-    result = ["${REPO}:${tag}"]
+    result = ["${REPO}:${tag}", "${GHCR_REPO}:${tag}"]
 }
 
 function "vtag" {
