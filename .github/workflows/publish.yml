@@ -73,8 +73,8 @@ jobs:
         env:
           METADATA: ${{ steps.build-and-push.outputs.metadata }}
         run: |
-          DIGEST=$(echo ${METADATA} | jq -r '.digest')
-          TAGS=$(echo ${METADATA} | jq -r '.tags[]')
+          DIGEST=$(echo ${METADATA} | jq -r '.[] | ."containerimage.digest"')
+          TAGS=$(echo ${METADATA} | jq -r '.[] | ."image.name" | tostring' | tr ',' '\n')
           images=""
           for tag in ${TAGS}; do
             images+="${tag}@${DIGEST} "

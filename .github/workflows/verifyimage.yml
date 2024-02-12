@@ -46,7 +46,6 @@ jobs:
 
       - name: Build images
         uses: docker/bake-action@v4.1.0
-        id: build
         with:
           files: |
             ./docker-bake.hcl
@@ -65,11 +64,3 @@ jobs:
       - name: Verify ${{ matrix.target }}
         run: |
           [ $(docker inspect ${{ matrix.target }}-test --format='{{.State.Running}}') = 'true' ]
-
-      - name: Show metadata
-        env:
-          METADATA: ${{ steps.build.outputs.metadata }}
-        run: |
-          echo PLAIN METADATA: $METADATA
-          echo JSON METADATA: $(echo $METADATA | jq -r .)
-
