@@ -53,6 +53,8 @@ jobs:
           set: |
             *.platform=linux/amd64
           load: true
+          provenance: true
+          sbom: true
           push: false
 
       - name: Run ${{ matrix.target }}
