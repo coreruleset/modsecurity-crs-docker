@@ -89,10 +89,15 @@ services:
   crs-nginx:
     extends: crs-apache
     image: owasp/modsecurity-crs:nginx
+    ports:
+      - "80:8080"
+      # only available if SETTLS was enabled:
+      - "443:8443"
     #######################################################
     # Add TLS server certificate and key
     # (only available if SETPROXY was enabled during the
     # parent ModSecurity image)
     #######################################################
+    # volumes:
     #  - ./server.crt:/etc/nginx/conf/server.crt
     #  - ./server.key:/etc/nginx/conf/server.key

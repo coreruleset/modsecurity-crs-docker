@@ -145,6 +145,8 @@ An example can be seen in the [docker-compose](https://github.com/coreruleset/mo
 > 💬 What happens if I want to make changes in a different file, like `/etc/nginx/conf.d/default.conf`?
 > You mount your local file, e.g. `nginx/default.conf` as the new template: `/etc/nginx/templates/conf.d/default.conf.template`. You can do this similarly with other files. Files in the templates directory will be copied and subdirectories will be preserved.
 
+nginx is run with an **unprivileged user**. This means that we cannot bind to ports below 1024, so you might need to correct your `PORT` and `SSL_PORT` settings. Now the defaults for nginx are `8080` and `8443`.
+
 ### Common ENV Variables
 
 These variables are common to image variants and will set defaults based on the image name.
@@ -157,7 +159,6 @@ These variables are common to image variants and will set defaults based on the 
 | METRICS_ALLOW_FROM | A single range of IP adresses that can access the metrics | `127.0.0.0/255.0.0.0 ::1/128` | `127.0.0.0/24` |
 | METRICS_DENY_FROM | A range of IP adresses that cannot access the metrics | `All` | `all` |
 | METRICSLOG | Location of metrics log file | `/dev/null` | - |
-| PORT | An int value indicating the port where the webserver is listening to | `80` | - |
 | PROXY_SSL  | SSL Proxy Engine Operation Switch | `off` | - |
 | PROXY_SSL_CERT | A string indicating the path to the PEM-encoded X.509 certificate data file or token identifier of the proxied server | `/usr/local/apache2/conf/proxy.crt` | `/etc/nginx/conf/proxy.crt` |
 | PROXY_SSL_CERT_KEY | A string indicating the path to the PEM-encoded private key file of the proxied server | `/usr/local/apache2/conf/proxy.key` | `/etc/nginx/conf/proxy.key` |
@@ -170,7 +171,6 @@ These variables are common to image variants and will set defaults based on the 
 | SSL_CERT_KEY | A string indicating the path to the PEM-encoded private key file of the proxied server | `/usr/local/apache2/conf/server.key` | `/etc/nginx/conf/server.key` |
 | SSL_CIPHERS| A string indicating the cipher suite for incoming TLS connections | `"ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384"` | - |
 | SSL_OCSP_STAPLING | Enable / disable OCSP stapling | `On` | `on` |
-| SSL_PORT | Port number where the SSL enabled webserver is listening | `443` | - |
 | SSL_PROTOCOLS | TLS protocols to enable for the connection to the backend | `"all -SSLv3 -TLSv1 -TLSv1.1"` | `TTLSv1.2 TLSv1.3` |
 
 ### Apache ENV Variables
@@ -184,6 +184,7 @@ These variables are common to image variants and will set defaults based on the 
 | BACKEND_WS | A string indicating the IP/URL of the WebSocket service (Default: `ws://localhost:8080`) |
 | H2_PROTOCOLS  | A string value indicating the protocols supported by the HTTP2 module (Default: `h2 http/1.1`) |
 | MUTEX | Configure mutex and lock file directory for all specified mutexes (see [Mutex](https://httpd.apache.org/docs/2.4/mod/core.html#mutex)) (Default: `default`) |
+| PORT | An int value indicating the port where the webserver is listening to | `80` | - |
 | PROXY_ERROR_OVERRIDE  | A string indicating that errors from the backend services should be overridden by this proxy server (see [ProxyErrorOverride](https://httpd.apache.org/docs/2.4/mod/mod_proxy.html#proxyerroroverride) directive). (Allowed values: `on`, `off`. Default: `on`) |
 | PROXY_PRESERVE_HOST  | A string indicating the use of incoming Host HTTP request header for proxy request (Default: `on`) |
 | PROXY_SSL_CA_CERT  | A string indicating the path to the PEM-encoded list of accepted CA certificates for the proxied server (Default: `/etc/ssl/certs/ca-certificates.ca`) |
@@ -195,6 +196,7 @@ These variables are common to image variants and will set defaults based on the 
 | SERVER_TOKENS | Option defining the server information presented to clients in the `Server` HTTP response header. Also see `MODSEC_SERVER_SIGNATURE`. (Allowed values: `Full`, `Prod[uctOnly]`, `Major`, `Minor`, `Min[imal]`, `OS`. Default: `Full`). |
 | SSL_ENGINE  | A string indicating the SSL Engine Operation Switch (Default: `on`) |
 | SSL_HONOR_CIPHER_ORDER | A string indicating if the server should [honor the cipher list provided by the client](https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslhonorcipherorder) (Allowed values: `on`, `off`. Default: `off`) |
+| SSL_PORT | Port number where the SSL enabled webserver is listening | `443` | - |
 | SSL_SESSION_TICKETS | A string to enable or disable the use of [TLS session tickets](https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslsessiontickets) (RFC 5077). (Default: `off`) |
 | TIMEOUT  | Number of seconds before receiving and sending timeout (Default: `60`) |
 | WORKER_CONNECTIONS  | Maximum number of MPM request worker processes (Default: `400`) |
@@ -213,8 +215,10 @@ These variables are common to image variants and will set defaults based on the 
 | REAL_IP_HEADER | Name of the header containing the real IP value(s) (Default: `X-REAL-IP`). See [real_ip_header](http://nginx.org/en/docs/http/ngx_http_realip_module.html#real_ip_header) |
 | REAL_IP_PROXY_HEADER | Name of the header containing `$remote_addr` to be passed to proxy (Default: `X-REAL-IP`). See [proxy_set_header](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_set_header) |
 | REAL_IP_RECURSIVE | A string value indicating whether to use recursive reaplacement on addresses in `REAL_IP_HEADER` (Allowed values: `on`, `off`. Default: `on`). See [real_ip_recursive](http://nginx.org/en/docs/http/ngx_http_realip_module.html#real_ip_recursive) |
+| PORT | An int value indicating the port where the webserver is listening to | `8080` | We run as unprivileged user. |
 | PROXY_SSL_VERIFY_DEPTH  | An integer value indicating the verification depth for the client certificate chain (Default: `1`) |
 | SERVER_TOKENS | A boolean value for enabling / disabling emission of server identifying information in the `Server` HTTP response header and on error pages. (Allowed values: `on`, `off`, `build`. Default: `off`). |
+| SSL_PORT | Port number where the SSL enabled webserver is listening | `8443` | We run as unprivileged user. |
 | SSL_DH_BITS | A numeric value indicating the size (in bits) to use for the generated DH-params file (Default 2048) |
 | SSL_PREFER_CIPHERS | A string value indicating if the server ciphers should be preferred over client ciphers when using the SSLv3 and TLS protocols (Allowed values: `on`, `off`. Default: `off`)|
 | SSL_VERIFY  | A string value indicating if the client certificates should be verified (Allowed values: `on`, `off`. Default: `off`) |
