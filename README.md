@@ -145,7 +145,7 @@ An example can be seen in the [docker-compose](https://github.com/coreruleset/mo
 > 💬 What happens if I want to make changes in a different file, like `/etc/nginx/conf.d/default.conf`?
 > You mount your local file, e.g. `nginx/default.conf` as the new template: `/etc/nginx/templates/conf.d/default.conf.template`. You can do this similarly with other files. Files in the templates directory will be copied and subdirectories will be preserved.
 
-Nginx also run as **unprivileged user**. This means that we cannot bind to ports below 1024, so you might need to correct your PORT and SSL_PORT settings. Now the defaults are 8080 and 8443.
+nginx is run with an **unprivileged user**. This means that we cannot bind to ports below 1024, so you might need to correct your `PORT` and `SSL_PORT` settings. Now the defaults for nginx are `8080` and `8443`.
 
 ### Common ENV Variables
 
