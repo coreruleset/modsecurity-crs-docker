@@ -69,6 +69,7 @@ jobs:
           targets: ${{ matrix.target }}
           push: true
           provenance: true
+          sbom: true
 
       - name: Sign the images with GitHub OIDC Token
         env:
