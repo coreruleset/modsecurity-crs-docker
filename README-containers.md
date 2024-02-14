@@ -1,4 +1,4 @@
-# ModSecurity Core Rule Set Docker Image
+# OWASP CRS Docker Image
 
 [![dockeri.co](http://dockeri.co/image/owasp/modsecurity-crs)](https://hub.docker.com/r/owasp/modsecurity-crs/)
 
@@ -23,9 +23,9 @@ Stable Tags are composed of:
 
 The stable tag format is `<CRS version>-<web server>[-<os>]-<date>`.
 Examples:
-   * `3-nginx-202401121309`
-   * `3.3-apache-alpine-202401121309`
-   * `3.3.5-openresty-alpine-fat-202401121309`
+   * `4-nginx-202401121309`
+   * `4.0-apache-alpine-202401121309`
+   * `4.0.0-openresty-alpine-fat-202401121309`
 
 ### Rolling Tags
 
@@ -43,12 +43,12 @@ Examples:
 
 ## OS Variants
 
-* nginx – *latest stable ModSecurity v3 on Nginx 1.25.3 official stable base image, and latest stable Core Rule Set 3.3.5*
+* nginx – *latest stable ModSecurity v3 on Nginx 1.25.3 official stable base image, and latest stable OWASP CRS 4.0.0*
    * [nginx](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile)
    * [nginx-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile-alpine)
-* Openresty - *last stable ModSecurity v3 on Nginx 1.25.3 official stable base image, and latest stable Core Rule Set 3.3.5*
+* Openresty - *last stable ModSecurity v3 on Nginx 1.25.3 official stable base image, and latest stable OWASP CRS 4.0.0*
    * [openresty-alpine-fat](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/openresty/Dockerfile-alpine)
-* Apache httpd – *last stable ModSecurity v2 on Apache 2.4.58 official stable base image, and latest stable Core Rule Set 3.3.5*
+* Apache httpd – *last stable ModSecurity v2 on Apache 2.4.58 official stable base image, and latest stable OWASP CRS 4.0.0*
    * [apache](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/apache/Dockerfile)
    * [apache-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/apache/Dockerfile-alpine)
 
