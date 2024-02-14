@@ -5,19 +5,37 @@ on:
       - master
 
 jobs:
-  build:
+  prepare:
     runs-on: ubuntu-latest
+    outputs:
+      targets: ${{ steps.generate.outputs.targets }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: List targets
+        id: generate
+        uses: docker/bake-action/subaction/list-targets@v4
+
+  build:
+    name: Build ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    needs:
+      - prepare
     permissions:
       contents: read
       packages: write
+      id-token: write # needed for signing the images with GitHub OIDC Token
     strategy:
       matrix:
-        repo: ["owasp/modsecurity-crs", "ghcr.io/coreruleset/modsecurity-crs"]
+        target: ${{ fromJson(needs.prepare.outputs.targets) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
+      
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3.4.0
 
       # https://github.com/docker/setup-qemu-action
       - name: Set up QEMU
@@ -30,25 +48,38 @@ jobs:
           driver-opts: image=moby/buildkit:master
 
       - name: Login to DockerHub
-        if: ${{ startsWith(matrix.repo, 'owasp')}}
         uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
         with:
           username: ${{ secrets.dockerhub_user }}
           password: ${{ secrets.dockerhub_token }}
 
       - name: Login to GitHub Container Registry
-        if: ${{ startsWith(matrix.repo, 'ghcr.io')}}
         uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push
+      - name: 'Build and push to Docker Hub: ${{ matrix.target }}'
+        id: build-and-push
         uses: docker/bake-action@v4.1.0
         with:
           files: |
             ./docker-bake.hcl
+          targets: ${{ matrix.target }}
           push: true
+          provenance: true
+          sbom: true
+
+      - name: Sign the images with GitHub OIDC Token
         env:
-          REPO: ${{ matrix.repo }}
+          METADATA: ${{ steps.build-and-push.outputs.metadata }}
+        run: |
+          DIGEST=$(echo ${METADATA} | jq -r '.[] | ."containerimage.digest"')
+          TAGS=$(echo ${METADATA} | jq -r '.[] | ."image.name" | tostring' | tr ',' '\n')
+          images=""
+          for tag in ${TAGS}; do
+            images+="${tag}@${DIGEST} "
+          done
+          cosign sign --yes ${images}
+

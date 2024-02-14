@@ -31,8 +31,12 @@ variable "lmdb-version" {
     default = "0.9.29"
 }
 
-variable "REPO" {
-    default = "owasp/modsecurity-crs"
+variable "REPOS" {
+    # List of repositories to tag
+    default = [
+        "owasp/modsecurity-crs",
+        "ghcr.io/coreruleset/modsecurity-crs",
+    ]
 }
 
 function "major" {
@@ -52,7 +56,7 @@ function "patch" {
 
 function "tag" {
     params = [tag]
-    result = ["${REPO}:${tag}"]
+    result = [for repo in REPOS : "${repo}:${tag}"]
 }
 
 function "vtag" {
