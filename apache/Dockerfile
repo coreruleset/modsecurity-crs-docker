@@ -164,6 +164,8 @@ RUN set -eux; \
         libcurl3-gnutls \
         libfuzzy2 \
         liblua${LUA_VERSION} \
+        lua-socket \
+        lua-zlib \
         libxml2 \
         libyajl2; \
     update-ca-certificates -f; \

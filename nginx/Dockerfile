@@ -211,6 +211,8 @@ RUN set -eux; \
         libcurl4-gnutls-dev \
         libfuzzy2 \
         liblua${LUA_VERSION} \
+        lua-socket \
+        lua-zlib \
         libxml2 \
         libyajl2 \
         moreutils; \
