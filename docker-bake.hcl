@@ -8,7 +8,7 @@ variable "modsec2-version" {
 }
 
 variable "crs-version" {
-    default = "3.3.5"
+    default = "4.0.0"
 }
 
 variable "nginx-version" {
