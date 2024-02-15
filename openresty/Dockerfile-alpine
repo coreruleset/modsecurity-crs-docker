@@ -224,6 +224,8 @@ RUN set -eux; \
         libstdc++ \
         libxml2-dev \
         lmdb-dev \
+        lua-lzlib \
+        lua-socket \
         moreutils \
         tzdata \
         pcre \
