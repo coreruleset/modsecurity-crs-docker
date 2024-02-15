@@ -171,6 +171,8 @@ RUN set -eux; \
         libfuzzy2 \
         libxml2 \
         lua${LUA_VERSION} \
+        lua-socket \
+        lua-lzlib \
         moreutils \
         openssl \
         sed \
