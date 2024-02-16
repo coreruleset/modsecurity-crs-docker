@@ -113,7 +113,7 @@ RUN set -eux; \
 FROM openresty/openresty:${OPENRESTY_VERSION}-alpine-fat
 
 ARG MODSEC3_VERSION
-ARG LUA_ROCKS_MODULES
+ARG LUA_MODULES
 
 LABEL maintainer="Taavi Ansper <taaviansperr@gmail.com>"
 
