@@ -60,6 +60,7 @@ FROM httpd:${HTTPD_VERSION}
 
 ARG MODSEC2_VERSION
 ARG LUA_VERSION
+ARG LUA_MODULES
 
 LABEL maintainer="Felipe Zipitria <felipe.zipitria@owasp.org>"
 
@@ -164,8 +165,7 @@ RUN set -eux; \
         libcurl3-gnutls \
         libfuzzy2 \
         liblua${LUA_VERSION} \
-        lua-socket \
-        lua-zlib \
+        ${LUA_MODULES} \
         libxml2 \
         libyajl2; \
     update-ca-certificates -f; \

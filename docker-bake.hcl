@@ -27,6 +27,13 @@ variable "lua-version" {
     default = "5.3"
 }
 
+variable "lua-modules" {
+  default = [
+    "lua-lzlib",
+    "lua-socket"
+  ]
+}
+
 variable "lmdb-version" {
     default = "0.9.29"
 }
@@ -92,6 +99,7 @@ target "platforms-base" {
         MODSEC2_VERSION = "${modsec2-version}"
         MODSEC3_VERSION = "${modsec3-version}"
         LUA_VERSION = "${lua-version}"
+        LUA_MODULES = join(" ", lua-modules)
         LMDB_VERSION = "${lmdb-version}"
     }
 }

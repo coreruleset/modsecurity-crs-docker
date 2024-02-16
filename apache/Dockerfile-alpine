@@ -70,6 +70,7 @@ FROM httpd:${HTTPD_VERSION}-alpine
 
 ARG MODSEC2_VERSION
 ARG LUA_VERSION
+ARG LUA_MODULES
 
 LABEL maintainer="Felipe Zipitria <felipe.zipitria@owasp.org>"
 
@@ -171,8 +172,7 @@ RUN set -eux; \
         libfuzzy2 \
         libxml2 \
         lua${LUA_VERSION} \
-        lua-socket \
-        lua-lzlib \
+        ${LUA_MODULES} \
         moreutils \
         openssl \
         sed \

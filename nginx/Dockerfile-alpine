@@ -104,6 +104,7 @@ FROM nginxinc/nginx-unprivileged:${NGINX_VERSION}-alpine
 
 ARG MODSEC3_VERSION
 ARG LUA_VERSION
+ARG LUA_MODULES
 
 LABEL maintainer="Felipe Zipitria <felipe.zipitria@owasp.org>"
 
@@ -206,8 +207,7 @@ RUN set -eux; \
         libxml2-dev \
         lmdb-dev \
         lua${LUA_VERSION} \
-        lua-socket \
-        lua-lzlib \
+        ${LUA_MODULES} \
         moreutils \
         openssl \
         tzdata \

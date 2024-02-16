@@ -113,6 +113,7 @@ RUN set -eux; \
 FROM openresty/openresty:${OPENRESTY_VERSION}-alpine-fat
 
 ARG MODSEC3_VERSION
+ARG LUA_ROCKS_MODULES
 
 LABEL maintainer="Taavi Ansper <taaviansperr@gmail.com>"
 
@@ -224,8 +225,6 @@ RUN set -eux; \
         libstdc++ \
         libxml2-dev \
         lmdb-dev \
-        lua-lzlib \
-        lua-socket \
         moreutils \
         tzdata \
         pcre \
@@ -234,7 +233,7 @@ RUN set -eux; \
         sed \
         yajl; \
     # Install lua modules here
-    luarocks install lua-resty-openidc; \
+    luarocks install lua-resty-openidc ${LUA_MODULES}; \
     mkdir /var/log/nginx; \
     mkdir -p /tmp/modsecurity/data; \
     mkdir -p /tmp/modsecurity/upload; \
