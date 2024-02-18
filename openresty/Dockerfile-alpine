@@ -233,7 +233,9 @@ RUN set -eux; \
         sed \
         yajl; \
     # Install lua modules here
-    luarocks install lua-resty-openidc ${LUA_MODULES}; \
+    for module in lua-resty-openidc ${LUA_MODULES}; do \
+        luarocks install ${module}; \
+    done; \
     mkdir /var/log/nginx; \
     mkdir -p /tmp/modsecurity/data; \
     mkdir -p /tmp/modsecurity/upload; \
