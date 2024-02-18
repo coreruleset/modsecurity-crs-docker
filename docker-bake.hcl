@@ -123,6 +123,7 @@ target "nginx" {
     dockerfile="nginx/Dockerfile"
     args = {
         NGINX_VERSION = "${nginx-version}"
+        NGINX_HOME = "/etc/nginx"
     }
     tags = concat(tag("nginx"),
         vtag("${crs-version}", "nginx")
@@ -134,6 +135,7 @@ target "nginx-alpine" {
     dockerfile="nginx/Dockerfile-alpine"
     args = {
         NGINX_VERSION = "${nginx-version}"
+        NGINX_HOME = "/etc/nginx"
     }
     tags = concat(tag("nginx-alpine"),
         vtag("${crs-version}", "nginx-alpine")
@@ -147,6 +149,7 @@ target "openresty-alpine-fat" {
     args = {
         OPENRESTY_VERSION = "${openresty-version}"
         NGINX_VERSION = "${nginx-version}"
+        NGINX_HOME = "/usr/local/openresty/nginx"
     }
     tags = concat(tag("openresty-alpine-fat"),
         vtag("${crs-version}", "openresty-alpine-fat")
