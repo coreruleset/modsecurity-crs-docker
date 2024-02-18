@@ -6,6 +6,7 @@ ARG MODSEC3_VERSION="n/a"
 ARG LMDB_VERSION="n/a"
 ARG LUA_VERSION="n/a"
 ARG NGINX_DYNAMIC_MODULES="n/a"
+ARG NGINX_HOME="n/a"
 
 USER root
 
@@ -120,8 +121,11 @@ ARG MODSEC3_VERSION
 ARG LMDB_VERSION
 ARG LUA_VERSION
 ARG LUA_MODULES
+ARG NGINX_HOME
 
 LABEL maintainer="Felipe Zipitria <felipe.zipitria@owasp.org>"
+
+ENV NGINX_HOME="${NGINX_HOME}"
 
 ENV \
     ACCESSLOG=/var/log/nginx/access.log \
@@ -251,7 +255,16 @@ RUN set -eux; \
     ln -s /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC3_VERSION} /usr/local/modsecurity/lib/libmodsecurity.so.3; \
     ln -s /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC3_VERSION} /usr/local/modsecurity/lib/libmodsecurity.so; \
     ln -sv /opt/owasp-crs /etc/modsecurity.d/; \
-    chown nginx:nginx /opt/owasp-crs /etc/modsecurity.d
+    # move files that need to be writable so we can use tmpfs for them later
+    mkdir -p /usr/local/bootstrap/nginx /usr/local/bootstrap/modsecurity.d /usr/local/bootstrap/owasp-crs; \
+    mv "${NGINX_HOME}/"* /usr/local/bootstrap/nginx/; \
+    mv /etc/modsecurity.d/* /usr/local/bootstrap/modsecurity.d/; \
+    mv /opt/owasp-crs/* /usr/local/bootstrap/owasp-crs/; \
+    chown nginx:nginx \
+        /opt/owasp-crs \
+        /etc/modsecurity.d \
+        "${NGINX_HOME}" \
+        /usr/local/bootstrap/*
 
 USER nginx
 

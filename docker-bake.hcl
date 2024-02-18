@@ -151,6 +151,7 @@ target "nginx" {
         LUA_MODULES = join(" ", lua-modules-debian)
         NGINX_VERSION = "${nginx-version}"
         NGINX_DYNAMIC_MODULES = join(" ", [for mod in nginx-dynamic-modules : join(" ", [mod.owner, mod.name, mod.version])])
+        NGINX_HOME = "/etc/nginx"
     }
     tags = concat(tag("nginx"),
         vtag("${crs-version}", "nginx")
@@ -164,6 +165,7 @@ target "nginx-alpine" {
         LUA_MODULES = join(" ", lua-modules-alpine)
         NGINX_VERSION = "${nginx-version}"
         NGINX_DYNAMIC_MODULES = join(" ", [for mod in nginx-dynamic-modules : join(" ", [mod.owner, mod.name, mod.version])])
+        NGINX_HOME = "/etc/nginx"
     }
     tags = concat(tag("nginx-alpine"),
         vtag("${crs-version}", "nginx-alpine")
