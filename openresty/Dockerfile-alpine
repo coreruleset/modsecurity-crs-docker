@@ -225,6 +225,7 @@ RUN set -eux; \
         libstdc++ \
         libxml2-dev \
         lmdb-dev \
+        git \
         moreutils \
         tzdata \
         pcre \

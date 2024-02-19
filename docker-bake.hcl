@@ -41,6 +41,14 @@ variable "lua-modules-debian" {
   ]
 }
 
+variable "lua-modules-luarocks" {
+  default = [
+    "lua-resty-openidc",
+    "lua-zlib",
+    "luasocket"
+  ]
+}
+
 variable "lmdb-version" {
     default = "0.9.29"
 }
@@ -165,7 +173,7 @@ target "openresty-alpine-fat" {
     args = {
         OPENRESTY_VERSION = "${openresty-version}"
         NGINX_VERSION = "${nginx-version}"
-        LUA_MODULES = join(" ", lua-modules-alpine)
+        LUA_MODULES = join(" ", lua-modules-luarocks)
     }
     tags = concat(tag("openresty-alpine-fat"),
         vtag("${crs-version}", "openresty-alpine-fat")
