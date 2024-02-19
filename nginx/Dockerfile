@@ -109,6 +109,7 @@ FROM nginxinc/nginx-unprivileged:${NGINX_VERSION}
 ARG MODSEC3_VERSION
 ARG LMDB_VERSION
 ARG LUA_VERSION
+ARG LUA_MODULES
 
 LABEL maintainer="Felipe Zipitria <felipe.zipitria@owasp.org>"
 
@@ -211,8 +212,7 @@ RUN set -eux; \
         libcurl4-gnutls-dev \
         libfuzzy2 \
         liblua${LUA_VERSION} \
-        lua-socket \
-        lua-zlib \
+        ${LUA_MODULES} \
         libxml2 \
         libyajl2 \
         moreutils; \
