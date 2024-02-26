@@ -1,4 +1,4 @@
-# ModSecurity Core Rule Set Docker Image
+# OWASP CRS Docker Image
 
 [![dockeri.co](http://dockeri.co/image/owasp/modsecurity-crs)](https://hub.docker.com/r/owasp/modsecurity-crs/)
 
@@ -7,9 +7,9 @@
 ) [![GitHub PRs](https://img.shields.io/github/issues-pr-raw/coreruleset/modsecurity-crs-docker.svg)](https://github.com/coreruleset/modsecurity-crs-docker/pulls
 ) [![License](https://img.shields.io/github/license/coreruleset/modsecurity-crs-docker.svg)](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/LICENSE)
 
-## What is the Core Rule Set
+## What is the OWASP CRS
 
-The Core Rule Set (CRS) is a set of generic attack detection rules for use with ModSecurity or compatible web application firewalls.
+OWASP CRS is a set of generic attack detection rules for use with ModSecurity or compatible web application firewalls.
 ModSecurity is an open source, cross platform web application firewall (WAF) engine for Apache, IIS and Nginx.
 
 ## Supported Tags
@@ -24,9 +24,9 @@ Stable Tags are composed of:
 
 The stable tag format is `<CRS version>-<web server>[-<os>]-<date>`.
 Examples:
-   * `3-nginx-202401121309`
-   * `3.3-apache-alpine-202401121309`
-   * `3.3.5-openresty-alpine-fat-202401121309`
+   * `4-nginx-202401121309`
+   * `4.0-apache-alpine-202401121309`
+   * `4.0.0-openresty-alpine-fat-202401121309`
 
 ### Rolling Tags
 
@@ -44,12 +44,12 @@ Examples:
 
 ## OS Variants
 
-* nginx – *latest stable ModSecurity v3 on Nginx 1.25.3 official stable base image, and latest stable Core Rule Set 3.3.5*
+* nginx – *latest stable ModSecurity v3 on Nginx 1.25.3 official stable base image, and latest stable OWASP CRS 4.0.0*
    * [nginx](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile)
    * [nginx-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile-alpine)
-* Openresty - *last stable ModSecurity v3 on Nginx 1.25.3 official stable base image, and latest stable Core Rule Set 3.3.5*
+* Openresty - *last stable ModSecurity v3 on Nginx 1.25.3 official stable base image, and latest stable OWASP CRS 4.0.0*
    * [openresty-alpine-fat](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/openresty/Dockerfile-alpine)
-* Apache httpd – *last stable ModSecurity v2 on Apache 2.4.58 official stable base image, and latest stable Core Rule Set 3.3.5*
+* Apache httpd – *last stable ModSecurity v2 on Apache 2.4.58 official stable base image, and latest stable OWASP CRS 4.0.0*
    * [apache](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/apache/Dockerfile)
    * [apache-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/apache/Dockerfile-alpine)
 
@@ -122,11 +122,11 @@ docker run -p 80:80 -ti -e PARANOIA=4 -v rules:/opt/owasp-crs/rules:ro --rm owas
 
 ## Quick reference
 
-* **Where to get help**: the [CRS-Support Docker Repo](https://github.com/coreruleset/modsecurity-crs-docker), the [Core Rule Set Slack Channel](https://owasp.org/slack/invite) (#coreruleset on owasp.slack.com), or [Stack Overflow](https://stackoverflow.com/questions/tagged/mod-security)
+* **Where to get help**: the [OWASP CRS container repo](https://github.com/coreruleset/modsecurity-crs-docker), the [OWASP CRS Slack channel](https://owasp.org/slack/invite) (#coreruleset on owasp.slack.com), or [Stack Overflow](https://stackoverflow.com/questions/tagged/mod-security)
 
-* **Where to file issues**: the [Core Rule Set Docker Repo](https://github.com/coreruleset/modsecurity-crs-docker)
+* **Where to file issues**: the [OWASP CRS container repo](https://github.com/coreruleset/modsecurity-crs-docker)
 
-* **Maintained By**: The Core Rule Set Project maintainers
+* **Maintained By**: The CRS project maintainers
 
 ## What is ModSecurity
 
