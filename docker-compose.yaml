@@ -7,8 +7,6 @@
 # and only if build args SETTLS and SETPROXY were set during
 # the build of the parent owasp/modsecurity:2.9-apache image.
 
-version: '3.7'
-
 x-defaults: &default-settings
   environment:
     SERVERNAME: localhost
@@ -46,24 +44,24 @@ x-defaults: &default-settings
     #######################################################
     # Various CRS Variables with Default Values
     #######################################################
-    #ENFORCE_BODYPROC_URLENCODED: 1
-    #ALLOWED_METHODS: GET HEAD POST OPTIONS
-    #ALLOWED_REQUEST_CONTENT_TYPE: '|application/x-www-form-urlencoded| |multipart/form-data| |multipart/related| |text/xml| |application/xml| |application/soap+xml| |application/json| |application/cloudevents+json| |application/cloudevents-batch+json|'
-    #ALLOWED_REQUEST_CONTENT_TYPE_CHARSET: 'utf-8|iso-8859-1|iso-8859-15|windows-1252'
-    #ALLOWED_HTTP_VERSIONS: HTTP/1.0 HTTP/1.1 HTTP/2 HTTP/2.0
-    #RESTRICTED_EXTENSIONS: .asa/ .asax/ .ascx/ .axd/ .backup/ .bak/ .bat/ .cdx/ .cer/ .cfg/ .cmd/ .com/ .config/ .conf/ .cs/ .csproj/ .csr/ .dat/ .db/ .dbf/ .dll/ .dos/ .htr/ .htw/ .ida/ .idc/ .idq/ .inc/ .ini/ .key/ .licx/ .lnk/ .log/ .mdb/ .old/ .pass/ .pdb/ .pol/ .printer/ .pwd/ .rdb/ .resources/ .resx/ .sql/ .swp/ .sys/ .vb/ .vbs/ .vbproj/ .vsdisco/ .webinfo/ .xsd/ .xsx/
-    #RESTRICTED_HEADERS: /accept-charset/ /content-encoding/ /proxy/ /lock-token/ /content-range/ /if/
-    #STATIC_EXTENSIONS: /.jpg/ /.jpeg/ /.png/ /.gif/ /.js/ /.css/ /.ico/ /.svg/ /.webp/
+    # ENFORCE_BODYPROC_URLENCODED: 1
+    # ALLOWED_METHODS: GET HEAD POST OPTIONS
+    # ALLOWED_REQUEST_CONTENT_TYPE: '|application/x-www-form-urlencoded| |multipart/form-data| |multipart/related| |text/xml| |application/xml| |application/soap+xml| |application/json| |application/cloudevents+json| |application/cloudevents-batch+json|'
+    # ALLOWED_REQUEST_CONTENT_TYPE_CHARSET: 'utf-8|iso-8859-1|iso-8859-15|windows-1252'
+    # ALLOWED_HTTP_VERSIONS: HTTP/1.0 HTTP/1.1 HTTP/2 HTTP/2.0
+    # RESTRICTED_EXTENSIONS: .asa/ .asax/ .ascx/ .axd/ .backup/ .bak/ .bat/ .cdx/ .cer/ .cfg/ .cmd/ .com/ .config/ .conf/ .cs/ .csproj/ .csr/ .dat/ .db/ .dbf/ .dll/ .dos/ .htr/ .htw/ .ida/ .idc/ .idq/ .inc/ .ini/ .key/ .licx/ .lnk/ .log/ .mdb/ .old/ .pass/ .pdb/ .pol/ .printer/ .pwd/ .rdb/ .resources/ .resx/ .sql/ .swp/ .sys/ .vb/ .vbs/ .vbproj/ .vsdisco/ .webinfo/ .xsd/ .xsx/
+    # RESTRICTED_HEADERS: /accept-charset/ /content-encoding/ /proxy/ /lock-token/ /content-range/ /if/
+    # STATIC_EXTENSIONS: /.jpg/ /.jpeg/ /.png/ /.gif/ /.js/ /.css/ /.ico/ /.svg/ /.webp/
 
     #######################################################
     # CRS Variables with Default Value unlimited
     #######################################################
-    #MAX_NUM_ARGS: 255
-    #ARG_NAME_LENGTH: 100
-    #ARG_LENGTH: 400
-    #TOTAL_ARG_LENGTH: 64000
-    MAX_FILE_SIZE: 1048576
-    #COMBINED_FILE_SIZES: 1048576
+    # MAX_NUM_ARGS: 255
+    # ARG_NAME_LENGTH: 100
+    # ARG_LENGTH: 400
+    # TOTAL_ARG_LENGTH: 64000
+    # MAX_FILE_SIZE: 1048576
+    # COMBINED_FILE_SIZES: 1048576
 
     #######################################################
     # Volumes for ModSecurity Tuning
