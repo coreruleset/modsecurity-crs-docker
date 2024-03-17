@@ -33,7 +33,7 @@ RUN set -eux; \
     make \
     openssl \
     openssl-dev \
-    pcre-dev \
+    pcre2-dev \
     zlib-dev
 
 RUN set -eux; \
@@ -41,7 +41,7 @@ RUN set -eux; \
     tar -zxvf v${MODSEC2_VERSION}.tar.gz; \
     cd ModSecurity-${MODSEC2_VERSION}; \
     ./autogen.sh; \
-    ./configure --with-yajl --with-ssdeep --with-lmdb; \
+    ./configure --with-yajl --with-ssdeep --with-lmdb --with-pcre2; \
     make; \
     make install; \
     make clean
