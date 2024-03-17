@@ -17,7 +17,7 @@ RUN set -eux; \
         libaprutil1-dev \
         libcurl4-gnutls-dev \
         libfuzzy-dev \
-        libpcre3-dev \
+        libpcre2-dev \
         libtool \
         libxml2-dev \
         libyajl-dev \
@@ -31,7 +31,7 @@ RUN set -eux; \
     tar -zxvf v${MODSEC2_VERSION}.tar.gz; \
     cd ModSecurity-${MODSEC2_VERSION}; \
     ./autogen.sh; \
-    ./configure --with-yajl --with-ssdeep; \
+    ./configure --with-yajl --with-ssdeep --with-pcre2; \
     make; \
     make install; \
     make clean
@@ -167,6 +167,7 @@ RUN set -eux; \
         libfuzzy2 \
         liblua${LUA_VERSION} \
         ${LUA_MODULES} \
+        libpcre2 \
         libxml2 \
         libyajl2; \
     update-ca-certificates -f; \
