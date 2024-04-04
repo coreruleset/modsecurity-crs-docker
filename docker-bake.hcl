@@ -16,7 +16,7 @@ variable "nginx-version" {
 }
 
 variable "httpd-version" {
-    default = "2.4.58"
+    default = "2.4.59"
 }
 
 variable "openresty-version" {
