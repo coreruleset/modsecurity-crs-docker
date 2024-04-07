@@ -1,6 +1,6 @@
 ARG HTTPD_VERSION="n/a"
 
-FROM httpd:${HTTPD_VERSION} as build
+FROM httpd:${HTTPD_VERSION} AS build
 
 ARG MODSEC2_VERSION="n/a"
 ARG LUA_VERSION="n/a"
@@ -36,7 +36,7 @@ RUN set -eux; \
     make install; \
     make clean
 
-FROM httpd:${HTTPD_VERSION} as crs_release
+FROM httpd:${HTTPD_VERSION} AS crs_release
 
 ARG CRS_RELEASE
 

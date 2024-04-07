@@ -1,6 +1,6 @@
 ARG NGINX_VERSION="n/a"
 
-FROM nginxinc/nginx-unprivileged:${NGINX_VERSION} as build
+FROM nginxinc/nginx-unprivileged:${NGINX_VERSION} AS build
 
 ARG MODSEC3_VERSION="n/a"
 ARG LMDB_VERSION="n/a"
@@ -76,7 +76,7 @@ RUN set -eux; \
     curl -sSL https://ssl-config.mozilla.org/ffdhe2048.txt -o /usr/share/TLS/dhparam-2048.pem; \
     curl -sSL https://ssl-config.mozilla.org/ffdhe4096.txt -o /usr/share/TLS/dhparam-4096.pem
 
-FROM nginxinc/nginx-unprivileged:${NGINX_VERSION} as crs_release
+FROM nginxinc/nginx-unprivileged:${NGINX_VERSION} AS crs_release
 
 ARG CRS_RELEASE
 
