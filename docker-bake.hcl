@@ -8,7 +8,7 @@ variable "modsec2-version" {
 }
 
 variable "crs-version" {
-    default = "4.0.0"
+    default = "4.1.0"
 }
 
 variable "nginx-version" {
@@ -16,7 +16,7 @@ variable "nginx-version" {
 }
 
 variable "httpd-version" {
-    default = "2.4.58"
+    default = "2.4.59"
 }
 
 variable "openresty-version" {
@@ -25,6 +25,28 @@ variable "openresty-version" {
 
 variable "lua-version" {
     default = "5.3"
+}
+
+variable "lua-modules-alpine" {
+  default = [
+    "lua-lzlib",
+    "lua-socket"
+  ]
+}
+
+variable "lua-modules-debian" {
+  default = [
+    "lua-zlib",
+    "lua-socket"
+  ]
+}
+
+variable "lua-modules-luarocks" {
+  default = [
+    "lua-resty-openidc",
+    "lua-zlib",
+    "luasocket"
+  ]
 }
 
 variable "lmdb-version" {
@@ -101,6 +123,7 @@ target "apache" {
     dockerfile="apache/Dockerfile"
     args = {
         HTTPD_VERSION = "${httpd-version}"
+        LUA_MODULES = join(" ", lua-modules-debian)
     }
     tags = concat(tag("apache"),
         vtag("${crs-version}", "apache")
@@ -112,6 +135,7 @@ target "apache-alpine" {
     dockerfile="apache/Dockerfile-alpine"
     args = {
         HTTPD_VERSION = "${httpd-version}"
+        LUA_MODULES = join(" ", lua-modules-alpine)
     }
     tags = concat(tag("apache-alpine"),
         vtag("${crs-version}", "apache-alpine")
@@ -123,6 +147,7 @@ target "nginx" {
     dockerfile="nginx/Dockerfile"
     args = {
         NGINX_VERSION = "${nginx-version}"
+        LUA_MODULES = join(" ", lua-modules-debian)
     }
     tags = concat(tag("nginx"),
         vtag("${crs-version}", "nginx")
@@ -134,6 +159,7 @@ target "nginx-alpine" {
     dockerfile="nginx/Dockerfile-alpine"
     args = {
         NGINX_VERSION = "${nginx-version}"
+        LUA_MODULES = join(" ", lua-modules-alpine)
     }
     tags = concat(tag("nginx-alpine"),
         vtag("${crs-version}", "nginx-alpine")
@@ -147,6 +173,7 @@ target "openresty-alpine-fat" {
     args = {
         OPENRESTY_VERSION = "${openresty-version}"
         NGINX_VERSION = "${nginx-version}"
+        LUA_MODULES = join(" ", lua-modules-luarocks)
     }
     tags = concat(tag("openresty-alpine-fat"),
         vtag("${crs-version}", "openresty-alpine-fat")
