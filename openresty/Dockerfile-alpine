@@ -2,7 +2,7 @@
 # Also specify the nginx core used. (Openresty, adds their own version numbers after the nginx one, so we can't use the same number for both Openresty and nginx)
 ARG OPENRESTY_VERSION="n/a"
 
-FROM openresty/openresty:${OPENRESTY_VERSION}-alpine-fat as build
+FROM openresty/openresty:${OPENRESTY_VERSION}-alpine-fat AS build
 
 ARG OPENRESTY_VERSION
 ARG MODSEC3_VERSION="n/a"
@@ -91,7 +91,7 @@ RUN /usr/local/openresty/openssl/bin/openssl dhparam -out /usr/share/TLS/dhparam
 RUN curl -sSL https://ssl-config.mozilla.org/ffdhe2048.txt -o /usr/share/TLS/dhparam-2048.pem
 RUN curl -sSL https://ssl-config.mozilla.org/ffdhe4096.txt -o /usr/share/TLS/dhparam-4096.pem
 
-FROM openresty/openresty:${OPENRESTY_VERSION}-alpine-fat as crs_release
+FROM openresty/openresty:${OPENRESTY_VERSION}-alpine-fat AS crs_release
 
 ARG CRS_RELEASE
 
