@@ -8,7 +8,7 @@ variable "modsec2-version" {
 }
 
 variable "crs-version" {
-    default = "4.0.0"
+    default = "4.1.0"
 }
 
 variable "nginx-version" {
@@ -16,7 +16,7 @@ variable "nginx-version" {
 }
 
 variable "httpd-version" {
-    default = "2.4.58"
+    default = "2.4.59"
 }
 
 variable "openresty-version" {
