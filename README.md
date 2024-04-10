@@ -377,8 +377,26 @@ docker start modseccrs
 
 ## Full docker run example of possible setup
 
+The following example illustrates how to use `docker run` with some of the variables. It's purpose is illustration only and it should not be used to run a container in production.
+
+Some important things to note:
+- Error and audit logs are enabled and mapped to files on the host, so that their contents are accessible and don't pollute the container filesystem. Docker requires these files to exist, otherwise they would be created as directories, hence the use of the `touch ...` commands.
+- For containers with read-only filesystems, the volumes might have to be specified differently, e.g., using `tmpfs`. Alternatively, if only one log output is required, the output could be redirected to `stdout` (`/proc/self/fd/2`).
+- The example expects a backend web server to be running at `localhost:8080`.
+
 ```bash
-docker run -dti -p 80:80 --rm \
+touch /tmp/host-fs-auditlog.log
+touch /tmp/host-fs-errorlog.log
+docker run \
+   -dti \
+   -p 80:80 \
+   --rm \
+   -v /tmp/host-fs-auditlog.log:/var/log/modsec_audit.log \
+   -v /tmp/host-fs-errorlog.log:/var/log/modsec_error.log \
+   -e MODSEC_AUDIT_ENGINE=on \
+   -e MODSEC_AUDIT_LOG=/var/log/modsec_audit.log
+   -e LOGLEVEL=warn \
+   -e ERRORLOG=/var/log/modsec_error.log \
    -e PARANOIA=1 \
    -e EXECUTING_PARANOIA=2 \
    -e ENFORCE_BODYPROC_URLENCODED=1 \
@@ -398,8 +416,6 @@ docker run -dti -p 80:80 --rm \
    -e MAX_FILE_SIZE=100000 \
    -e COMBINED_FILE_SIZES=1000000 \
    -e TIMEOUT=60 \
-   -e LOGLEVEL=warn \
-   -e ERRORLOG='/proc/self/fd/2' \
    -e SERVER_ADMIN=root@localhost \
    -e SERVER_NAME=localhost \
    -e PORT=80 \
@@ -413,5 +429,6 @@ docker run -dti -p 80:80 --rm \
    -e MODSEC_PCRE_MATCH_LIMIT_RECURSION=1000 \
    -e VALIDATE_UTF8_ENCODING=1 \
    -e CRS_ENABLE_TEST_MARKER=1 \
+   -e BACKEND="http://localhost:8080" \
    owasp/modsecurity-crs:apache
 ```
