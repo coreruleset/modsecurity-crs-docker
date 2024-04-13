@@ -70,8 +70,8 @@ ENV \
     APACHE_ERRORLOG_FORMAT='"[%{u}t] [%-m:%l] [pid %P:tid %T] %7F: %E: [client\ %a] %M% ,\ referer\ %{Referer}i"' \
     APACHE_LOGFORMAT='"%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""' \
     APACHE_METRICS_LOGFORMAT='"%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""' \
-    BACKEND=http://localhost:80 \
-    BACKEND_WS=ws://localhost:8080 \
+    BACKEND=http://localhost:8080 \
+    BACKEND_WS=ws://localhost:8081 \
     ERRORLOG='/proc/self/fd/2' \
     H2_PROTOCOLS='h2 http/1.1' \
     LOGLEVEL=warn \
@@ -109,7 +109,7 @@ ENV \
     MODSEC_TMP_SAVE_UPLOADED_FILES="on" \
     MODSEC_UPLOAD_DIR=/tmp/modsecurity/upload \
     MUTEX='default' \
-    PORT=80 \
+    PORT=8080 \
     PROXY_ERROR_OVERRIDE=on \
     PROXY_PRESERVE_HOST=on \
     PROXY_SSL_CA_CERT=/etc/ssl/certs/ca-certificates.crt \
@@ -133,7 +133,7 @@ ENV \
     SSL_ENGINE=on \
     SSL_HONOR_CIPHER_ORDER=off \
     SSL_OCSP_STAPLING=On \
-    SSL_PORT=443 \
+    SSL_PORT=8443 \
     SSL_PROTOCOLS="all -SSLv3 -TLSv1 -TLSv1.1" \
     SSL_SESSION_TICKETS=off \
     TIMEOUT=60 \
@@ -144,9 +144,9 @@ ENV \
     ANOMALY_OUTBOUND=4 \
     BLOCKING_PARANOIA=1
 
-COPY --from=build /usr/local/apache2/modules/mod_security2.so                  /usr/local/apache2/modules/mod_security2.so
-COPY --from=build /usr/local/apache2/ModSecurity-${MODSEC2_VERSION}/modsecurity.conf-recommended  /etc/modsecurity.d/modsecurity.conf
-COPY --from=build /usr/local/apache2/ModSecurity-${MODSEC2_VERSION}/unicode.mapping               /etc/modsecurity.d/unicode.mapping
+COPY --from=build /usr/local/apache2/modules/mod_security2.so /usr/local/apache2/modules/mod_security2.so
+COPY --from=build /usr/local/apache2/ModSecurity-${MODSEC2_VERSION}/modsecurity.conf-recommended /etc/modsecurity.d/modsecurity.conf
+COPY --from=build /usr/local/apache2/ModSecurity-${MODSEC2_VERSION}/unicode.mapping /etc/modsecurity.d/unicode.mapping
 COPY --from=crs_release /opt/owasp-crs /opt/owasp-crs
 COPY src/etc/modsecurity.d/*.conf /etc/modsecurity.d/
 COPY src/bin/* /usr/local/bin/
@@ -172,6 +172,8 @@ RUN set -eux; \
     update-ca-certificates -f; \
     apt-get clean; \
     rm -rf /var/lib/apt/lists/*
+
+RUN useradd --system httpd
 
 RUN set -eux; \
     mkdir -p /etc/modsecurity.d/; \
@@ -204,8 +206,13 @@ RUN set -eux; \
     echo 'Include conf/extra/httpd-locations.conf' >> /usr/local/apache2/conf/httpd.conf; \
     echo 'Include conf/extra/httpd-modsecurity.conf' >> /usr/local/apache2/conf/httpd.conf; \
     sed -i -E 's|(MaxRequestWorkers[ ]*)[0-9]*|\1${WORKER_CONNECTIONS}|' /usr/local/apache2/conf/extra/httpd-mpm.conf; \
-    chgrp -R 0 /var/log/ /usr/local/apache2/; \
-    chmod -R g=u /var/log/ /usr/local/apache2/
+    chown -R httpd:httpd \
+        /var/log/ \
+        /usr/local/apache2/ \
+        /etc/modsecurity.d \
+        /opt/owasp-crs
+
+USER httpd
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
