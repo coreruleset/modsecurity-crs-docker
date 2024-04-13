@@ -327,7 +327,7 @@ ModSecurity is often used in a reverse proxy setup with the following porperties
 This allows one to use ModSecurity without modifying the webserver hosting the underlying application and also protects web servers that ModSecurity cannot currently be embedd into.
 
 Tips:
-* the application web server (the one receiving traffic from the reverse proxy) should not listen on a public interface. Only the reverse proxy should be exposed to the public. With Docker, this could meain setting up a network for both containers and only exposing the reverse proxy with `-p 8080:8080`, for example. `docker compose` takes care of this automatically. See the `docker-compose.yaml` for an example setup.
+* the application web server (the one receiving traffic from the reverse proxy) should not listen on a public interface. Only the reverse proxy should be exposed to the public. With Docker, this could mean setting up a network for both containers and only exposing the reverse proxy with `-p 8080:8080`, for example. `docker compose` takes care of this automatically. See the `docker-compose.yaml` for an example setup.
 
 ```bash
 docker build -t my-modsec . -f
