@@ -44,7 +44,7 @@ RUN set -eux; \
     strip /usr/local/lib/liblmdb*.so*
 
 RUN set -eux; \
-    git clone https://github.com/SpiderLabs/ModSecurity --branch "v${MODSEC3_VERSION}" --depth 1 --recursive; \
+    git clone https://github.com/owasp-modsecurity/ModSecurity --branch "v${MODSEC3_VERSION}" --depth 1 --recursive; \
     cd ModSecurity; \
     ARCH=$(gcc -print-multiarch); \
     sed -ie "s/i386-linux-gnu/${ARCH}/g" build/ssdeep.m4; \
@@ -56,7 +56,7 @@ RUN set -eux; \
 
 # We use master
 RUN set -eux; \
-    git clone -b master --depth 1 https://github.com/SpiderLabs/ModSecurity-nginx.git; \
+    git clone -b master --depth 1 https://github.com/owasp-modsecurity/ModSecurity-nginx.git; \
     curl -sSL https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz -o nginx-${NGINX_VERSION}.tar.gz; \
     tar -xzf nginx-${NGINX_VERSION}.tar.gz; \
     cd ./nginx-${NGINX_VERSION}; \
