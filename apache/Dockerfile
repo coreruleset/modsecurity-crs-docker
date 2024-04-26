@@ -78,11 +78,15 @@ ENV \
     METRICS_ALLOW_FROM='127.0.0.0/255.0.0.0 ::1/128' \
     METRICS_DENY_FROM='All' \
     METRICSLOG='/dev/null' \
+    MODSEC_ARGUMENT_SEPARATOR="&" \
+    MODSEC_ARGUMENTS_LIMIT=1000 \
     MODSEC_AUDIT_ENGINE="RelevantOnly" \
     MODSEC_AUDIT_LOG=/dev/stdout \
     MODSEC_AUDIT_LOG_FORMAT=JSON \
     MODSEC_AUDIT_LOG_PARTS='ABIJDEFHZ' \
+    MODSEC_AUDIT_LOG_RELEVANT_STATUS="^(?:5|4(?!04))" \
     MODSEC_AUDIT_LOG_TYPE=Serial \
+    MODSEC_COOKIE_FORMAT=0 \
     MODSEC_AUDIT_STORAGE=/var/log/modsecurity/audit/ \
     MODSEC_DATA_DIR=/tmp/modsecurity/data \
     MODSEC_DEBUG_LOG=/dev/null \
@@ -107,7 +111,10 @@ ENV \
     MODSEC_TAG=modsecurity \
     MODSEC_TMP_DIR=/tmp/modsecurity/tmp \
     MODSEC_TMP_SAVE_UPLOADED_FILES="on" \
+    MODSEC_UNICODE_MAPPING=20127 \
     MODSEC_UPLOAD_DIR=/tmp/modsecurity/upload \
+    MODSEC_UPLOAD_FILE_MODE=0600 \
+    MODSEC_UPLOAD_KEEP_FILES=RelevantOnly \
     MUTEX='default' \
     PORT=8080 \
     PROXY_ERROR_OVERRIDE=on \
@@ -145,7 +152,6 @@ ENV \
     BLOCKING_PARANOIA=1
 
 COPY --from=build /usr/local/apache2/modules/mod_security2.so /usr/local/apache2/modules/mod_security2.so
-COPY --from=build /usr/local/apache2/ModSecurity-${MODSEC2_VERSION}/modsecurity.conf-recommended /etc/modsecurity.d/modsecurity.conf
 COPY --from=build /usr/local/apache2/ModSecurity-${MODSEC2_VERSION}/unicode.mapping /etc/modsecurity.d/unicode.mapping
 COPY --from=crs_release /opt/owasp-crs /opt/owasp-crs
 COPY src/etc/modsecurity.d/*.conf /etc/modsecurity.d/

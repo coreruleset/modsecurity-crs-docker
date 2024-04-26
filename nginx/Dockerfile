@@ -65,8 +65,6 @@ RUN set -eux; \
     strip objs/ngx_http_modsecurity_module.so; \
     cp objs/ngx_http_modsecurity_module.so /etc/nginx/modules/; \
     mkdir /etc/modsecurity.d; \
-    curl -sSL https://raw.githubusercontent.com/owasp-modsecurity/ModSecurity/v3/master/modsecurity.conf-recommended \
-         -o /etc/modsecurity.d/modsecurity.conf; \
     curl -sSL https://raw.githubusercontent.com/owasp-modsecurity/ModSecurity/v3/master/unicode.mapping \
          -o /etc/modsecurity.d/unicode.mapping
 
@@ -124,11 +122,15 @@ ENV \
     METRICS_ALLOW_FROM='127.0.0.0/24' \
     METRICS_DENY_FROM='all' \
     METRICSLOG=/dev/null \
+    MODSEC_ARGUMENT_SEPARATOR="&" \
+    MODSEC_ARGUMENTS_LIMIT=1000 \
     MODSEC_AUDIT_ENGINE="RelevantOnly" \
     MODSEC_AUDIT_LOG=/dev/stdout \
     MODSEC_AUDIT_LOG_FORMAT=JSON \
     MODSEC_AUDIT_LOG_PARTS='ABIJDEFHZ' \
+    MODSEC_AUDIT_LOG_RELEVANT_STATUS="^(?:5|4(?!04))" \
     MODSEC_AUDIT_LOG_TYPE=Serial \
+    MODSEC_COOKIE_FORMAT=0 \
     MODSEC_AUDIT_STORAGE=/var/log/modsecurity/audit/ \
     MODSEC_DATA_DIR=/tmp/modsecurity/data \
     MODSEC_DEBUG_LOG=/dev/null \
@@ -151,7 +153,10 @@ ENV \
     MODSEC_TAG=modsecurity \
     MODSEC_TMP_DIR=/tmp/modsecurity/tmp \
     MODSEC_TMP_SAVE_UPLOADED_FILES="on" \
+    MODSEC_UNICODE_MAPPING=20127 \
     MODSEC_UPLOAD_DIR=/tmp/modsecurity/upload \
+    MODSEC_UPLOAD_FILE_MODE=0600 \
+    MODSEC_UPLOAD_KEEP_FILES=RelevantOnly \
     NGINX_ALWAYS_TLS_REDIRECT=off \
     NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx \
     PORT=8080 \
@@ -191,8 +196,8 @@ COPY --from=build /etc/nginx/modules/ngx_http_modsecurity_module.so /etc/nginx/m
 COPY --from=build /usr/local/lib/liblmdb.so /usr/local/lib/
 COPY --from=build /usr/share/TLS/dhparam-* /etc/ssl/certs/
 COPY --from=build /etc/modsecurity.d/unicode.mapping /etc/modsecurity.d/unicode.mapping
-COPY --from=build /etc/modsecurity.d/modsecurity.conf /etc/modsecurity.d/modsecurity.conf
 COPY --from=crs_release /opt/owasp-crs /opt/owasp-crs
+COPY src/etc/modsecurity.d/modsecurity.conf /etc/nginx/templates/modsecurity.d/modsecurity.conf.template
 COPY src/etc/modsecurity.d/modsecurity-override.conf /etc/nginx/templates/modsecurity.d/modsecurity-override.conf.template
 COPY src/etc/modsecurity.d/setup.conf /etc/nginx/templates/modsecurity.d/setup.conf.template
 COPY nginx/docker-entrypoint.d/*.sh /docker-entrypoint.d/

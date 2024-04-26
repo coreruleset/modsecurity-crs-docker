@@ -235,11 +235,15 @@ All these variables impact in configuration directives in the modsecurity engine
 
 | Name     | Description|
 | -------- | ------------------------------------------------------------------- |
+| MODSEC_ARGUMENT_SEPARATOR | A character to use as the separator for `application/x-www-form-urlencoded` content. (Default: `&`). :warning: Do not touch unless you really know what you are doing. See [SecArgumentSeparator](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-%28v2.x%29#secargumentseparator) |
+| MODSEC_ARGUMENTS_LIMIT | An integer indicating the maximum number of arguments that can be processed before setting the `REQBODY_ERROR` variable (Default `1000`). See [SecArgumentsLimit](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-%28v2.x%29#secargumentslimit)|
 | MODSEC_AUDIT_ENGINE  | A string used to configure the audit engine, which logs complete transactions (Default: `RelevantOnly`). Accepted values: `On`, `Off`, `RelevantOnly`. See [SecAuditEngine](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-%28v2.x%29#SecAuditEngine) for additional information. |
 | MODSEC_AUDIT_LOG  | A string indicating the path to the main audit log file or the concurrent logging index file (Default: `/dev/stdout`) |
 | MODSEC_AUDIT_LOG_FORMAT  | A string indicating the output format of the AuditLogs (Default: `JSON`). Accepted values: `JSON`, `Native`. See [SecAuditLogFormat](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-%28v2.x%29#SecAuditLogFormat) for additional information. |
 | MODSEC_AUDIT_LOG_PARTS  | A string that defines which parts of each transaction are going to be recorded in the audit log (Default: `'ABIJDEFHZ'`). See [SecAuditLogParts](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-(v2.x)#secauditlogparts) for the accepted values. |
+| MODSEC_AUDIT_LOG_RELEVANT_STATUS | A regular expression string that defines the http error codes that are relevant for audit logging (Default: `"^(?:5|4(?!04))"`). See [SecAuditLogRelevantStatus](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-%28v2.x%29#secauditlogrelevantstatus) |
 | MODSEC_AUDIT_LOG_TYPE  | A string indicating the type of audit logging mechanism to be used (Default: `Serial`). Accepted values: `Serial`, `Concurrent` (`HTTPS` works only on Nginx - v3). See [SecAuditLogType](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-%28v2.x%29#secauditlogtype) for additional information. |
+| MODSEC_COOKIE_FORMAT | The cookie format used (Default: `0`)  :warning: Do not touch unless you really know what you are doing. |
 | MODSEC_AUDIT_STORAGE  | A string indicating the directory where concurrent audit log entries are to be stored (Default: `/var/log/modsecurity/audit/`) |
 | MODSEC_DATA_DIR  | A string indicating the path where persistent data (e.g., IP address data, session data, and so on) is to be stored (Default: `/tmp/modsecurity/data`) |
 | MODSEC_DEBUG_LOG  | A string indicating the path to the ModSecurity debug log file (Default: `/dev/null`) |
@@ -264,7 +268,10 @@ All these variables impact in configuration directives in the modsecurity engine
 | MODSEC_TAG  | A string indicating the default tag action, which will be inherited by the rules in the same configuration context (Default: `modsecurity`) |
 | MODSEC_TMP_DIR  | A string indicating the path where temporary files will be created (Default: `/tmp/modsecurity/tmp`) |
 | MODSEC_TMP_SAVE_UPLOADED_FILES  | A string indicating if temporary uploaded files are saved (Default: `On`) (only relevant in Apache - ModSecurity v2) |
+| MODSEC_UNICODE_MAPPING | The unicode Code Point to use form the default file(Default: `20127`). See [SecUnicodeMapFile](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-%28v2.x%29#secunicodemapfile) |
 | MODSEC_UPLOAD_DIR  | A string indicating the path where intercepted files will be stored (Default: `/tmp/modsecurity/upload`) |
+| MODSEC_UPLOAD_FILE_MODE | (Default: `0600`) |
+| MODSEC_UPLOAD_KEEP_FILES | Configures whether or not the intercepted files will be kept after transaction is processed.  (Default: `RelevantOnly`) Accepted values: `On`, `Off`, `RelevantOnly`. See [SecUploadKeepFiles](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-%28v2.x%29#secuploadkeepfiles)
 
 ### CRS specific
 
