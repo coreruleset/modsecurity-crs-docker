@@ -8,7 +8,8 @@ on:
 
 env:
   REPO: "owasp/modsecurity-crs"
-  MODSECURITY_RECOMMENDED: "d9e164c508218202eba13d37cf661baacb8600706e618ce93ccc91c74c51449e"
+  # sha256sum format: <hash><space><format (space for text)><file name>
+  MODSECURITY_RECOMMENDED: "d9e164c508218202eba13d37cf661baacb8600706e618ce93ccc91c74c51449e  modsecurity.conf-recommended"
 
 jobs:
   prepare:
@@ -24,7 +25,7 @@ jobs:
       - name: Check modsecurity recommended
         run: |
           curl -sSL https://raw.githubusercontent.com/owasp-modsecurity/ModSecurity/v3/master/modsecurity.conf-recommended -o modsecurity.conf-recommended
-          sha256sum -c "${{ env.MODSECURITY_RECOMMENDED }} modsecurity.conf-recommended" modsecurity.conf-recommended
+          sha256sum -c "${{ env.MODSECURITY_RECOMMENDED }}"
 
   build:
     runs-on: ubuntu-latest
