@@ -25,7 +25,8 @@ jobs:
       - name: Check modsecurity recommended
         run: |
           curl -sSL https://raw.githubusercontent.com/owasp-modsecurity/ModSecurity/v3/master/modsecurity.conf-recommended -o modsecurity.conf-recommended
-          sha256sum -c "${{ env.MODSECURITY_RECOMMENDED }}"
+          echo '${{ env.MODSECURITY_RECOMMENDED }}' > sha256sum.txt
+          sha256sum -c sha256sum.txt
 
   build:
     runs-on: ubuntu-latest
