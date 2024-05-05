@@ -42,7 +42,7 @@ RUN set -eux; \
 WORKDIR /sources
 
 RUN set -eux; \
-    git clone https://github.com/SpiderLabs/ModSecurity --branch "v${MODSEC3_VERSION}" --depth 1 --recursive; \
+    git clone https://github.com/owasp-modsecurity/ModSecurity --branch "v${MODSEC3_VERSION}" --depth 1 --recursive; \
     cd ModSecurity; \
     ARCH=$(gcc -print-multiarch); \
     sed -ie "s/i386-linux-gnu/${ARCH}/g" build/ssdeep.m4; \
@@ -54,18 +54,15 @@ RUN set -eux; \
 
 # We use master
 RUN set -eux; \
-    git clone -b master --depth 1 https://github.com/SpiderLabs/ModSecurity-nginx.git; \
-    wget --quiet http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz; \
-    tar -xzf nginx-${NGINX_VERSION}.tar.gz; \
+    git clone -b master --depth 1 https://github.com/owasp-modsecurity/ModSecurity-nginx.git; \
+    curl -sSL http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz | tar -xzf -; \
     cd ./nginx-${NGINX_VERSION}; \
     ./configure --with-compat --add-dynamic-module=../ModSecurity-nginx; \
     make modules; \
     cp objs/ngx_http_modsecurity_module.so /etc/nginx/modules/; \
     mkdir /etc/modsecurity.d; \
-    wget --quiet https://raw.githubusercontent.com/owasp-modsecurity/ModSecurity/v3/master/modsecurity.conf-recommended \
-        -O /etc/modsecurity.d/modsecurity.conf; \
-    wget --quiet https://raw.githubusercontent.com/owasp-modsecurity/ModSecurity/v3/master/unicode.mapping \
-        -O /etc/modsecurity.d/unicode.mapping
+    curl -sSL https://raw.githubusercontent.com/owasp-modsecurity/ModSecurity/v3/master/unicode.mapping \
+        -o /etc/modsecurity.d/unicode.mapping
 
 # Generate/Download Diffie-Hellman parameter files
 RUN set -eux; \
@@ -119,11 +116,15 @@ ENV \
     METRICS_ALLOW_FROM='127.0.0.0/24' \
     METRICS_DENY_FROM='all' \
     METRICSLOG=/dev/null \
+    MODSEC_ARGUMENT_SEPARATOR="&" \
+    MODSEC_ARGUMENTS_LIMIT=1000 \
     MODSEC_AUDIT_ENGINE="RelevantOnly" \
     MODSEC_AUDIT_LOG=/dev/stdout \
     MODSEC_AUDIT_LOG_FORMAT=JSON \
     MODSEC_AUDIT_LOG_PARTS='ABIJDEFHZ' \
+    MODSEC_AUDIT_LOG_RELEVANT_STATUS="^(?:5|4(?!04))" \
     MODSEC_AUDIT_LOG_TYPE=Serial \
+    MODSEC_COOKIE_FORMAT=0 \
     MODSEC_AUDIT_STORAGE=/var/log/modsecurity/audit/ \
     MODSEC_DATA_DIR=/tmp/modsecurity/data \
     MODSEC_DEBUG_LOG=/dev/null \
@@ -146,7 +147,10 @@ ENV \
     MODSEC_TAG=modsecurity \
     MODSEC_TMP_DIR=/tmp/modsecurity/tmp \
     MODSEC_TMP_SAVE_UPLOADED_FILES="on" \
+    MODSEC_UNICODE_MAPPING=20127 \
     MODSEC_UPLOAD_DIR=/tmp/modsecurity/upload \
+    MODSEC_UPLOAD_FILE_MODE=0600 \
+    MODSEC_UPLOAD_KEEP_FILES=RelevantOnly \
     NGINX_ALWAYS_TLS_REDIRECT=off \
     NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx \
     PORT=8080 \
@@ -185,8 +189,8 @@ COPY --from=build /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC3_VERSION
 COPY --from=build /etc/nginx/modules/ngx_http_modsecurity_module.so /etc/nginx/modules/ngx_http_modsecurity_module.so
 COPY --from=build /usr/share/TLS/dhparam-* /etc/ssl/certs/
 COPY --from=build /etc/modsecurity.d/unicode.mapping /etc/modsecurity.d/unicode.mapping
-COPY --from=build /etc/modsecurity.d/modsecurity.conf /etc/modsecurity.d/modsecurity.conf
 COPY --from=crs_release /opt/owasp-crs /opt/owasp-crs
+COPY src/etc/modsecurity.d/modsecurity.conf /etc/nginx/templates/modsecurity.d/modsecurity.conf.template
 COPY src/etc/modsecurity.d/modsecurity-override.conf /etc/nginx/templates/modsecurity.d/modsecurity-override.conf.template
 COPY src/etc/modsecurity.d/setup.conf /etc/nginx/templates/modsecurity.d/setup.conf.template
 COPY nginx/docker-entrypoint.d/*.sh /docker-entrypoint.d/

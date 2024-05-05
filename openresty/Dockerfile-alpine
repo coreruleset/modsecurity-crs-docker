@@ -47,7 +47,7 @@ WORKDIR /sources
 
 # Download ModSecurity and compile it.
 RUN set -eux; \
-    git clone https://github.com/SpiderLabs/ModSecurity --branch "v${MODSEC3_VERSION}" --depth 1 --recursive; \
+    git clone https://github.com/owasp-modsecurity/ModSecurity --branch "v${MODSEC3_VERSION}" --depth 1 --recursive; \
     cd ModSecurity; \
     ARCH=$(gcc -print-multiarch); \
     sed -ie "s/i386-linux-gnu/${ARCH}/g" build/ssdeep.m4; \
@@ -61,9 +61,8 @@ RUN set -eux; \
 # Download Openresty bundle for the specific version. We can then get the compilation options for nginx from the installed Openresty in the docker image to be used with the 'configure' script inside the openresty bundle to configure the ModSecurity-nginx module and then build it. I did not find the configure script inside the Openresty Docker image.
 # Specify the LUAJIT_LIB and LUAJIT_INC that are already installed in the base image.
 RUN set -eux; \
-    git clone -b master --depth 1 https://github.com/SpiderLabs/ModSecurity-nginx.git; \
-    wget --quiet https://openresty.org/download/openresty-"${OPENRESTY_VERSION}".tar.gz; \
-    tar -xzf openresty-"${OPENRESTY_VERSION}".tar.gz; \
+    git clone -b master --depth 1 https://github.com/owasp-modsecurity/ModSecurity-nginx.git; \
+    curl -sSL https://openresty.org/download/openresty-"${OPENRESTY_VERSION}".tar.gz | tar -xzf -; \
     cd ./openresty-"${OPENRESTY_VERSION}"/bundle/nginx-${NGINX_VERSION}; \
     export LUAJIT_LIB="/usr/local/openresty/luajit/lib"; \
     export LUAJIT_INC="/usr/local/openresty/luajit/include/luajit-2.1"; \
@@ -72,10 +71,8 @@ RUN set -eux; \
     make modules; \
     cp objs/ngx_http_modsecurity_module.so /usr/local/openresty/nginx/modules/; \ 
     mkdir /etc/modsecurity.d; \
-    wget --quiet https://raw.githubusercontent.com/owasp-modsecurity/ModSecurity/v3/master/modsecurity.conf-recommended \
-        -O /etc/modsecurity.d/modsecurity.conf; \
-    wget --quiet https://raw.githubusercontent.com/owasp-modsecurity/ModSecurity/v3/master/unicode.mapping \
-        -O /etc/modsecurity.d/unicode.mapping
+    curl -sSL https://raw.githubusercontent.com/owasp-modsecurity/ModSecurity/v3/master/unicode.mapping \
+        -o /etc/modsecurity.d/unicode.mapping
 
 
 # Generate self-signed certificates (if needed)
@@ -129,11 +126,15 @@ ENV \
     METRICS_ALLOW_FROM='127.0.0.0/24' \
     METRICS_DENY_FROM='all' \
     METRICSLOG=/dev/null \
+    MODSEC_ARGUMENT_SEPARATOR="&" \
+    MODSEC_ARGUMENTS_LIMIT=1000 \
     MODSEC_AUDIT_ENGINE="RelevantOnly" \
     MODSEC_AUDIT_LOG=/dev/stdout \
     MODSEC_AUDIT_LOG_FORMAT=JSON \
     MODSEC_AUDIT_LOG_PARTS='ABIJDEFHZ' \
+    MODSEC_AUDIT_LOG_RELEVANT_STATUS="^(?:5|4(?!04))" \
     MODSEC_AUDIT_LOG_TYPE=Serial \
+    MODSEC_COOKIE_FORMAT=0 \
     MODSEC_AUDIT_STORAGE=/var/log/modsecurity/audit/ \
     MODSEC_DATA_DIR=/tmp/modsecurity/data \
     MODSEC_DEBUG_LOG=/dev/null \
@@ -156,7 +157,10 @@ ENV \
     MODSEC_TAG=modsecurity \
     MODSEC_TMP_DIR=/tmp/modsecurity/tmp \
     MODSEC_TMP_SAVE_UPLOADED_FILES="on" \
+    MODSEC_UNICODE_MAPPING=20127 \
     MODSEC_UPLOAD_DIR=/tmp/modsecurity/upload \
+    MODSEC_UPLOAD_FILE_MODE=0600 \
+    MODSEC_UPLOAD_KEEP_FILES=RelevantOnly \
     NGINX_ALWAYS_TLS_REDIRECT=off \
     NGINX_ENVSUBST_OUTPUT_DIR=/usr/local/openresty/nginx/conf \
     PORT=80 \
@@ -197,7 +201,6 @@ COPY --from=build /usr/share/TLS/server.key /usr/local/openresty/nginx/conf/serv
 COPY --from=build /usr/share/TLS/server.crt /usr/local/openresty/nginx/conf/server.crt
 COPY --from=build /usr/share/TLS/dhparam-* /etc/ssl/certs/
 COPY --from=build /etc/modsecurity.d/unicode.mapping /etc/modsecurity.d/unicode.mapping
-COPY --from=build /etc/modsecurity.d/modsecurity.conf /etc/modsecurity.d/modsecurity.conf
 COPY --from=crs_release /opt/owasp-crs /opt/owasp-crs
 # We use the templating mechanism from the nginx image here.
 # Everything from templates except the nginx configuration, is the same for Openresty.
@@ -205,6 +208,7 @@ COPY nginx/templates/conf.d /usr/local/openresty/nginx/templates/conf.d
 COPY nginx/templates/includes /usr/local/openresty/nginx/templates/includes
 COPY nginx/templates/modsecurity.d /usr/local/openresty/nginx/templates/modsecurity.d
 # Copy the nginx configuration separately
+COPY src/etc/modsecurity.d/modsecurity.conf /usr/local/openresty/nginx/templates/modsecurity.d/modsecurity.conf.template
 COPY src/etc/modsecurity.d/modsecurity-override.conf /usr/local/openresty/nginx/templates/modsecurity.d/modsecurity-override.conf.template
 COPY src/etc/modsecurity.d/setup.conf /usr/local/openresty/nginx/templates/modsecurity.d/setup.conf.template
 COPY src/bin/healthcheck /usr/local/bin/healthcheck

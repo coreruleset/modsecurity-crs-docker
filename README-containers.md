@@ -4,8 +4,8 @@
 
 [![License](https://img.shields.io/github/license/coreruleset/modsecurity-crs-docker.svg)](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/LICENSE)
 
-> [!IMPORTANT]
-> Please refer to the [documentation on GitHub](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/README.md).
+
+⚠️ Please refer to the [documentation on GitHub](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/README.md).
 
 
 ## Supported Tags
