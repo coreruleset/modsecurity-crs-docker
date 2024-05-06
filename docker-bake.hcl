@@ -11,12 +11,12 @@ variable "modsec2-version" {
 
 variable "crs-version" {
     # renovate: depName=coreruleset/coreruleset datasource=github-releases
-    default = "4.1.0"
+    default = "4.2.0"
 }
 
 variable "nginx-version" {
     # renovate: depName=nginxinc/nginx-unprivileged datasource=docker
-    default = "1.25.3"
+    default = "1.26.0"
 }
 
 variable "httpd-version" {
