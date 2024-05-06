@@ -44,12 +44,12 @@ Examples:
 
 ## OS Variants
 
-* nginx – *latest stable ModSecurity v3 on Nginx 1.25.3 official stable base image, and latest stable OWASP CRS 4.1.0*
+* nginx – *latest stable ModSecurity v3 on Nginx 1.26.0 official stable base image, and latest stable OWASP CRS 4.2.0*
    * [nginx](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile)
    * [nginx-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile-alpine)
-* Openresty - *last stable ModSecurity v3 on Nginx 1.25.3 official stable base image, and latest stable OWASP CRS 4.1.0*
+* Openresty - *last stable ModSecurity v3 on OpenResty 1.25.3.1 official stable base image, and latest stable OWASP CRS 4.2.0*
    * [openresty-alpine-fat](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/openresty/Dockerfile-alpine)
-* Apache httpd – *last stable ModSecurity v2 on Apache 2.4.59 official stable base image, and latest stable OWASP CRS 4.1.0*
+* Apache httpd – *last stable ModSecurity v2 on Apache 2.4.59 official stable base image, and latest stable OWASP CRS 4.2.0*
    * [apache](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/apache/Dockerfile)
    * [apache-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/apache/Dockerfile-alpine)
 
@@ -244,7 +244,7 @@ All these variables impact in configuration directives in the modsecurity engine
 | MODSEC_AUDIT_LOG_RELEVANT_STATUS | A regular expression string that defines the http error codes that are relevant for audit logging (Default: `"^(?:5|4(?!04))"`). See [SecAuditLogRelevantStatus](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-%28v2.x%29#secauditlogrelevantstatus) |
 | MODSEC_AUDIT_LOG_TYPE  | A string indicating the type of audit logging mechanism to be used (Default: `Serial`). Accepted values: `Serial`, `Concurrent` (`HTTPS` works only on Nginx - v3). See [SecAuditLogType](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-%28v2.x%29#secauditlogtype) for additional information. |
 | MODSEC_COOKIE_FORMAT | The cookie format used (Default: `0` use Netscape cookies) :warning: Do not touch unless you really know what you are doing. See [SecCookieFormat](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-%28v2.x%29#seccookieformat). |
-| MODSEC_AUDIT_STORAGE  | A string indicating the directory where concurrent audit log entries are to be stored (Default: `/var/log/modsecurity/audit/`) |
+| MODSEC_AUDIT_STORAGE_DIR  | A string indicating the directory where concurrent audit log entries are to be stored (Default: `/var/log/modsecurity/audit/`) |
 | MODSEC_DATA_DIR  | A string indicating the path where persistent data (e.g., IP address data, session data, and so on) is to be stored (Default: `/tmp/modsecurity/data`) |
 | MODSEC_DEBUG_LOG  | A string indicating the path to the ModSecurity debug log file (Default: `/dev/null`) |
 | MODSEC_DEBUG_LOGLEVEL  | An integer indicating the verboseness of the debug log data (Default: `0`). Accepted values: `0` - `9`. See [SecDebugLogLevel](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-(v2.x)#secdebugloglevel). |
@@ -271,7 +271,7 @@ All these variables impact in configuration directives in the modsecurity engine
 | MODSEC_UNICODE_MAPPING | The unicode Code Point to use form the default file(Default: `20127`). See [SecUnicodeMapFile](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-%28v2.x%29#secunicodemapfile) |
 | MODSEC_UPLOAD_DIR  | A string indicating the path where intercepted files will be stored (Default: `/tmp/modsecurity/upload`) |
 | MODSEC_UPLOAD_FILE_MODE | (Default: `0600`) |
-| MODSEC_UPLOAD_KEEP_FILES | Configures whether or not the intercepted files will be kept after transaction is processed.  (Default: `RelevantOnly`) Accepted values: `On`, `Off`, `RelevantOnly`. See [SecUploadKeepFiles](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-%28v2.x%29#secuploadkeepfiles)
+| MODSEC_UPLOAD_KEEP_FILES | Configures whether or not the intercepted files will be kept after transaction is processed.  (Default: `RelevantOnly` on Apache, `Off` on nginx) Accepted values: `On`, `Off`, `RelevantOnly` (only modsec2). See [SecUploadKeepFiles](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-%28v2.x%29#secuploadkeepfiles) and [libmodsecurity3](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-%28v3.x%29#secuploadkeepfiles)
 
 ### CRS specific
 
