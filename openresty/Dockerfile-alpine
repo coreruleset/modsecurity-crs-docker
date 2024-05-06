@@ -63,7 +63,6 @@ RUN set -eux; \
 RUN set -eux; \
     git clone -b master --depth 1 https://github.com/owasp-modsecurity/ModSecurity-nginx.git; \
     curl -sSL https://openresty.org/download/openresty-"${OPENRESTY_VERSION}".tar.gz | tar -xzf -; \
-    NGINX_VERSION=$(echo $OPENRESTY_VERSION | cut -f1-3 -d.)
     cd "./openresty-${OPENRESTY_VERSION}/bundle/nginx-${NGINX_VERSION}"; \
     export LUAJIT_LIB="/usr/local/openresty/luajit/lib"; \
     export LUAJIT_INC="/usr/local/openresty/luajit/include/luajit-2.1"; \
