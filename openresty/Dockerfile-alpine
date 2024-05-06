@@ -135,7 +135,7 @@ ENV \
     MODSEC_AUDIT_LOG_RELEVANT_STATUS="^(?:5|4(?!04))" \
     MODSEC_AUDIT_LOG_TYPE=Serial \
     MODSEC_COOKIE_FORMAT=0 \
-    MODSEC_AUDIT_STORAGE=/var/log/modsecurity/audit/ \
+    MODSEC_AUDIT_STORAGE_DIR=/var/log/modsecurity/audit/ \
     MODSEC_DATA_DIR=/tmp/modsecurity/data \
     MODSEC_DEBUG_LOG=/dev/null \
     MODSEC_DEBUG_LOGLEVEL=0 \
