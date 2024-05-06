@@ -44,12 +44,12 @@ Examples:
 
 ## OS Variants
 
-* nginx – *latest stable ModSecurity v3 on Nginx 1.25.3 official stable base image, and latest stable OWASP CRS 4.1.0*
+* nginx – *latest stable ModSecurity v3 on Nginx 1.26.0 official stable base image, and latest stable OWASP CRS 4.2.0*
    * [nginx](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile)
    * [nginx-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile-alpine)
-* Openresty - *last stable ModSecurity v3 on OpenResty 1.25.3.1 official stable base image, and latest stable OWASP CRS 4.1.0*
+* Openresty - *last stable ModSecurity v3 on OpenResty 1.25.3.1 official stable base image, and latest stable OWASP CRS 4.2.0*
    * [openresty-alpine-fat](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/openresty/Dockerfile-alpine)
-* Apache httpd – *last stable ModSecurity v2 on Apache 2.4.59 official stable base image, and latest stable OWASP CRS 4.1.0*
+* Apache httpd – *last stable ModSecurity v2 on Apache 2.4.59 official stable base image, and latest stable OWASP CRS 4.2.0*
    * [apache](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/apache/Dockerfile)
    * [apache-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/apache/Dockerfile-alpine)
 
