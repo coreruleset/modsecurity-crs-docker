@@ -179,7 +179,7 @@ target "openresty-alpine-fat" {
     dockerfile="openresty/Dockerfile-alpine"
     args = {
         OPENRESTY_VERSION = "${openresty-version}"
-        NGINX_VERSION = "${nginx-version}"
+        NGINX_VERSION = patch(openresty-version)
         LUA_MODULES = join(" ", lua-modules-luarocks)
     }
     tags = concat(tag("openresty-alpine-fat"),
