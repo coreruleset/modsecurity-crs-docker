@@ -1,7 +1,7 @@
 #!/bin/sh
 
 if [ "${PORT}" -lt 1024 ] || [ "${SSL_PORT}" -lt 1024 ]; then
-  echo<<EOF
+  cat<<EOF
 ERROR: you are using PORT=${PORT} and SSL_PORT=${SSL_PORT}
 
 Both nginx and httpd containers now run with an unprivileged user.
