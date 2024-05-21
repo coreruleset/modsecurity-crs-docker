@@ -1,31 +1,42 @@
 # docker-bake.hcl
 variable "modsec3-version" {
+    # renovate: depName=ModSecurity3 packageName=owasp-modsecurity/ModSecurity datasource=github-releases
     default = "3.0.12"
 }
 
 variable "modsec2-version" {
+    # renovate: depName=ModSecurity2 packageName=owasp-modsecurity/ModSecurity datasource=github-releases
     default = "2.9.7"
 }
 
 variable "crs-version" {
-    default = "4.0.0"
+    # renovate: depName=coreruleset/coreruleset datasource=github-releases
+    default = "4.2.0"
 }
 
 variable "nginx-version" {
-    default = "1.25.3"
+    # renovate: depName=nginxinc/nginx-unprivileged datasource=docker
+    default = "1.26.0"
 }
 
 variable "httpd-version" {
-    default = "2.4.58"
+    # renovate: depName=httpd datasource=docker
+    default = "2.4.59"
 }
 
 variable "openresty-version" {
+    # renovate: depName=openresty/openresty datasource=docker
     default = "1.25.3.1"
 }
 
 variable "lua-version" {
     default = "5.3"
 }
+
+variable "lmdb-version" {
+    default = "0.9.29"
+}
+
 
 variable "lua-modules-alpine" {
   default = [
@@ -47,10 +58,6 @@ variable "lua-modules-luarocks" {
     "lua-zlib",
     "luasocket"
   ]
-}
-
-variable "lmdb-version" {
-    default = "0.9.29"
 }
 
 variable "REPOS" {
@@ -172,7 +179,7 @@ target "openresty-alpine-fat" {
     dockerfile="openresty/Dockerfile-alpine"
     args = {
         OPENRESTY_VERSION = "${openresty-version}"
-        NGINX_VERSION = "${nginx-version}"
+        NGINX_VERSION = patch(openresty-version)
         LUA_MODULES = join(" ", lua-modules-luarocks)
     }
     tags = concat(tag("openresty-alpine-fat"),

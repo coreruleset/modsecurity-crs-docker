@@ -11,4 +11,4 @@ if [ "${PROXY_SSL}" = "on" ]; then
     PROXY_SSL_CONFIG="include includes/proxy_backend_ssl.conf;"
 fi
 
-sed -i.bak -r 's#PROXY_SSL_CONFIG#'"${PROXY_SSL_CONFIG}"'#' /usr/local/openresty/nginx/conf.d/default.conf
+sed -i.bak -r 's#PROXY_SSL_CONFIG#'"${PROXY_SSL_CONFIG}"'#' /usr/local/openresty/nginx/conf/conf.d/default.conf

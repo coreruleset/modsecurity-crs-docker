@@ -44,12 +44,12 @@ Examples:
 
 ## OS Variants
 
-* nginx – *latest stable ModSecurity v3 on Nginx 1.25.3 official stable base image, and latest stable OWASP CRS 4.0.0*
+* nginx – *latest stable ModSecurity v3 on Nginx 1.26.0 official stable base image, and latest stable OWASP CRS 4.2.0*
    * [nginx](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile)
    * [nginx-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile-alpine)
-* Openresty - *last stable ModSecurity v3 on Nginx 1.25.3 official stable base image, and latest stable OWASP CRS 4.0.0*
+* Openresty - *last stable ModSecurity v3 on OpenResty 1.25.3.1 official stable base image, and latest stable OWASP CRS 4.2.0*
    * [openresty-alpine-fat](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/openresty/Dockerfile-alpine)
-* Apache httpd – *last stable ModSecurity v2 on Apache 2.4.58 official stable base image, and latest stable OWASP CRS 4.0.0*
+* Apache httpd – *last stable ModSecurity v2 on Apache 2.4.59 official stable base image, and latest stable OWASP CRS 4.2.0*
    * [apache](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/apache/Dockerfile)
    * [apache-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/apache/Dockerfile-alpine)
 
@@ -117,7 +117,7 @@ You can achieve the same results just by getting any version you want, and using
 git clone https://github.com/coreruleset/coreruleset.git myrules
 cd myrules
 git checkout ac2a0d1
-docker run -p 80:80 -ti -e PARANOIA=4 -v rules:/opt/owasp-crs/rules:ro --rm owasp/modsecurity-crs
+docker run -p 8080:8080 -ti -e PARANOIA=4 -v rules:/opt/owasp-crs/rules:ro --rm owasp/modsecurity-crs
 ```
 
 ## Quick reference
@@ -145,7 +145,7 @@ An example can be seen in the [docker-compose](https://github.com/coreruleset/mo
 > 💬 What happens if I want to make changes in a different file, like `/etc/nginx/conf.d/default.conf`?
 > You mount your local file, e.g. `nginx/default.conf` as the new template: `/etc/nginx/templates/conf.d/default.conf.template`. You can do this similarly with other files. Files in the templates directory will be copied and subdirectories will be preserved.
 
-nginx is run with an **unprivileged user**. This means that we cannot bind to ports below 1024, so you might need to correct your `PORT` and `SSL_PORT` settings. Now the defaults for nginx are `8080` and `8443`.
+Both nginx and httpd containers now run with an **unprivileged user**. This means that we cannot bind to ports below 1024, so you might need to correct your `PORT` and `SSL_PORT` settings. Now the defaults for both nginx and httpd are `8080` and `8443`.
 
 ### Common ENV Variables
 
@@ -181,10 +181,10 @@ These variables are common to image variants and will set defaults based on the 
 | APACHE_ERRORLOG_FORMAT | A string value indicating the `ErrorLogFormat` that Apache should use. (Default: `'"[%{u}t] [%-m:%l] [pid %P:tid %T] %7F: %E: [client\ %a] %M% ,\ referer\ %{Referer}i"'` |
 | APACHE_LOGFORMAT | A string value indicating the LogFormat that apache should use. (Default: `'"%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""'` (combined). Tip: use single quotes outside your double quoted format string.) ⚠️ Do not add a `|` as part of the log format. It is used internally.  |
 | APACHE_METRICS_LOGFORMAT | A string value indicating the LogFormat that the additional log apache metrics should use. (Default:'"%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""' (combined). Tip: use single quotes outside your double quoted format string.) ⚠️ Do not add a `|` as part of the log format. It is used internally.  |
-| BACKEND_WS | A string indicating the IP/URL of the WebSocket service (Default: `ws://localhost:8080`) |
+| BACKEND_WS | A string indicating the IP/URL of the WebSocket service (Default: `ws://localhost:8081`) |
 | H2_PROTOCOLS  | A string value indicating the protocols supported by the HTTP2 module (Default: `h2 http/1.1`) |
 | MUTEX | Configure mutex and lock file directory for all specified mutexes (see [Mutex](https://httpd.apache.org/docs/2.4/mod/core.html#mutex)) (Default: `default`) |
-| PORT | An int value indicating the port where the webserver is listening to | `80` | - |
+| PORT | An int value indicating the port where the webserver is listening to | `8080` | - |
 | PROXY_ERROR_OVERRIDE  | A string indicating that errors from the backend services should be overridden by this proxy server (see [ProxyErrorOverride](https://httpd.apache.org/docs/2.4/mod/mod_proxy.html#proxyerroroverride) directive). (Allowed values: `on`, `off`. Default: `on`) |
 | PROXY_PRESERVE_HOST  | A string indicating the use of incoming Host HTTP request header for proxy request (Default: `on`) |
 | PROXY_SSL_CA_CERT  | A string indicating the path to the PEM-encoded list of accepted CA certificates for the proxied server (Default: `/etc/ssl/certs/ca-certificates.ca`) |
@@ -196,7 +196,7 @@ These variables are common to image variants and will set defaults based on the 
 | SERVER_TOKENS | Option defining the server information presented to clients in the `Server` HTTP response header. Also see `MODSEC_SERVER_SIGNATURE`. (Allowed values: `Full`, `Prod[uctOnly]`, `Major`, `Minor`, `Min[imal]`, `OS`. Default: `Full`). |
 | SSL_ENGINE  | A string indicating the SSL Engine Operation Switch (Default: `on`) |
 | SSL_HONOR_CIPHER_ORDER | A string indicating if the server should [honor the cipher list provided by the client](https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslhonorcipherorder) (Allowed values: `on`, `off`. Default: `off`) |
-| SSL_PORT | Port number where the SSL enabled webserver is listening | `443` | - |
+| SSL_PORT | Port number where the SSL enabled webserver is listening | `8443` | - |
 | SSL_SESSION_TICKETS | A string to enable or disable the use of [TLS session tickets](https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslsessiontickets) (RFC 5077). (Default: `off`) |
 | TIMEOUT  | Number of seconds before receiving and sending timeout (Default: `60`) |
 | WORKER_CONNECTIONS  | Maximum number of MPM request worker processes (Default: `400`) |
@@ -235,12 +235,16 @@ All these variables impact in configuration directives in the modsecurity engine
 
 | Name     | Description|
 | -------- | ------------------------------------------------------------------- |
+| MODSEC_ARGUMENT_SEPARATOR | A character to use as the separator for `application/x-www-form-urlencoded` content. (Default: `&`). :warning: Do not touch unless you really know what you are doing. See [SecArgumentSeparator](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-%28v2.x%29#secargumentseparator) |
+| MODSEC_ARGUMENTS_LIMIT | An integer indicating the maximum number of arguments that can be processed before setting the `REQBODY_ERROR` variable (Default `1000`). See [SecArgumentsLimit](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-%28v2.x%29#secargumentslimit)|
 | MODSEC_AUDIT_ENGINE  | A string used to configure the audit engine, which logs complete transactions (Default: `RelevantOnly`). Accepted values: `On`, `Off`, `RelevantOnly`. See [SecAuditEngine](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-%28v2.x%29#SecAuditEngine) for additional information. |
 | MODSEC_AUDIT_LOG  | A string indicating the path to the main audit log file or the concurrent logging index file (Default: `/dev/stdout`) |
 | MODSEC_AUDIT_LOG_FORMAT  | A string indicating the output format of the AuditLogs (Default: `JSON`). Accepted values: `JSON`, `Native`. See [SecAuditLogFormat](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-%28v2.x%29#SecAuditLogFormat) for additional information. |
 | MODSEC_AUDIT_LOG_PARTS  | A string that defines which parts of each transaction are going to be recorded in the audit log (Default: `'ABIJDEFHZ'`). See [SecAuditLogParts](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-(v2.x)#secauditlogparts) for the accepted values. |
+| MODSEC_AUDIT_LOG_RELEVANT_STATUS | A regular expression string that defines the http error codes that are relevant for audit logging (Default: `"^(?:5|4(?!04))"`). See [SecAuditLogRelevantStatus](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-%28v2.x%29#secauditlogrelevantstatus) |
 | MODSEC_AUDIT_LOG_TYPE  | A string indicating the type of audit logging mechanism to be used (Default: `Serial`). Accepted values: `Serial`, `Concurrent` (`HTTPS` works only on Nginx - v3). See [SecAuditLogType](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-%28v2.x%29#secauditlogtype) for additional information. |
-| MODSEC_AUDIT_STORAGE  | A string indicating the directory where concurrent audit log entries are to be stored (Default: `/var/log/modsecurity/audit/`) |
+| MODSEC_COOKIE_FORMAT | The cookie format used (Default: `0` use Netscape cookies) :warning: Do not touch unless you really know what you are doing. See [SecCookieFormat](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-%28v2.x%29#seccookieformat). |
+| MODSEC_AUDIT_STORAGE_DIR  | A string indicating the directory where concurrent audit log entries are to be stored (Default: `/var/log/modsecurity/audit/`) |
 | MODSEC_DATA_DIR  | A string indicating the path where persistent data (e.g., IP address data, session data, and so on) is to be stored (Default: `/tmp/modsecurity/data`) |
 | MODSEC_DEBUG_LOG  | A string indicating the path to the ModSecurity debug log file (Default: `/dev/null`) |
 | MODSEC_DEBUG_LOGLEVEL  | An integer indicating the verboseness of the debug log data (Default: `0`). Accepted values: `0` - `9`. See [SecDebugLogLevel](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-(v2.x)#secdebugloglevel). |
@@ -264,7 +268,10 @@ All these variables impact in configuration directives in the modsecurity engine
 | MODSEC_TAG  | A string indicating the default tag action, which will be inherited by the rules in the same configuration context (Default: `modsecurity`) |
 | MODSEC_TMP_DIR  | A string indicating the path where temporary files will be created (Default: `/tmp/modsecurity/tmp`) |
 | MODSEC_TMP_SAVE_UPLOADED_FILES  | A string indicating if temporary uploaded files are saved (Default: `On`) (only relevant in Apache - ModSecurity v2) |
+| MODSEC_UNICODE_MAPPING | The unicode Code Point to use form the default file(Default: `20127`). See [SecUnicodeMapFile](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-%28v2.x%29#secunicodemapfile) |
 | MODSEC_UPLOAD_DIR  | A string indicating the path where intercepted files will be stored (Default: `/tmp/modsecurity/upload`) |
+| MODSEC_UPLOAD_FILE_MODE | (Default: `0600`) |
+| MODSEC_UPLOAD_KEEP_FILES | Configures whether or not the intercepted files will be kept after transaction is processed.  (Default: `RelevantOnly` on Apache, `Off` on nginx) Accepted values: `On`, `Off`, `RelevantOnly` (only modsec2). See [SecUploadKeepFiles](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-%28v2.x%29#secuploadkeepfiles) and [libmodsecurity3](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-%28v3.x%29#secuploadkeepfiles)
 
 ### CRS specific
 
@@ -302,10 +309,10 @@ All these variables impact in configuration directives in the modsecurity engine
 >
 > ```bash
 > docker build -t my-modsec .
-> docker run -p 8443:443 my-modsec
+> docker run -p 8443:8443 my-modsec
 > ```
 
-TLS is configured on port `443` and enabled by default.
+TLS is configured on port `8443` and enabled by default.
 
 We use sane intermediate defaults taken from the [Mozilla SSL config tool](https://ssl-config.mozilla.org/). Please review the defaults and choose the ones that best match your needs.
 
@@ -327,11 +334,11 @@ ModSecurity is often used in a reverse proxy setup with the following porperties
 This allows one to use ModSecurity without modifying the webserver hosting the underlying application and also protects web servers that ModSecurity cannot currently be embedd into.
 
 Tips:
-* the application web server (the one receiving traffic from the reverse proxy) should not listen on a public interface. Only the reverse proxy should be exposed to the public. With Docker, this could meain setting up a network for both containers and only exposing the reverse proxy with `-p 8080:80`, for example. `docker compose` takes care of this automatically. See the `docker-compose.yaml` for an example setup.
+* the application web server (the one receiving traffic from the reverse proxy) should not listen on a public interface. Only the reverse proxy should be exposed to the public. With Docker, this could mean setting up a network for both containers and only exposing the reverse proxy with `-p 8080:8080`, for example. `docker compose` takes care of this automatically. See the `docker-compose.yaml` for an example setup.
 
 ```bash
 docker build -t my-modsec . -f
-docker run -p 8080:80 -e BACKEND=http://example.com my-modsec
+docker run -p 8080:8080 -e BACKEND=http://example.com my-modsec
 ```
 
 ## ServerName
@@ -340,7 +347,7 @@ It is often convenient to set your server name (set to `localhost` by defualt). 
 
 ```bash
 docker build -t modsec .
-docker run -p 8080:80 -e SERVER_NAME=myhost my-modsec
+docker run -p 8080:8080 -e SERVER_NAME=myhost my-modsec
 ```
 
 ## ModSecurity CRS Tuning
@@ -354,7 +361,7 @@ There are two possible ways to pass ModSecurity CRS tuning rules to the containe
 
 ```bash
 docker run -dti --rm \
-   -p 80:80 \
+   -p 8080:8080 \
    -v /path/to/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf:/etc/modsecurity.d/owasp-crs/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf \
    -v /path/to/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf:/etc/modsecurity.d/owasp-crs/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf \
    owasp/modsecurity-crs:apache
@@ -366,7 +373,7 @@ This example can be helpful when no volume mounts are possible (some CI pipeline
 
 ```bash
 docker create -ti --name modseccrs \
-   -p 80:80 \
+   -p 8080:8080 \
    owasp/modsecurity-crs:apache
 
 docker cp /path/to/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf \
@@ -377,8 +384,26 @@ docker start modseccrs
 
 ## Full docker run example of possible setup
 
+The following example illustrates how to use `docker run` with some of the variables. It's purpose is illustration only and it should not be used to run a container in production.
+
+Some important things to note:
+- Error and audit logs are enabled and mapped to files on the host, so that their contents are accessible and don't pollute the container filesystem. Docker requires these files to exist, otherwise they would be created as directories, hence the use of the `touch ...` commands.
+- For containers with read-only filesystems, the volumes might have to be specified differently, e.g., using `tmpfs`. Alternatively, if only one log output is required, the output could be redirected to `stdout` (`/proc/self/fd/2`).
+- The example expects a backend web server to be running at `localhost:8081`.
+
 ```bash
-docker run -dti -p 80:80 --rm \
+touch /tmp/host-fs-auditlog.log
+touch /tmp/host-fs-errorlog.log
+docker run \
+   -dti \
+   -p 8080:8080 \
+   --rm \
+   -v /tmp/host-fs-auditlog.log:/var/log/modsec_audit.log \
+   -v /tmp/host-fs-errorlog.log:/var/log/modsec_error.log \
+   -e MODSEC_AUDIT_ENGINE=on \
+   -e MODSEC_AUDIT_LOG=/var/log/modsec_audit.log
+   -e LOGLEVEL=warn \
+   -e ERRORLOG=/var/log/modsec_error.log \
    -e PARANOIA=1 \
    -e EXECUTING_PARANOIA=2 \
    -e ENFORCE_BODYPROC_URLENCODED=1 \
@@ -398,11 +423,9 @@ docker run -dti -p 80:80 --rm \
    -e MAX_FILE_SIZE=100000 \
    -e COMBINED_FILE_SIZES=1000000 \
    -e TIMEOUT=60 \
-   -e LOGLEVEL=warn \
-   -e ERRORLOG='/proc/self/fd/2' \
    -e SERVER_ADMIN=root@localhost \
    -e SERVER_NAME=localhost \
-   -e PORT=80 \
+   -e PORT=8080 \
    -e MODSEC_RULE_ENGINE=on \
    -e MODSEC_REQ_BODY_ACCESS=on \
    -e MODSEC_REQ_BODY_LIMIT=13107200 \
@@ -413,5 +436,6 @@ docker run -dti -p 80:80 --rm \
    -e MODSEC_PCRE_MATCH_LIMIT_RECURSION=1000 \
    -e VALIDATE_UTF8_ENCODING=1 \
    -e CRS_ENABLE_TEST_MARKER=1 \
+   -e BACKEND="http://localhost:8081" \
    owasp/modsecurity-crs:apache
 ```

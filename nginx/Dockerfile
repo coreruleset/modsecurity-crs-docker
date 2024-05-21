@@ -1,6 +1,6 @@
 ARG NGINX_VERSION="n/a"
 
-FROM nginxinc/nginx-unprivileged:${NGINX_VERSION} as build
+FROM nginxinc/nginx-unprivileged:${NGINX_VERSION} AS build
 
 ARG MODSEC3_VERSION="n/a"
 ARG LMDB_VERSION="n/a"
@@ -44,7 +44,7 @@ RUN set -eux; \
     strip /usr/local/lib/liblmdb*.so*
 
 RUN set -eux; \
-    git clone https://github.com/SpiderLabs/ModSecurity --branch "v${MODSEC3_VERSION}" --depth 1 --recursive; \
+    git clone https://github.com/owasp-modsecurity/ModSecurity --branch "v${MODSEC3_VERSION}" --depth 1 --recursive; \
     cd ModSecurity; \
     ARCH=$(gcc -print-multiarch); \
     sed -ie "s/i386-linux-gnu/${ARCH}/g" build/ssdeep.m4; \
@@ -56,7 +56,7 @@ RUN set -eux; \
 
 # We use master
 RUN set -eux; \
-    git clone -b master --depth 1 https://github.com/SpiderLabs/ModSecurity-nginx.git; \
+    git clone -b master --depth 1 https://github.com/owasp-modsecurity/ModSecurity-nginx.git; \
     curl -sSL https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz -o nginx-${NGINX_VERSION}.tar.gz; \
     tar -xzf nginx-${NGINX_VERSION}.tar.gz; \
     cd ./nginx-${NGINX_VERSION}; \
@@ -65,8 +65,6 @@ RUN set -eux; \
     strip objs/ngx_http_modsecurity_module.so; \
     cp objs/ngx_http_modsecurity_module.so /etc/nginx/modules/; \
     mkdir /etc/modsecurity.d; \
-    curl -sSL https://raw.githubusercontent.com/owasp-modsecurity/ModSecurity/v3/master/modsecurity.conf-recommended \
-         -o /etc/modsecurity.d/modsecurity.conf; \
     curl -sSL https://raw.githubusercontent.com/owasp-modsecurity/ModSecurity/v3/master/unicode.mapping \
          -o /etc/modsecurity.d/unicode.mapping
 
@@ -76,7 +74,7 @@ RUN set -eux; \
     curl -sSL https://ssl-config.mozilla.org/ffdhe2048.txt -o /usr/share/TLS/dhparam-2048.pem; \
     curl -sSL https://ssl-config.mozilla.org/ffdhe4096.txt -o /usr/share/TLS/dhparam-4096.pem
 
-FROM nginxinc/nginx-unprivileged:${NGINX_VERSION} as crs_release
+FROM nginxinc/nginx-unprivileged:${NGINX_VERSION} AS crs_release
 
 ARG CRS_RELEASE
 
@@ -124,17 +122,22 @@ ENV \
     METRICS_ALLOW_FROM='127.0.0.0/24' \
     METRICS_DENY_FROM='all' \
     METRICSLOG=/dev/null \
+    MODSEC_ARGUMENT_SEPARATOR="&" \
+    MODSEC_ARGUMENTS_LIMIT=1000 \
     MODSEC_AUDIT_ENGINE="RelevantOnly" \
     MODSEC_AUDIT_LOG=/dev/stdout \
     MODSEC_AUDIT_LOG_FORMAT=JSON \
     MODSEC_AUDIT_LOG_PARTS='ABIJDEFHZ' \
+    MODSEC_AUDIT_LOG_RELEVANT_STATUS="^(?:5|4(?!04))" \
     MODSEC_AUDIT_LOG_TYPE=Serial \
-    MODSEC_AUDIT_STORAGE=/var/log/modsecurity/audit/ \
+    MODSEC_COOKIE_FORMAT=0 \
+    MODSEC_AUDIT_STORAGE_DIR=/var/log/modsecurity/audit/ \
     MODSEC_DATA_DIR=/tmp/modsecurity/data \
     MODSEC_DEBUG_LOG=/dev/null \
     MODSEC_DEBUG_LOGLEVEL=0 \
     MODSEC_DEFAULT_PHASE1_ACTION="phase:1,pass,log,tag:'\${MODSEC_TAG}'" \
     MODSEC_DEFAULT_PHASE2_ACTION="phase:2,pass,log,tag:'\${MODSEC_TAG}'" \
+    MODSEC_DISABLE_BACKEND_COMPRESSION="Off" \
     MODSEC_PCRE_MATCH_LIMIT=100000 \
     MODSEC_PCRE_MATCH_LIMIT_RECURSION=100000 \
     MODSEC_REQ_BODY_ACCESS=on \
@@ -151,7 +154,10 @@ ENV \
     MODSEC_TAG=modsecurity \
     MODSEC_TMP_DIR=/tmp/modsecurity/tmp \
     MODSEC_TMP_SAVE_UPLOADED_FILES="on" \
+    MODSEC_UNICODE_MAPPING=20127 \
     MODSEC_UPLOAD_DIR=/tmp/modsecurity/upload \
+    MODSEC_UPLOAD_FILE_MODE=0600 \
+    MODSEC_UPLOAD_KEEP_FILES=Off \
     NGINX_ALWAYS_TLS_REDIRECT=off \
     NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx \
     PORT=8080 \
@@ -191,8 +197,8 @@ COPY --from=build /etc/nginx/modules/ngx_http_modsecurity_module.so /etc/nginx/m
 COPY --from=build /usr/local/lib/liblmdb.so /usr/local/lib/
 COPY --from=build /usr/share/TLS/dhparam-* /etc/ssl/certs/
 COPY --from=build /etc/modsecurity.d/unicode.mapping /etc/modsecurity.d/unicode.mapping
-COPY --from=build /etc/modsecurity.d/modsecurity.conf /etc/modsecurity.d/modsecurity.conf
 COPY --from=crs_release /opt/owasp-crs /opt/owasp-crs
+COPY src/etc/modsecurity.d/modsecurity.conf /etc/nginx/templates/modsecurity.d/modsecurity.conf.template
 COPY src/etc/modsecurity.d/modsecurity-override.conf /etc/nginx/templates/modsecurity.d/modsecurity-override.conf.template
 COPY src/etc/modsecurity.d/setup.conf /etc/nginx/templates/modsecurity.d/setup.conf.template
 COPY nginx/docker-entrypoint.d/*.sh /docker-entrypoint.d/

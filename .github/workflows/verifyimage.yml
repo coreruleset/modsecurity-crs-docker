@@ -8,6 +8,8 @@ on:
 
 env:
   REPO: "owasp/modsecurity-crs"
+  # sha256sum format: <hash><space><format (space for text)><file name>
+  MODSECURITY_RECOMMENDED: "d9e164c508218202eba13d37cf661baacb8600706e618ce93ccc91c74c51449e  modsecurity.conf-recommended"
 
 jobs:
   prepare:
@@ -20,6 +22,11 @@ jobs:
       - name: List targets
         id: generate
         uses: docker/bake-action/subaction/list-targets@v4
+      - name: Check modsecurity recommended
+        run: |
+          curl -sSL https://raw.githubusercontent.com/owasp-modsecurity/ModSecurity/v3/master/modsecurity.conf-recommended -o modsecurity.conf-recommended
+          echo '${{ env.MODSECURITY_RECOMMENDED }}' > sha256sum.txt
+          sha256sum -c sha256sum.txt
 
   build:
     runs-on: ubuntu-latest
