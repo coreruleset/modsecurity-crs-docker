@@ -297,7 +297,8 @@ All these variables impact in configuration directives in the modsecurity engine
 | MAX_NUM_ARGS | An integer indicating the max_num_args (Default: `unlimited`) |
 | PARANOIA | An integer indicating the paranoia level (Default: `1`)               |
 | RESTRICTED_EXTENSIONS | A string indicating the restricted_extensions (Default: `.asa/ .asax/ .ascx/ .axd/ .backup/ .bak/ .bat/ .cdx/ .cer/ .cfg/ .cmd/ .com/ .config/ .conf/ .cs/ .csproj/ .csr/ .dat/ .db/ .dbf/ .dll/ .dos/ .htr/ .htw/ .ida/ .idc/ .idq/ .inc/ .ini/ .key/ .licx/ .lnk/ .log/ .mdb/ .old/ .pass/ .pdb/ .pol/ .printer/ .pwd/ .rdb/ .resources/ .resx/ .sql/ .swp/ .sys/ .vb/ .vbs/ .vbproj/ .vsdisco/ .webinfo/ .xsd/ .xsx/`) |
-| RESTRICTED_HEADERS | A string indicating the restricted_headers (Default: `/accept-charset/ /content-encoding/ /proxy/ /lock-token/ /content-range/ /if/`) |
+| RESTRICTED_HEADERS_BASIC | A string indicating the restricted_headers_basic (Default: `/content-encoding/ /proxy/ /lock-token/ /content-range/ /if/ /x-http-method-override/ /x-http-method/ /x-method-override/`) |
+| RESTRICTED_HEADERS_EXTENDED | A string indicating the restricted_headers_extended (Default: `/accept-charset/`) |
 | STATIC_EXTENSIONS | A string indicating the static_extensions (Default: `/.jpg/ /.jpeg/ /.png/ /.gif/ /.js/ /.css/ /.ico/ /.svg/ /.webp/`) |
 | TOTAL_ARG_LENGTH | An integer indicating the total_arg_length (Default: `unlimited`) |
 | VALIDATE_UTF8_ENCODING | A boolean indicating the crs_validate_utf8_encoding (Default: `0`) |

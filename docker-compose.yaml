@@ -50,7 +50,8 @@ x-defaults: &default-settings
     # ALLOWED_REQUEST_CONTENT_TYPE_CHARSET: 'utf-8|iso-8859-1|iso-8859-15|windows-1252'
     # ALLOWED_HTTP_VERSIONS: HTTP/1.0 HTTP/1.1 HTTP/2 HTTP/2.0
     # RESTRICTED_EXTENSIONS: .asa/ .asax/ .ascx/ .axd/ .backup/ .bak/ .bat/ .cdx/ .cer/ .cfg/ .cmd/ .com/ .config/ .conf/ .cs/ .csproj/ .csr/ .dat/ .db/ .dbf/ .dll/ .dos/ .htr/ .htw/ .ida/ .idc/ .idq/ .inc/ .ini/ .key/ .licx/ .lnk/ .log/ .mdb/ .old/ .pass/ .pdb/ .pol/ .printer/ .pwd/ .rdb/ .resources/ .resx/ .sql/ .swp/ .sys/ .vb/ .vbs/ .vbproj/ .vsdisco/ .webinfo/ .xsd/ .xsx/
-    # RESTRICTED_HEADERS: /accept-charset/ /content-encoding/ /proxy/ /lock-token/ /content-range/ /if/
+    # RESTRICTED_HEADERS_BASIC: /content-encoding/ /proxy/ /lock-token/ /content-range/ /if/ /x-http-method-override/ /x-http-method/ /x-method-override/
+    # RESTRICTED_HEADERS_EXTENDED: /accept-charset/
     # STATIC_EXTENSIONS: /.jpg/ /.jpeg/ /.png/ /.gif/ /.js/ /.css/ /.ico/ /.svg/ /.webp/
 
     #######################################################
