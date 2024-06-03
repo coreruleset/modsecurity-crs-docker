@@ -16,7 +16,7 @@ variable "crs-version" {
 
 variable "nginx-version" {
     # renovate: depName=nginxinc/nginx-unprivileged datasource=docker
-    default = "1.26.0"
+    default = "1.27.0"
 }
 
 variable "httpd-version" {
