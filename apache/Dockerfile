@@ -216,6 +216,7 @@ RUN set -eux; \
         /var/log/ \
         /usr/local/apache2/ \
         /etc/modsecurity.d \
+        /tmp/modsecurity \
         /opt/owasp-crs
 
 USER httpd
