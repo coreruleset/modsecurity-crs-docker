@@ -215,7 +215,6 @@ RUN set -eux; \
     mkdir -p /tmp/modsecurity/data; \
     mkdir -p /tmp/modsecurity/upload; \
     mkdir -p /tmp/modsecurity/tmp; \
-    chown -R $(awk '/^User/ { print $2;}' /usr/local/apache2/conf/httpd.conf) /tmp/modsecurity /var/log/apache2; \
     chown -R httpd:httpd \
         /var/log/ \
         /usr/local/apache2/ \
