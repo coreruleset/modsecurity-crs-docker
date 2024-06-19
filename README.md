@@ -44,12 +44,12 @@ Examples:
 
 ## OS Variants
 
-* nginx – *latest stable ModSecurity v3 on Nginx 1.26.0 official stable base image, and latest stable OWASP CRS 4.2.0*
+* nginx – *latest stable ModSecurity v3 on Nginx 1.27.0 official stable base image, and latest stable OWASP CRS 4.3.0*
    * [nginx](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile)
    * [nginx-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile-alpine)
-* Openresty - *last stable ModSecurity v3 on OpenResty 1.25.3.1 official stable base image, and latest stable OWASP CRS 4.2.0*
+* Openresty - *last stable ModSecurity v3 on OpenResty 1.25.3.1 official stable base image, and latest stable OWASP CRS 4.3.0*
    * [openresty-alpine-fat](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/openresty/Dockerfile-alpine)
-* Apache httpd – *last stable ModSecurity v2 on Apache 2.4.59 official stable base image, and latest stable OWASP CRS 4.2.0*
+* Apache httpd – *last stable ModSecurity v2 on Apache 2.4.59 official stable base image, and latest stable OWASP CRS 4.3.0*
    * [apache](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/apache/Dockerfile)
    * [apache-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/apache/Dockerfile-alpine)
 
@@ -297,7 +297,8 @@ All these variables impact in configuration directives in the modsecurity engine
 | MAX_NUM_ARGS | An integer indicating the max_num_args (Default: `unlimited`) |
 | PARANOIA | An integer indicating the paranoia level (Default: `1`)               |
 | RESTRICTED_EXTENSIONS | A string indicating the restricted_extensions (Default: `.asa/ .asax/ .ascx/ .axd/ .backup/ .bak/ .bat/ .cdx/ .cer/ .cfg/ .cmd/ .com/ .config/ .conf/ .cs/ .csproj/ .csr/ .dat/ .db/ .dbf/ .dll/ .dos/ .htr/ .htw/ .ida/ .idc/ .idq/ .inc/ .ini/ .key/ .licx/ .lnk/ .log/ .mdb/ .old/ .pass/ .pdb/ .pol/ .printer/ .pwd/ .rdb/ .resources/ .resx/ .sql/ .swp/ .sys/ .vb/ .vbs/ .vbproj/ .vsdisco/ .webinfo/ .xsd/ .xsx/`) |
-| RESTRICTED_HEADERS | A string indicating the restricted_headers (Default: `/accept-charset/ /content-encoding/ /proxy/ /lock-token/ /content-range/ /if/`) |
+| RESTRICTED_HEADERS_BASIC | A string indicating the restricted_headers_basic (Default: `/content-encoding/ /proxy/ /lock-token/ /content-range/ /if/ /x-http-method-override/ /x-http-method/ /x-method-override/`) |
+| RESTRICTED_HEADERS_EXTENDED | A string indicating the restricted_headers_extended (Default: `/accept-charset/`) |
 | STATIC_EXTENSIONS | A string indicating the static_extensions (Default: `/.jpg/ /.jpeg/ /.png/ /.gif/ /.js/ /.css/ /.ico/ /.svg/ /.webp/`) |
 | TOTAL_ARG_LENGTH | An integer indicating the total_arg_length (Default: `unlimited`) |
 | VALIDATE_UTF8_ENCODING | A boolean indicating the crs_validate_utf8_encoding (Default: `0`) |

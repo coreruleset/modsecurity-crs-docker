@@ -3,9 +3,7 @@ name: Verify Images
 on:
   pull_request:
     branches:
-      - master
-      - develop
-
+      - main
 env:
   REPO: "owasp/modsecurity-crs"
   # sha256sum format: <hash><space><format (space for text)><file name>

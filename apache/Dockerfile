@@ -186,7 +186,6 @@ RUN set -eux; \
     mkdir -p /tmp/modsecurity/data; \
     mkdir -p /tmp/modsecurity/upload; \
     mkdir -p /tmp/modsecurity/tmp; \
-    chown -R $(awk '/^User/ { print $2;}' /usr/local/apache2/conf/httpd.conf) /tmp/modsecurity; \
     mkdir -p /var/log/apache2/; \
     ln -s /opt/owasp-crs /etc/modsecurity.d/; \
     sed -i -E 's|(Listen) [0-9]+|\1 ${PORT}|' /usr/local/apache2/conf/httpd.conf; \
@@ -216,6 +215,7 @@ RUN set -eux; \
         /var/log/ \
         /usr/local/apache2/ \
         /etc/modsecurity.d \
+        /tmp/modsecurity \
         /opt/owasp-crs
 
 USER httpd
