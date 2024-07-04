@@ -21,7 +21,7 @@ variable "nginx-version" {
 
 variable "httpd-version" {
     # renovate: depName=httpd datasource=docker
-    default = "2.4.59"
+    default = "2.4.61"
 }
 
 variable "openresty-version" {
