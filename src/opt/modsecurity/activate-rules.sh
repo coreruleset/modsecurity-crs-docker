@@ -59,9 +59,14 @@ if [ -n "${RESTRICTED_EXTENSIONS}" ]; then
   sed -z -E -i 's|#SecAction[^"]+"id:900240.*\x27tx\.restricted_extensions=[[:lower:][:space:]./]*\/\x27\"|SecAction \\\n  \"id:900240, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:\x27tx.restricted_extensions='"${RESTRICTED_EXTENSIONS}"'\x27\"|' "${setup_conf_path}"
 fi
 
-# Forbidden request headers.
-if [ -n "${RESTRICTED_HEADERS}" ]; then
-  sed -z -E -i 's|#SecAction[^"]+"id:900250.*\x27tx\.restricted_headers=[[:lower:][:space:]/-]*\x27\"|SecAction \\\n  \"id:900250, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:\x27tx.restricted_headers='"${RESTRICTED_HEADERS}"'\x27\"|' "${setup_conf_path}"
+# Forbidden request headers basic.
+if [ -n "${RESTRICTED_HEADERS_BASIC}" ]; then
+  sed -z -E -i 's|#SecAction[^"]+"id:900250.*\x27tx\.restricted_headers_basic=[[:lower:][:space:]/-]*\x27\"|SecAction \\\n  \"id:900250, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:\x27tx.restricted_headers_basic='"${RESTRICTED_HEADERS_BASIC}"'\x27\"|' "${setup_conf_path}"
+fi
+
+# Forbidden request headers extended.
+if [ -n "${RESTRICTED_HEADERS_EXTENDED}" ]; then
+  sed -z -E -i 's|#SecAction[^"]+"id:900255.*\x27tx\.restricted_headers_extended=[[:lower:][:space:]/-]*\x27\"|SecAction \\\n  \"id:900255, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:\x27tx.restricted_headers_extended='"${RESTRICTED_HEADERS_EXTENDED}"'\x27\"|' "${setup_conf_path}"
 fi
 
 # File extensions considered static files.

@@ -1,0 +1,26 @@
+#!/bin/sh
+
+if [ "${PORT}" -lt 1024 ] || [ "${SSL_PORT}" -lt 1024 ]; then
+  cat<<EOF
+ERROR: you are using PORT=${PORT} and SSL_PORT=${SSL_PORT}
+
+Both nginx and httpd containers now run with an unprivileged user.
+
+This means that we cannot bind to ports below 1024, so you might need to correct your PORT and SSL_PORT settings.
+Now the defaults for both nginx and httpd are 8080 and 8443.
+
+FIX:
+
+if you have a port mapping like
+
+ports:
+- "80:80"
+
+then update it to use a port higher than 1024. Example:
+
+- "80:8080"
+
+The same should be done for the SSL ports.
+EOF
+  exit 1
+fi

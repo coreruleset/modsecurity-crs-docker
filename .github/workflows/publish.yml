@@ -1,8 +1,8 @@
 name: Build and publish images for container registries
+
 on:
-  push:
-    branches:
-      - master
+  release:
+    types: [published]
 
 jobs:
   prepare:

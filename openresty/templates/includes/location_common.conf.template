@@ -1,0 +1,19 @@
+
+location /healthz {
+    access_log off;
+    add_header Content-Type text/plain;
+    return 200 "OK";
+}
+
+location /metrics/nginx {
+    access_log off;
+    allow ${METRICS_ALLOW_FROM};
+    deny ${METRICS_DENY_FROM};
+    proxy_store off;
+    stub_status;
+}
+
+error_page 500 502 503 504  /50x.html;
+location = /50x.html {
+    root /usr/share/nginx/html;
+}
