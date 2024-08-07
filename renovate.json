@@ -11,9 +11,6 @@
     {
       "groupName": "all non-major dependencies",
       "groupSlug": "all-minor-patch",
-      "matchPackagePatterns": [
-        "*"
-      ],
       "matchUpdateTypes": [
         "minor",
         "patch"
@@ -24,14 +21,14 @@
         "Update",
         "Change",
         "Pending"
+      ],
+      "matchPackageNames": [
+        "*"
       ]
     },
     {
       "groupName": "all major dependencies",
       "groupSlug": "all-major",
-      "matchPackagePatterns": [
-        "*"
-      ],
       "matchUpdateTypes": [
         "major"
       ],
@@ -41,10 +38,15 @@
         "Update",
         "Change",
         "Pending"
+      ],
+      "matchPackageNames": [
+        "*"
       ]
     },
     {
-      "matchDepNames": ["ModSecurity2"],
+      "matchDepNames": [
+        "ModSecurity2"
+      ],
       "allowedVersions": "/^v2.*/"
     }
   ],
