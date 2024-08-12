@@ -344,7 +344,7 @@ docker run -p 8080:8080 -e BACKEND=http://example.com my-modsec
 
 ## ServerName
 
-It is often convenient to set your server name (set to `localhost` by defualt). To do this simply use the `SERVER_NAME` environment variable.
+It is often convenient to set your server name (set to `localhost` by default). To do this simply use the `SERVER_NAME` environment variable.
 
 ```bash
 docker build -t modsec .
