@@ -44,7 +44,7 @@ Examples:
 
 ## OS Variants
 
-* nginx – *latest stable ModSecurity v3 on Nginx 1.27.0 official stable base image, and latest stable OWASP CRS 4.5.0*
+* nginx – *latest stable ModSecurity v3 on Nginx 1.27.1 official stable base image, and latest stable OWASP CRS 4.5.0*
    * [nginx](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile)
    * [nginx-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile-alpine)
 * Openresty - *last stable ModSecurity v3 on OpenResty 1.25.3.1 official stable base image, and latest stable OWASP CRS 4.5.0*
