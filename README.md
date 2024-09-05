@@ -17,7 +17,7 @@ ModSecurity is an open source, cross platform web application firewall (WAF) eng
 ### Stable Tags
 
 Stable Tags are composed of:
-   * CRS version, in the fromat `<major>[.<minor>[.<patch]]`
+   * CRS version, in the format `<major>[.<minor>[.<patch]]`
    * web server variant
    * OS variant (optional)
    * date, in the format `YYYYMMDDHHMM`
