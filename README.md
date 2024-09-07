@@ -402,7 +402,7 @@ docker run \
    -v /tmp/host-fs-auditlog.log:/var/log/modsec_audit.log \
    -v /tmp/host-fs-errorlog.log:/var/log/modsec_error.log \
    -e MODSEC_AUDIT_ENGINE=on \
-   -e MODSEC_AUDIT_LOG=/var/log/modsec_audit.log
+   -e MODSEC_AUDIT_LOG=/var/log/modsec_audit.log \
    -e LOGLEVEL=warn \
    -e ERRORLOG=/var/log/modsec_error.log \
    -e PARANOIA=1 \
