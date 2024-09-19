@@ -27,6 +27,7 @@ RUN set -eux; \
         libpcre2-dev \
         libtool \
         libxml2-dev \
+        libmaxminddb-dev \
         libyajl-dev \
         make \
         patch \
@@ -50,7 +51,7 @@ RUN set -eux; \
     sed -ie "s/i386-linux-gnu/${ARCH}/g" build/ssdeep.m4; \
     sed -ie "s/i386-linux-gnu/${ARCH}/g" build/pcre2.m4; \
     ./build.sh; \
-    ./configure --with-yajl --with-ssdeep --with-geoip --with-pcre2 --enable-silent-rules; \
+    ./configure --with-yajl --with-ssdeep --with-geoip --with-pcre2 --with-maxmind --enable-silent-rules; \
     make install; \
     strip /usr/local/modsecurity/lib/lib*.so*
 
@@ -222,6 +223,7 @@ RUN set -eux; \
         ${LUA_MODULES} \
         libxml2 \
         libyajl2 \
+        libmaxminddb-dev \
         moreutils; \
     rm -rf /var/lib/apt/lists/*; \
     apt-get clean; \
