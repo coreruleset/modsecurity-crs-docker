@@ -52,7 +52,7 @@ RUN set -eux; \
     sed -ie "s/i386-linux-gnu/${ARCH}/g" build/ssdeep.m4; \
     sed -ie "s/i386-linux-gnu/${ARCH}/g" build/pcre2.m4; \
     ./build.sh; \
-    ./configure --with-yajl --with-ssdeep --with-lmdb --enable-silent-rules --with-pcre2  --with-maxmind; \
+    ./configure --with-yajl --with-ssdeep --with-lmdb --enable-silent-rules --with-pcre2; \
     make install; \
     strip /usr/local/modsecurity/lib/lib*.so*
 
@@ -68,7 +68,7 @@ RUN set -eux; \
     COMPILEOPTIONS=$(openresty -V 2>&1| grep -i "arguments"|cut -d ":" -f2-); \
     eval ./configure $COMPILEOPTIONS --add-dynamic-module=../../../ModSecurity-nginx; \
     make modules; \
-    cp objs/ngx_http_modsecurity_module.so /usr/local/openresty/nginx/modules/; \ 
+    cp objs/ngx_http_modsecurity_module.so /usr/local/openresty/nginx/modules/; \
     mkdir /etc/modsecurity.d; \
     curl -sSL https://raw.githubusercontent.com/owasp-modsecurity/ModSecurity/v3/master/unicode.mapping \
         -o /etc/modsecurity.d/unicode.mapping
@@ -98,12 +98,12 @@ RUN set -eux; \
     curl \
     gnupg; \
     mkdir /opt/owasp-crs; \
-    curl -sSL https://github.com/coreruleset/coreruleset/releases/download/v${CRS_RELEASE}/coreruleset-${CRS_RELEASE}-minimal.tar.gz -o v${CRS_RELEASE}-minimal.tar.gz; \
-    curl -sSL https://github.com/coreruleset/coreruleset/releases/download/v${CRS_RELEASE}/coreruleset-${CRS_RELEASE}-minimal.tar.gz.asc -o coreruleset-${CRS_RELEASE}-minimal.tar.gz.asc; \
+    curl -SL https://github.com/coreruleset/coreruleset/archive/v${CRS_RELEASE}.tar.gz -o v${CRS_RELEASE}.tar.gz; \
+    curl -SL https://github.com/coreruleset/coreruleset/releases/download/v${CRS_RELEASE}/coreruleset-${CRS_RELEASE}.tar.gz.asc -o coreruleset-${CRS_RELEASE}.tar.gz.asc; \
     gpg --fetch-key https://coreruleset.org/security.asc; \
-    gpg --verify coreruleset-${CRS_RELEASE}-minimal.tar.gz.asc v${CRS_RELEASE}-minimal.tar.gz; \
-    tar -zxf v${CRS_RELEASE}-minimal.tar.gz --strip-components=1 -C /opt/owasp-crs; \
-    rm -f v${CRS_RELEASE}-minimal.tar.gz coreruleset-${CRS_RELEASE}-minimal.tar.gz.asc; \
+    gpg --verify coreruleset-${CRS_RELEASE}.tar.gz.asc v${CRS_RELEASE}.tar.gz; \
+    tar -zxf v${CRS_RELEASE}.tar.gz --strip-components=1 -C /opt/owasp-crs; \
+    rm -f v${CRS_RELEASE}.tar.gz coreruleset-${CRS_RELEASE}.tar.gz.asc; \
     mv -v /opt/owasp-crs/crs-setup.conf.example /opt/owasp-crs/crs-setup.conf
 
 FROM openresty/openresty:${OPENRESTY_VERSION}-alpine-fat
@@ -245,7 +245,7 @@ RUN set -eux; \
     mkdir /var/log/nginx; \
     mkdir -p /tmp/modsecurity/data; \
     mkdir -p /tmp/modsecurity/upload; \
-    mkdir -p /tmp/modsecurity/tmp; \ 
+    mkdir -p /tmp/modsecurity/tmp; \
     mkdir -p /usr/local/modsecurity; \
     # Comment out the SecDisableBackendCompression option since it is not supported in V3
     sed -i 's/^\(SecDisableBackendCompression .*\)/# \1/' /usr/local/openresty/nginx/templates/modsecurity.d/modsecurity-override.conf.template; \
