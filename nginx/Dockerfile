@@ -21,7 +21,6 @@ RUN set -eux; \
         git \
         libcurl4-gnutls-dev \
         libfuzzy-dev \
-        libgeoip-dev \
         liblua${LUA_VERSION}-dev \
         libpcre3-dev \
         libpcre2-dev \
@@ -51,7 +50,7 @@ RUN set -eux; \
     sed -ie "s/i386-linux-gnu/${ARCH}/g" build/ssdeep.m4; \
     sed -ie "s/i386-linux-gnu/${ARCH}/g" build/pcre2.m4; \
     ./build.sh; \
-    ./configure --with-yajl --with-ssdeep --with-geoip --with-pcre2 --with-maxmind --enable-silent-rules; \
+    ./configure --with-yajl --with-ssdeep --with-pcre2 --with-maxmind --enable-silent-rules; \
     make install; \
     strip /usr/local/modsecurity/lib/lib*.so*
 
