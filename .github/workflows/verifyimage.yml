@@ -7,7 +7,7 @@ on:
 env:
   REPO: "owasp/modsecurity-crs"
   # sha256sum format: <hash><space><format (space for text)><file name>
-  MODSECURITY_RECOMMENDED: "284b0ab56e5f13cba6a804f73dd05646b6f0a6c1a342f69838eca220344d76e5  modsecurity.conf-recommended"
+  MODSECURITY_RECOMMENDED: "ccff8ba1f12428b34ff41960d8bf773dd9f62b9a7c77755247a027cb01896d4f  modsecurity.conf-recommended"
 
 jobs:
   prepare:
