@@ -14,6 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       targets: ${{ steps.generate.outputs.targets }}
+      repo: ${{ steps.metadata.outputs.repo }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -25,6 +26,10 @@ jobs:
           curl -sSL https://raw.githubusercontent.com/owasp-modsecurity/ModSecurity/v3/master/modsecurity.conf-recommended -o modsecurity.conf-recommended
           echo '${{ env.MODSECURITY_RECOMMENDED }}' > sha256sum.txt
           sha256sum -c sha256sum.txt
+      # The environment variable is not accessible in the context of "with" section
+      - name: Set a repo output
+        id: metadata
+        run: echo "repo=${REPO}" >> "$GITHUB_OUTPUT"
 
   build:
     runs-on: ubuntu-latest
@@ -59,6 +64,20 @@ jobs:
             *.platform=linux/amd64
           load: true
           push: false
+
+      - name: Scan ${{ matrix.target }}
+        uses: aquasecurity/trivy-action@0.27.0
+        with:
+          image-ref: ${{ needs.prepare.outputs.repo }}:${{ matrix.target }}
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+          scanners: 'vuln,secret'
+        env:
+          TRIVY_SKIP_DB_UPDATE: true
+#          TRIVY_SKIP_JAVA_DB_UPDATE: true
 
       - name: Run ${{ matrix.target }}
         run: |
