@@ -74,19 +74,11 @@ RUN set -eux; \
     curl -sSL https://raw.githubusercontent.com/owasp-modsecurity/ModSecurity/v3/master/unicode.mapping \
         -o /etc/modsecurity.d/unicode.mapping
 
-
-# Generate self-signed certificates (if needed)
-RUN mkdir -p /usr/share/TLS
-COPY openresty/openssl.conf /usr/share/TLS
-RUN /usr/local/openresty/openssl/bin/openssl req -x509 -days 365 -new \
-    -config /usr/share/TLS/openssl.conf \
-    -keyout /usr/share/TLS/server.key \
-    -out /usr/share/TLS/server.crt
-
 # Generate/Download Diffie-Hellman parameter files
-RUN /usr/local/openresty/openssl/bin/openssl dhparam -out /usr/share/TLS/dhparam-1024.pem 1024
-RUN curl -sSL https://ssl-config.mozilla.org/ffdhe2048.txt -o /usr/share/TLS/dhparam-2048.pem
-RUN curl -sSL https://ssl-config.mozilla.org/ffdhe4096.txt -o /usr/share/TLS/dhparam-4096.pem
+RUN set -eux; \
+    mkdir -p /usr/share/TLS; \
+    curl -sSL https://ssl-config.mozilla.org/ffdhe2048.txt -o /usr/share/TLS/dhparam-2048.pem; \
+    curl -sSL https://ssl-config.mozilla.org/ffdhe4096.txt -o /usr/share/TLS/dhparam-4096.pem
 
 FROM openresty/openresty:${OPENRESTY_VERSION}-alpine-fat AS crs_release
 
@@ -198,8 +190,6 @@ ENV \
 
 COPY --from=build /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC3_VERSION} /usr/local/modsecurity/lib/
 COPY --from=build /usr/local/openresty/nginx/modules/ngx_http_modsecurity_module.so /usr/local/openresty/nginx/modules/ngx_http_modsecurity_module.so
-COPY --from=build /usr/share/TLS/server.key /usr/local/openresty/nginx/conf/server.key
-COPY --from=build /usr/share/TLS/server.crt /usr/local/openresty/nginx/conf/server.crt
 COPY --from=build /usr/share/TLS/dhparam-* /etc/ssl/certs/
 COPY --from=build /etc/modsecurity.d/unicode.mapping /etc/modsecurity.d/unicode.mapping
 COPY --from=crs_release /opt/owasp-crs /opt/owasp-crs
@@ -212,9 +202,9 @@ COPY nginx/templates/modsecurity.d /usr/local/openresty/nginx/templates/modsecur
 COPY src/etc/modsecurity.d/modsecurity.conf /usr/local/openresty/nginx/templates/modsecurity.d/modsecurity.conf.template
 COPY src/etc/modsecurity.d/modsecurity-override.conf /usr/local/openresty/nginx/templates/modsecurity.d/modsecurity-override.conf.template
 COPY src/etc/modsecurity.d/setup.conf /usr/local/openresty/nginx/templates/modsecurity.d/setup.conf.template
-COPY src/bin/healthcheck /usr/local/bin/healthcheck
 COPY src/opt/modsecurity/activate-plugins.sh /docker-entrypoint.d/94-activate-plugins.sh
 COPY src/opt/modsecurity/activate-rules.sh /docker-entrypoint.d/95-activate-rules.sh
+COPY src/bin/* /usr/local/bin/
 
 # Openresty specific block.
 COPY openresty/templates/nginx.conf.template /usr/local/openresty/nginx/templates
@@ -241,7 +231,7 @@ RUN set -eux; \
         yajl; \
     # Install lua modules here
     for module in lua-resty-openidc ${LUA_MODULES}; do \
-        luarocks install ${module}; \
+        luarocks install "${module}"; \
     done; \
     mkdir /var/log/nginx; \
     mkdir -p /tmp/modsecurity/data; \
