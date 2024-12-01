@@ -107,6 +107,11 @@ LABEL maintainer="Felipe Zipitria <felipe.zipitria@owasp.org>"
 ENV \
     ACCESSLOG=/var/log/nginx/access.log \
     BACKEND=http://localhost:80 \
+    CORS_HEADER_403_ALLOW_ORIGIN="*" \
+    CORS_HEADER_403_ALLOW_METHODS="GET, POST, PUT, DELETE, OPTIONS" \
+    CORS_HEADER_403_CONTENT_TYPE="text/plain" \
+    CORS_HEADER_403_MAX_AGE=3600 \
+    CORS_HEADER_ACCESS_CONTROL_ALLOW_HEADERS="*" \
     DNS_SERVER= \
     ERRORLOG=/var/log/nginx/error.log \
     KEEPALIVE_TIMEOUT=60s \
