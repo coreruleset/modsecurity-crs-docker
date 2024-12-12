@@ -64,6 +64,7 @@ jobs:
         run: |
           echo "Starting container ${{ matrix.target }}"
           docker run --pull "never" -d --name ${{ matrix.target }}-test "${REPO}:${{ matrix.target }}"
+          sleep 30
           docker logs ${{ matrix.target }}-test
 
       - name: Verify ${{ matrix.target }}
