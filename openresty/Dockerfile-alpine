@@ -224,6 +224,7 @@ RUN set -eux; \
         git \
         moreutils \
         tzdata \
+        openssl \
         pcre \
         pcre2 \
         # Alpine needs GNU 'sed' because the 'sed' program shipped with busybox does not support 'z' parameter for separating lines with a 'NUL' character.
