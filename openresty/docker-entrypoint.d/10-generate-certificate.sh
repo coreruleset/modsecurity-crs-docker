@@ -7,6 +7,6 @@ LC_ALL=C
 ME=$( basename "$0" )
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
-/usr/local/bin/generate-certificate /usr/local/openresty/nginx/conf
+/usr/local/bin/generate-certificate /usr/local/openresty/nginx
 
 exit 0
