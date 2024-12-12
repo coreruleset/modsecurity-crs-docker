@@ -51,14 +51,17 @@ RUN set -eux; \
     make install; \
     strip /usr/local/modsecurity/lib/lib*.so*
 
-# We use master
+   # Build modules
 RUN set -eux; \
     git clone -b master --depth 1 https://github.com/owasp-modsecurity/ModSecurity-nginx.git; \
-    curl -sSL http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz | tar -xzf -; \
+    git clone -b master --depth 1 https://github.com/openresty/headers-more-nginx-module.git; \
+    curl -sSL https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz -o nginx-${NGINX_VERSION}.tar.gz; \
+    tar -xzf nginx-${NGINX_VERSION}.tar.gz; \
     cd ./nginx-${NGINX_VERSION}; \
-    ./configure --with-compat --add-dynamic-module=../ModSecurity-nginx; \
+    ./configure --with-compat --add-dynamic-module=../ModSecurity-nginx --add-module=../headers-more-nginx-module; \
     make modules; \
-    cp objs/ngx_http_modsecurity_module.so /etc/nginx/modules/; \
+    strip objs/ngx_http_modsecurity_module.so objs/ngx_http_headers_more_filter_module.so; \
+    cp objs/ngx_http_modsecurity_module.so objs/ngx_http_headers_more_filter_module.so /etc/nginx/modules/; \
     mkdir /etc/modsecurity.d; \
     curl -sSL https://raw.githubusercontent.com/owasp-modsecurity/ModSecurity/v3/master/unicode.mapping \
         -o /etc/modsecurity.d/unicode.mapping
@@ -192,6 +195,7 @@ ENV \
 
 COPY --from=build /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC3_VERSION} /usr/local/modsecurity/lib/
 COPY --from=build /etc/nginx/modules/ngx_http_modsecurity_module.so /etc/nginx/modules/ngx_http_modsecurity_module.so
+COPY --from=build /etc/nginx/modules/ngx_http_headers_more_filter_module.so /etc/nginx/modules/ngx_http_headers_more_filter_module.so
 COPY --from=build /usr/share/TLS/dhparam-* /etc/ssl/certs/
 COPY --from=build /etc/modsecurity.d/unicode.mapping /etc/modsecurity.d/unicode.mapping
 COPY --from=crs_release /opt/owasp-crs /opt/owasp-crs
