@@ -23,6 +23,7 @@ server {
             return 301 https://$host$request_uri;
         }
 
+        include includes/cors.conf;
         include includes/proxy_backend.conf;
 
         index index.html index.htm;
