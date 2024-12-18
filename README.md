@@ -291,7 +291,7 @@ All these variables impact in configuration directives in the modsecurity engine
 | ANOMALY_OUTBOUND | An integer indicating the outbound_anomaly_score_threshold (Default: `4`) |
 | ARG_LENGTH | An integer indicating the arg_length (Default: `unlimited`) |
 | ARG_NAME_LENGTH | An integer indicating the arg_name_length (Default: `unlimited`) |
-| BLOCKING_PARANOIA | (:new: Replaces `PARANOIA` in CRSv4) An integer indicating the paranoia level (Default: `1`)               |
+| BLOCKING_PARANOIA | (:new: Replaces `PARANOIA` in CRSv4) An integer indicating the paranoia level (Default: `1`) |
 | COMBINED_FILE_SIZES | An integer indicating the combined_file_sizes (Default: `unlimited`) |
 | CRS_DISABLE_PLUGINS | A boolean indicating whether plugins will be **disabled** (Only from v4 and up. Default: `0`) |
 | CRS_ENABLE_TEST_MARKER | A boolean indicating whether to write test markers to the log file (Used for running the CRS test suite. Default: `0`) |
@@ -301,7 +301,8 @@ All these variables impact in configuration directives in the modsecurity engine
 | MANUAL_MODE | A boolean indicating that you are providing your own `crs-setup.conf` file mounted as volume. (Default: `0`). ⚠️ None of the following variables are used if you set it to `1`. |
 | MAX_FILE_SIZE | An integer indicating the max_file_size (Default: `unlimited`) |
 | MAX_NUM_ARGS | An integer indicating the max_num_args (Default: `unlimited`) |
-| PARANOIA | An integer indicating the paranoia level (Default: `1`)               |
+| PARANOIA | An integer from `1` through `4`, indicating the paranoia level (Default: `1`) |
+| REPORTING_LEVEL | An integer from `0` through `5`, indicating the level of verbosity when reporting anomaly scores. See [rule 900115](https://github.com/coreruleset/coreruleset/blob/1a8f408ea730c7447e0dbb009ac3cef88368f74e/crs-setup.conf.example#L349) for details. (Default: `4`) |
 | RESTRICTED_EXTENSIONS | A string indicating the restricted_extensions (Default: `.asa/ .asax/ .ascx/ .axd/ .backup/ .bak/ .bat/ .cdx/ .cer/ .cfg/ .cmd/ .com/ .config/ .conf/ .cs/ .csproj/ .csr/ .dat/ .db/ .dbf/ .dll/ .dos/ .htr/ .htw/ .ida/ .idc/ .idq/ .inc/ .ini/ .key/ .licx/ .lnk/ .log/ .mdb/ .old/ .pass/ .pdb/ .pol/ .printer/ .pwd/ .rdb/ .resources/ .resx/ .sql/ .swp/ .sys/ .vb/ .vbs/ .vbproj/ .vsdisco/ .webinfo/ .xsd/ .xsx/`) |
 | RESTRICTED_HEADERS_BASIC | A string indicating the restricted_headers_basic (Default: `/content-encoding/ /proxy/ /lock-token/ /content-range/ /if/ /x-http-method-override/ /x-http-method/ /x-method-override/`) |
 | RESTRICTED_HEADERS_EXTENDED | A string indicating the restricted_headers_extended (Default: `/accept-charset/`) |
