@@ -70,3 +70,11 @@ jobs:
       - name: Verify ${{ matrix.target }}
         run: |
           [ $(docker inspect ${{ matrix.target }}-test --format='{{.State.Running}}') = 'true' ]
+          if "${{ matrix.target }}" == "nginx" ; then
+            curl -q -D headers.txt http://localhost:8080/?test=../../etc/passwd
+            grep -q "HTTP/1.1 403 Forbidden" headers.txt
+            grep -q "Access-Control-Allow-Origin: *" headers.txt
+            grep -q "Access-Control-Max-Age: 3600" headers.txt
+            grep -q "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS" headers.txt
+            grep -q "Access-Control-Allow-Headers: *" headers.txt
+          fi

@@ -206,14 +206,12 @@ These variables are common to image variants and will set defaults based on the 
 
 ### Nginx ENV Variables
 
-<!-- temporarily hidden -->
-<!-- | CORS_HEADER_403_ALLOW_ORIGIN | The value of the [Access-Control-Allow-Origin](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin) header for `403` responses. Determines which origins can access the response. (Default: `"*"`). |
-| CORS_HEADER_403_ALLOW_METHODS | The value of the [Access-Control-Request-Method](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Request-Method) header for `403` responses. Determines the allowed request methods for the resource. Default: `"GET, POST, PUT, DELETE, OPTIONS"` |
-| CORS_HEADER_403_CONTENT_TYPE | The value of the  `Content-Type` header for `403` responses. Default: (`"text/plain"`) |
-| CORS_HEADER_403_MAX_AGE | The value of the [Access-Control-Max-Age](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Max-Age) header for `403` responses. The number of seconds that preflight requests for this resource may be cached by the browser. (Default: `3600`) | -->
-
 | Name     | Description|
 | -------- | ------------------------------------------------------------------- |
+| CORS_HEADER_403_ALLOW_ORIGIN | The value of the [Access-Control-Allow-Origin](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin) header for `403` responses. Determines which origins can access the response. (Default: `"*"`). |
+| CORS_HEADER_403_ALLOW_METHODS | The value of the [Access-Control-Request-Method](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Request-Method) header for `403` responses. Determines the allowed request methods for the resource. Default: `"GET, POST, PUT, DELETE, OPTIONS"` |
+| CORS_HEADER_403_CONTENT_TYPE | The value of the  `Content-Type` header for `403` responses. Default: (`"text/plain"`) |
+| CORS_HEADER_403_MAX_AGE | The value of the [Access-Control-Max-Age](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Max-Age) header for `403` responses. The number of seconds that preflight requests for this resource may be cached by the browser. (Default: `3600`) |
 | DNS_SERVER  | A string indicating the name servers used to resolve names of upstream servers into addresses. For localhost backend this value should not be defined (Default: _not defined_) |
 | KEEPALIVE_TIMEOUT  | Number of seconds for a keep-alive client connection to stay open on the server side (Default: `60s`) |
 | NGINX_ALWAYS_TLS_REDIRECT | A string value indicating if http should redirect to https (Allowed values: `on`, `off`. Default: `off`) |
