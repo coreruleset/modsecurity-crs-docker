@@ -4,6 +4,6 @@
 /usr/local/bin/check-low-port
 
 . /opt/modsecurity/activate-plugins.sh
-. /opt/modsecurity/activate-rules.sh
+. /opt/modsecurity/configure-rules.sh
 
 exec "$@"

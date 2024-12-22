@@ -158,7 +158,7 @@ COPY src/etc/modsecurity.d/*.conf /etc/modsecurity.d/
 COPY src/bin/* /usr/local/bin/
 COPY apache/conf/extra/*.conf /usr/local/apache2/conf/extra/
 COPY src/etc/modsecurity.d/*.conf /etc/modsecurity.d/
-COPY src/opt/modsecurity/activate-*.sh /opt/modsecurity/
+COPY src/opt/modsecurity/* /opt/modsecurity/
 COPY apache/docker-entrypoint.sh /
 
 RUN set -eux; \

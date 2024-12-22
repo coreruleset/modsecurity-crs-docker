@@ -1,137 +1,152 @@
-#!/bin/sh -e
+#!/bin/busybox sh
 
-setup_conf_path="/etc/modsecurity.d/owasp-crs/crs-setup.conf"
+set -e
+
+DIRECTORY="$(dirname "$0")"
 
 # Check if crs-setup.conf is overriden
 if [ -n "${MANUAL_MODE}" ]; then
   echo "Using manual config mode"
-  return; # Don't use exit on a sourced script
+  # Don't use exit on a sourced script
+  return
 fi
 
-# Paranoia Level
-sed -z -E -i 's/#SecAction[^"]+"id:900000.*tx\.paranoia_level=1\"/SecAction \\\n  \"id:900000, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:tx.paranoia_level='"${PARANOIA}"'\"/' "${setup_conf_path}"
 
-# Blocking Paranoia Level
-if [ -n "${BLOCKING_PARANOIA}" ]; then
-  sed -z -E -i 's/#SecAction[^"]+"id:900000.*tx\.blocking_paranoia_level=1\"/SecAction \\\n  \"id:900000, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:tx.blocking_paranoia_level='"${BLOCKING_PARANOIA}"'\"/' "${setup_conf_path}"
-fi
+setup_conf_path="/etc/modsecurity.d/owasp-crs/crs-setup.conf"
 
-# Executing Paranoia Level
-if [ -n "${EXECUTING_PARANOIA}" ]; then
-  sed -z -E -i 's/#SecAction[^"]+"id:900001.*tx\.executing_paranoia_level=1\"/SecAction \\\n  \"id:900001, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:tx.executing_paranoia_level='"${EXECUTING_PARANOIA}"'\"/' "${setup_conf_path}"
-fi
+set_value() {
+  local rule="${1}"
+  local var_name="${2}"
+  local tx_var_name="${3}"
+  local var_value="${4}"
+  echo "Configuring ${rule} for ${var_name} with ${tx_var_name}=${var_value}"
 
-# Detection Paranoia Level
-if [ -n "${DETECTION_PARANOIA}" ]; then
-  sed -z -E -i 's/#SecAction[^"]+"id:900001.*tx\.detection_paranoia_level=1\"/SecAction \\\n  \"id:900001, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:tx.detection_paranoia_level='"${DETECTION_PARANOIA}"'\"/' "${setup_conf_path}"
-fi
+  # For each rule, we do one pass to uncomment the rule (up to first blank line after the rule),
+  # then a second pass to set the variable. We do two separate passes since the rule might
+  # already be uncommented (by default in the file or due to having been uncommented in a previous step).
+  if grep -Eq "#.*id:${rule}" "${setup_conf_path}"; then
+    # commented, uncomment now
+    ed -s "${setup_conf_path}" <<EOF 2 > /dev/null
+/id:${rule}/
+-
+.,/^$/ s/#//
+wq
+EOF
+  fi
 
-# Enforce Body Processor URLENCODED
-if [ -n "${ENFORCE_BODYPROC_URLENCODED}" ]; then
-  sed -z -E -i 's/#SecAction[^"]+"id:900010.*tx\.enforce_bodyproc_urlencoded=1\"/SecAction \\\n  \"id:900010, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:tx.enforce_bodyproc_urlencoded='"${ENFORCE_BODYPROC_URLENCODED}"'\"/' "${setup_conf_path}"
-fi
+  # uncommented, set var
+  ed -s "${setup_conf_path}" <<EOF 2 > /dev/null
+/id:${rule}/
+/setvar:'\?tx\.${tx_var_name}=/
+s/=.*"/=${var_value}"/
+wq
+EOF
+}
 
-# Inbound and Outbound Anomaly Score
-sed -z -E -i 's/#SecAction[^"]+"id:900110.*tx\.outbound_anomaly_score_threshold=4\"/SecAction \\\n  \"id:900110, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:tx.inbound_anomaly_score_threshold='"${ANOMALY_INBOUND}"',  \\\n   setvar:tx.outbound_anomaly_score_threshold='"${ANOMALY_OUTBOUND}"'\"/' "${setup_conf_path}"
+should_set() {
+  test -n "${1}"
+}
 
-# HTTP methods that a client is allowed to use.
-if [ -n "${ALLOWED_METHODS}" ]; then
-  sed -z -E -i 's/#SecAction[^"]+"id:900200.*\x27tx\.allowed_methods=[[:upper:][:space:]]*\x27\"/SecAction \\\n  \"id:900200, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:\x27tx.allowed_methods='"${ALLOWED_METHODS}"'\x27\"/' "${setup_conf_path}"
-fi
+can_set() {
+  local rule="${1}"
+  local tx_var_name="${2}"
 
-# Content-Types that a client is allowed to send in a request.
-if [ -n "${ALLOWED_REQUEST_CONTENT_TYPE}" ]; then
-  sed -z -E -i 's;#SecAction[^"]+"id:900220.*\x27tx\.allowed_request_content_type=[[:lower:][:space:]|+/-]*\x27\";SecAction \\\n  \"id:900220, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:\x27tx.allowed_request_content_type='"${ALLOWED_REQUEST_CONTENT_TYPE}"'\x27\";' "${setup_conf_path}"
-fi
+  if ! grep -q "id:${rule}" "${setup_conf_path}"; then
+    return 1
+  elif ! grep -Eq "setvar:'?tx\.${tx_var_name}" "${setup_conf_path}"; then
+    return 1
+  else
+    return 0
+  fi
+}
 
-# Content-Types charsets that a client is allowed to send in a request.
-if [ -n "${ALLOWED_REQUEST_CONTENT_TYPE_CHARSET}" ]; then
-  sed -z -E -i 's/#SecAction[^"]+"id:900280.*\x27tx\.allowed_request_content_type_charset=[[:lower:][:digit:]|-]*\x27\"/SecAction \\\n  \"id:900280, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:\x27tx.allowed_request_content_type_charset='"${ALLOWED_REQUEST_CONTENT_TYPE_CHARSET}"'\x27\"/' "${setup_conf_path}"
-fi
+get_legacy() {
+  echo "${1}" | awk -F'\|' '{print $1}'
+}
 
-# Allowed HTTP versions.
-if [ -n "${ALLOWED_HTTP_VERSIONS}" ]; then
-  sed -z -E -i 's|#SecAction[^"]+"id:900230.*\x27tx\.allowed_http_versions=[HTP012[:space:]/.]*\x27\"|SecAction \\\n  \"id:900230, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:\x27tx.allowed_http_versions='"${ALLOWED_HTTP_VERSIONS}"'\x27\"|' "${setup_conf_path}"
-fi
+get_var_name() {
+  echo "${1}" | awk -F'\|' '{print $2}'
+}
 
-# Forbidden file extensions.
-if [ -n "${RESTRICTED_EXTENSIONS}" ]; then
-  sed -z -E -i 's|#SecAction[^"]+"id:900240.*\x27tx\.restricted_extensions=[[:lower:][:space:]./]*\/\x27\"|SecAction \\\n  \"id:900240, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:\x27tx.restricted_extensions='"${RESTRICTED_EXTENSIONS}"'\x27\"|' "${setup_conf_path}"
-fi
+get_var_value() {
+  # Get the variable name, produce "${<var name>}" and use eval to expand
+  eval "echo $(echo "${1}" | awk -F'\|' '{print "${"$2"}"}')"
+}
 
-# Forbidden request headers basic.
-if [ -n "${RESTRICTED_HEADERS_BASIC}" ]; then
-  sed -z -E -i 's|#SecAction[^"]+"id:900250.*\x27tx\.restricted_headers_basic=[[:lower:][:space:]/-]*\x27\"|SecAction \\\n  \"id:900250, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:\x27tx.restricted_headers_basic='"${RESTRICTED_HEADERS_BASIC}"'\x27\"|' "${setup_conf_path}"
-fi
+get_rule() {
+  echo "${1}" | awk -F'\|' '{print $3}'
+}
 
-# Forbidden request headers extended.
-if [ -n "${RESTRICTED_HEADERS_EXTENDED}" ]; then
-  sed -z -E -i 's|#SecAction[^"]+"id:900255.*\x27tx\.restricted_headers_extended=[[:lower:][:space:]/-]*\x27\"|SecAction \\\n  \"id:900255, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:\x27tx.restricted_headers_extended='"${RESTRICTED_HEADERS_EXTENDED}"'\x27\"|' "${setup_conf_path}"
-fi
+get_tx_var_name() {
+  echo "${1}" | awk -F'\|' '{print $4}'
+}
 
-# File extensions considered static files.
-if [ -n "${STATIC_EXTENSIONS}" ]; then
-  sed -z -E -i 's|#SecAction[^"]+"id:900260.*\x27tx\.static_extensions=/[[:lower:][:space:]/.]*\x27\"|SecAction \\\n  \"id:900260, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:\x27tx.static_extensions='"${STATIC_EXTENSIONS}"'\x27\"|' "${setup_conf_path}"
-fi
+while read -r line; do
+  if [ -z "${line}" ] || echo "${line}" | grep -Eq "^#"; then
+    continue
+  fi
 
-# Block request if number of arguments is too high
-if [ -n "${MAX_NUM_ARGS}" ]; then
-  sed -z -E -i 's/#SecAction[^"]+"id:900300.*tx\.max_num_args=255\"/SecAction \\\n  \"id:900300, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:tx.max_num_args='"${MAX_NUM_ARGS}"'\"/' "${setup_conf_path}"
-fi
+  legacy="$(get_legacy "${line}")"
+  var_name="$(get_var_name "${line}")"
+  var_value="$(get_var_value "${line}")"
+  rule="$(get_rule "${line}")"
+  tx_var_name="$(get_tx_var_name "${line}")"
 
-# Block request if the length of any argument name is too high
-if [ -n "${ARG_NAME_LENGTH}" ]; then
-  sed -z -E -i 's/#SecAction[^"]+"id:900310.*tx\.arg_name_length=100\"/SecAction \\\n \"id:900310, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:tx.arg_name_length='"${ARG_NAME_LENGTH}"'\"/' "${setup_conf_path}"
-fi
+  if should_set "${var_value}" "${tx_var_name}"; then
+    if ! can_set "${rule}" "${tx_var_name}"; then
+      if [ "${legacy}" = "true" ]; then
+        echo "Legacy variable set but nothing found to substitute. Skipping"
+        continue
+      fi
+      echo "Failed to find rule ${rule} to set ${tx_var_name}=${var_value} for ${var_name} in ${setup_conf_path}. Aborting"
+      exit 1
+    fi
 
-# Block request if the length of any argument value is too high
-if [ -n "${ARG_LENGTH}" ]; then
-  sed -z -E -i 's/#SecAction[^"]+"id:900320.*tx\.arg_length=400\"/SecAction \\\n  \"id:900320, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:tx.arg_length='"${ARG_LENGTH}"'\"/' "${setup_conf_path}"
-fi
-
-# Block request if the total length of all combined arguments is too high
-if [ -n "${TOTAL_ARG_LENGTH}" ]; then
-  sed -z -E -i 's/#SecAction[^"]+"id:900330.*tx\.total_arg_length=64000\"/SecAction \\\n  \"id:900330, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n  t:none, \\\n   setvar:tx.total_arg_length='"${TOTAL_ARG_LENGTH}"'\"/' "${setup_conf_path}"
-fi
-
-# Block request if the total length of all combined arguments is too high
-if [ -n "${MAX_FILE_SIZE}" ]; then
-  sed -z -E -i 's/#SecAction[^"]+"id:900340.*tx\.max_file_size=1048576\"/SecAction \\\n  \"id:900340, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:tx.max_file_size='"${MAX_FILE_SIZE}"'\"/' "${setup_conf_path}"
-fi
-
-# Block request if the total size of all combined uploaded files is too high
-if [ -n "${COMBINED_FILE_SIZES}" ]; then
-  sed -z -E -i 's/#SecAction[^"]+"id:900350.*tx\.combined_file_sizes=1048576\"/SecAction \\\n  \"id:900350, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:tx.combined_file_sizes='"${COMBINED_FILE_SIZES}"'\"/' "${setup_conf_path}"
-fi
-
-# Activate UTF8 validation
-if [ -n "${VALIDATE_UTF8_ENCODING}" ]; then
-  sed -z -E -i 's/#SecAction[^"]+"id:900950.*tx\.crs_validate_utf8_encoding=1\"/SecAction \\\n  \"id:900950, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:tx.crs_validate_utf8_encoding=1\"/' "${setup_conf_path}"
-fi
+    set_value "${rule}" "${var_name}" "${tx_var_name}" "${var_value}"
+  fi
+done < "${DIRECTORY}/configure-rules.conf"
 
 # Add SecDefaultActions
-if [ -n "${MODSEC_DEFAULT_PHASE1_ACTION}" ]; then
-  sed -z -E -i "s/SecDefaultAction \"phase:1,log,auditlog,pass\"/SecDefaultAction \"${MODSEC_DEFAULT_PHASE1_ACTION}\"/" "${setup_conf_path}"
+var="${MODSEC_DEFAULT_PHASE1_ACTION}"
+if should_set "${var}"; then
+  if ! grep -Eq "^SecDefaultAction.*phase:1" "${setup_conf_path}"; then
+    echo "Failed to find definition of SecDefaultAction for phase 1 in ${setup_conf_path}. Aborting"
+    exit 1
+  fi
+  ed -s "${setup_conf_path}" <<EOF 2 > /dev/null
+/^SecDefaultAction.*phase:1/
+s/".*"/"${var}"/
+wq
+EOF
+fi
+var="${MODSEC_DEFAULT_PHASE2_ACTION}"
+if should_set "${var}"; then
+  if ! grep -Eq "^SecDefaultAction.*phase:2" "${setup_conf_path}"; then
+    echo "Failed to find definition of SecDefaultAction for phase 2 in ${setup_conf_path}. Aborting"
+    exit 1
+  fi
+  ed -s "${setup_conf_path}" <<EOF 2 > /dev/null
+/^SecDefaultAction.*phase:2/
+s/".*"/"${var}"/
+wq
+EOF
 fi
 
-if [ -n "${MODSEC_DEFAULT_PHASE2_ACTION}" ]; then
-  sed -z -E -i "s/SecDefaultAction \"phase:2,log,auditlog,pass\"/SecDefaultAction \"${MODSEC_DEFAULT_PHASE2_ACTION}\"/" "${setup_conf_path}"
-fi
+# Substitute MODSEC_TAG (part of the default phase actions above)
+var="${MODSEC_TAG}"
+if should_set "${var}"; then
+  if ! grep -q "MODSEC_TAG" "${setup_conf_path}"; then
+    echo "Failed to find definition of MODSEC_TAG in ${setup_conf_path}. Skipping"
 
-# Substitute MODSEC_TAG
-if [ -n "${MODSEC_TAG}" ]; then
-  sed -z -E -i "s/\\$\{MODSEC_TAG\}/${MODSEC_TAG}/g" "${setup_conf_path}"
-fi
-
-# Reporting Level
-if [ -n "${REPORTING_LEVEL}" ]; then
-  sed -z -E -i 's/#SecAction[^"]+"id:900115.*tx\.reporting_level=2\"/SecAction \\\n  \"id:900115, \\\n   phase:1, \\\n   nolog, \\\n   pass, \\\n   t:none, \\\n   setvar:tx.reporting_level='"${REPORTING_LEVEL}"'\"/' "${setup_conf_path}"
+  else
+    sed -z -E -i "s/\\$\{MODSEC_TAG\}/${var}/g" "${setup_conf_path}"
+  fi
 fi
 
 
 # Add marker rule for CRS test setup
 # Add it only once
-if [ -n "${CRS_ENABLE_TEST_MARKER}" ] && [ ${CRS_ENABLE_TEST_MARKER} -eq 1 ] && ! grep -q id:999999 "${setup_conf_path}"; then
+if [ -n "${CRS_ENABLE_TEST_MARKER}" ] && [ "${CRS_ENABLE_TEST_MARKER}" -eq 1 ] && ! grep -q id:999999 "${setup_conf_path}"; then
   cat <<EOF >> "${setup_conf_path}"
 
 
