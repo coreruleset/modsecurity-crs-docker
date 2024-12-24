@@ -31,20 +31,24 @@ set_value() {
   # then a second pass to set the variable. We do two separate passes since the rule might
   # already be uncommented (by default in the file or due to having been uncommented in a previous step).
   if grep -Eq "#.*id:${rule}" "${setup_conf_path}"; then
-    # commented, uncomment now
+    # Commented, uncomment now
     ed -s "${setup_conf_path}" <<EOF 2 > /dev/null
 /id:${rule}/
 -
-.,/^$/ s/#//
+.,/^#\?$/ s/#//
 wq
 EOF
   fi
 
-  # uncommented, set var
+  # Uncommented, set var
+  # Some rules set multiple vars, so the variable name will be terminated
+  # by either `,`, `'`, or `"`, depending on whether it's the last line of the rule
+  # and whether the expression is enclosed in single quotes.
+  # Use `#` as pattern delimiter, as `/` is part of some variable values.
   ed -s "${setup_conf_path}" <<EOF 2 > /dev/null
 /id:${rule}/
 /setvar:'\?tx\.${tx_var_name}=/
-s/=.*"/=${var_value}"/
+s#=[^,'"]\+#=${var_value}#
 wq
 EOF
 }
@@ -101,7 +105,7 @@ while read -r line; do
   if should_set "${var_value}" "${tx_var_name}"; then
     if ! can_set "${rule}" "${tx_var_name}"; then
       if [ "${legacy}" = "true" ]; then
-        echo "Legacy variable set but nothing found to substitute. Skipping"
+        echo "Legacy variable ${var_name} (${rule}) set but nothing found to substitute. Skipping"
         continue
       fi
       echo "Failed to find rule ${rule} to set ${tx_var_name}=${var_value} for ${var_name} in ${setup_conf_path}. Aborting"
