@@ -24,11 +24,6 @@ variable "httpd-version" {
     default = "2.4.62"
 }
 
-variable "openresty-version" {
-    # renovate: depName=openresty/openresty datasource=docker
-    default = "1.25.3.1"
-}
-
 variable "lua-version" {
     default = "5.3"
 }
@@ -103,7 +98,6 @@ group "default" {
         "apache-alpine",
         "nginx",
         "nginx-alpine",
-        "openresty-alpine-fat"
     ]
 }
 
@@ -173,16 +167,3 @@ target "nginx-alpine" {
     )
 }
 
-target "openresty-alpine-fat" {
-    inherits = ["platforms-base"]
-    platforms = ["linux/amd64", "linux/arm64/v8"]
-    dockerfile="openresty/Dockerfile-alpine"
-    args = {
-        OPENRESTY_VERSION = "${openresty-version}"
-        NGINX_VERSION = patch(openresty-version)
-        LUA_MODULES = join(" ", lua-modules-luarocks)
-    }
-    tags = concat(tag("openresty-alpine-fat"),
-        vtag("${crs-version}", "openresty-alpine-fat")
-    )
-}
