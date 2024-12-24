@@ -192,7 +192,6 @@ ENV \
     SSL_VERIFY=off \
     WORKER_CONNECTIONS=1024 \
     # CRS specific variables
-    PARANOIA=1 \
     ANOMALY_INBOUND=5 \
     ANOMALY_OUTBOUND=4 \
     BLOCKING_PARANOIA=1
@@ -208,7 +207,8 @@ COPY src/etc/modsecurity.d/modsecurity-override.conf /etc/nginx/templates/modsec
 COPY src/etc/modsecurity.d/setup.conf /etc/nginx/templates/modsecurity.d/setup.conf.template
 COPY nginx/docker-entrypoint.d/*.sh /docker-entrypoint.d/
 COPY src/opt/modsecurity/activate-plugins.sh /docker-entrypoint.d/94-activate-plugins.sh
-COPY src/opt/modsecurity/activate-rules.sh /docker-entrypoint.d/95-activate-rules.sh
+COPY src/opt/modsecurity/configure-rules.sh /docker-entrypoint.d/95-configure-rules.sh
+COPY src/opt/modsecurity/configure-rules.conf /docker-entrypoint.d/
 # We use the templating mechanism from the nginx image here.
 COPY nginx/templates /etc/nginx/templates/
 COPY src/bin/* /usr/local/bin/
@@ -221,6 +221,7 @@ RUN set -eux; \
     LD_LIBRARY_PATH="" apt-get install -y -qq --no-install-recommends --no-install-suggests \
         ca-certificates \
         curl \
+        ed \
         libcurl4-gnutls-dev \
         libfuzzy2 \
         liblua${LUA_VERSION} \

@@ -62,8 +62,16 @@ jobs:
 
       - name: Run ${{ matrix.target }}
         run: |
+          . .github/workflows/configure-rules-for-test.sh \
+            src/opt/modsecurity/configure-rules.conf \
+            "$(pwd)/${{ matrix.target }}.env"
           echo "Starting container ${{ matrix.target }}"
-          docker run --pull "never" -d --name ${{ matrix.target }}-test "${REPO}:${{ matrix.target }}"
+          docker run \
+            --pull "never" \
+            -d \
+            --name ${{ matrix.target }}-test \
+            --env-file "${{ matrix.target }}.env" \
+            "${REPO}:${{ matrix.target }}"
           sleep 30
           docker logs ${{ matrix.target }}-test
 

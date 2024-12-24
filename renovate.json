@@ -96,18 +96,6 @@
       ],
       "depNameTemplate": "coreruleset/coreruleset",
       "datasourceTemplate": "github-releases"
-    },
-    {
-      "description": "Docs: OpenResty",
-      "customType": "regex",
-      "fileMatch": [
-        "^README\\.md$"
-      ],
-      "matchStrings": [
-        "OpenResty (?<currentValue>\\d+\\.\\d+\\.\\d+(\\.\\d+)?)"
-      ],
-      "depNameTemplate": "openresty/openresty",
-      "datasourceTemplate": "docker"
     }
   ]
 }

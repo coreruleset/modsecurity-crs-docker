@@ -47,14 +47,6 @@ variable "lua-modules-debian" {
   ]
 }
 
-variable "lua-modules-luarocks" {
-  default = [
-    "lua-resty-openidc",
-    "lua-zlib",
-    "luasocket"
-  ]
-}
-
 variable "REPOS" {
     # List of repositories to tag
     default = [
