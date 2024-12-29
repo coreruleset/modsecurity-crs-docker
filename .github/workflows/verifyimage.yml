@@ -78,7 +78,7 @@ jobs:
       - name: Verify ${{ matrix.target }}
         run: |
           [ $(docker inspect ${{ matrix.target }}-test --format='{{.State.Running}}') = 'true' ]
-          if "${{ matrix.target }}" == "nginx" ; then
+          if grep -q  "nginx <<< ${{ matrix.target }}" ; then
             curl -q -D headers.txt http://localhost:8080/?test=../../etc/passwd
             grep -q "HTTP/1.1 403 Forbidden" headers.txt
             grep -q "Access-Control-Allow-Origin: *" headers.txt

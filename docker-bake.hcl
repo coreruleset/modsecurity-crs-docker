@@ -55,6 +55,14 @@ variable "REPOS" {
     ]
 }
 
+variable "nginx-dynamic-modules" {
+    # List of dynamic modules to include in the nginx build
+    default = [
+        "owasp-modsecurity/ModSecurity-nginx",
+        "openresty/headers-more-nginx-module"
+    ]
+}
+
 function "major" {
     params = [version]
     result = split(".", version)[0]
