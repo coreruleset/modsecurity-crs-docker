@@ -53,16 +53,17 @@ RUN set -eux; \
 
    # Build modules
 RUN set -eux; \
+    declare -a modules;
     for module in ${NGINX_DYNAMIC_MODULES}; \
     do; \
-        repo=$(awk -F'/' '{print $2}' <<< $module); \
+        repo=$(awk -F'/' '{print $2}' <<< "${module}"); \
         git clone -b master --depth 1 https://github.com/${module}.git; \
-        modules=+("--add-dynamic-module=../${repo}"); \
+        modules+=("--add-dynamic-module=../${repo}"); \
     done; \
     curl -sSL https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz -o nginx-${NGINX_VERSION}.tar.gz; \
     tar -xzf nginx-${NGINX_VERSION}.tar.gz; \
     cd ./nginx-${NGINX_VERSION}; \
-    ./configure --with-compat ${modules[@]} ;\
+    ./configure --with-compat ${modules[@]};\
     make modules; \
     strip objs/*.so; \
     cp objs/*.so /etc/nginx/modules/; \
