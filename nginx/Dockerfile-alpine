@@ -53,7 +53,7 @@ RUN set -eux; \
 
    # Build modules
 RUN set -eux; \
-    declare -a modules;
+    declare -a modules; \
     for module in ${NGINX_DYNAMIC_MODULES}; \
     do; \
         repo=$(awk -F'/' '{print $2}' <<< "${module}"); \
