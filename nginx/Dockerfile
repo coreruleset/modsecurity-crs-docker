@@ -59,7 +59,7 @@ RUN set -eux; \
 RUN set -eux; \
     declare -a modules; \
     for module in ${NGINX_DYNAMIC_MODULES}; \
-    do; \
+    do \
         repo=$(awk -F'/' '{print $2}' <<< "${module}"); \
         git clone -b master --depth 1 https://github.com/${module}.git; \
         modules+=("--add-dynamic-module=../${repo}"); \
