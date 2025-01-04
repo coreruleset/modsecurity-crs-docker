@@ -44,6 +44,7 @@ RUN set -eux; \
     make -C lmdb/libraries/liblmdb install; \
     strip /usr/local/lib/liblmdb*.so*
 
+
 RUN set -eux; \
     git clone https://github.com/owasp-modsecurity/ModSecurity --branch "v${MODSEC3_VERSION}" --depth 1 --recursive; \
     cd ModSecurity; \
@@ -57,17 +58,17 @@ RUN set -eux; \
 
 # Build modules
 RUN set -eux; \
-    declare -a modules; \
+    modules=""; \
     for module in ${NGINX_DYNAMIC_MODULES}; \
     do \
-        repo=$(awk -F'/' '{print $2}' <<< "${module}"); \
-        git clone -b master --depth 1 https://github.com/${module}.git; \
-        modules+=("--add-dynamic-module=../${repo}"); \
+        repo=$(echo "${module}" | awk -F'/' '{print $2}'); \
+        git clone -b master --depth 1 "https://github.com/${module}.git" ; \
+        modules="${modules} --add-dynamic-module=../${repo}"; \
     done; \
-    curl -sSL https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz -o nginx-${NGINX_VERSION}.tar.gz; \
+    curl -sSL "https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz" -o nginx-${NGINX_VERSION}.tar.gz; \
     tar -xzf nginx-${NGINX_VERSION}.tar.gz; \
     cd ./nginx-${NGINX_VERSION}; \
-    ./configure --with-compat ${modules[@]}; \
+    ./configure --with-compat ${modules}; \
     make modules; \
     strip objs/*.so; \
     cp objs/*.so /etc/nginx/modules/; \
