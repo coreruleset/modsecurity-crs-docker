@@ -147,8 +147,9 @@ target "nginx" {
     inherits = ["platforms-base"]
     dockerfile="nginx/Dockerfile"
     args = {
-        NGINX_VERSION = "${nginx-version}"
         LUA_MODULES = join(" ", lua-modules-debian)
+        NGINX_VERSION = "${nginx-version}"
+        NGINX_DYNAMIC_MODULES = join(" ", nginx-dynamic-modules)
     }
     tags = concat(tag("nginx"),
         vtag("${crs-version}", "nginx")
@@ -159,8 +160,9 @@ target "nginx-alpine" {
     inherits = ["platforms-base"]
     dockerfile="nginx/Dockerfile-alpine"
     args = {
-        NGINX_VERSION = "${nginx-version}"
         LUA_MODULES = join(" ", lua-modules-alpine)
+        NGINX_DYNAMIC_MODULES = join(" ", nginx-dynamic-modules)
+        NGINX_VERSION = "${nginx-version}"
     }
     tags = concat(tag("nginx-alpine"),
         vtag("${crs-version}", "nginx-alpine")
