@@ -23,6 +23,7 @@ server {
             return 301 https://$host$request_uri;
         }
 
+        include includes/cors.conf;
         include includes/proxy_backend.conf;
 
         index index.html index.htm;
@@ -62,8 +63,7 @@ server {
     location / {
         client_max_body_size 0;
 
-        # temporarily disabled, since the upstream image doesn't include the required module
-        # include includes/cors.conf;
+        include includes/cors.conf;
         include includes/proxy_backend.conf;
 
         index index.html index.htm;

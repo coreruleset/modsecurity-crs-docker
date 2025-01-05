@@ -5,6 +5,7 @@ FROM nginxinc/nginx-unprivileged:${NGINX_VERSION} AS build
 ARG MODSEC3_VERSION="n/a"
 ARG LMDB_VERSION="n/a"
 ARG LUA_VERSION="n/a"
+ARG NGINX_DYNAMIC_MODULES="n/a"
 
 USER root
 
@@ -43,6 +44,7 @@ RUN set -eux; \
     make -C lmdb/libraries/liblmdb install; \
     strip /usr/local/lib/liblmdb*.so*
 
+
 RUN set -eux; \
     git clone https://github.com/owasp-modsecurity/ModSecurity --branch "v${MODSEC3_VERSION}" --depth 1 --recursive; \
     cd ModSecurity; \
@@ -54,16 +56,22 @@ RUN set -eux; \
     make install; \
     strip /usr/local/modsecurity/lib/lib*.so*
 
-# We use master
+# Build modules
 RUN set -eux; \
-    git clone -b master --depth 1 https://github.com/owasp-modsecurity/ModSecurity-nginx.git; \
-    curl -sSL https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz -o nginx-${NGINX_VERSION}.tar.gz; \
+    modules=""; \
+    for module in ${NGINX_DYNAMIC_MODULES}; \
+    do \
+        repo=$(echo "${module}" | awk -F'/' '{print $2}'); \
+        git clone -b master --depth 1 "https://github.com/${module}.git" ; \
+        modules="${modules} --add-dynamic-module=../${repo}"; \
+    done; \
+    curl -sSL "https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz" -o nginx-${NGINX_VERSION}.tar.gz; \
     tar -xzf nginx-${NGINX_VERSION}.tar.gz; \
     cd ./nginx-${NGINX_VERSION}; \
-    ./configure --with-compat --add-dynamic-module=../ModSecurity-nginx; \
+    ./configure --with-compat ${modules}; \
     make modules; \
-    strip objs/ngx_http_modsecurity_module.so; \
-    cp objs/ngx_http_modsecurity_module.so /etc/nginx/modules/; \
+    strip objs/*.so; \
+    cp objs/*.so /etc/nginx/modules/; \
     mkdir /etc/modsecurity.d; \
     curl -sSL https://raw.githubusercontent.com/owasp-modsecurity/ModSecurity/v3/master/unicode.mapping \
          -o /etc/modsecurity.d/unicode.mapping
@@ -197,7 +205,7 @@ ENV \
     BLOCKING_PARANOIA=1
 
 COPY --from=build /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC3_VERSION} /usr/local/modsecurity/lib/
-COPY --from=build /etc/nginx/modules/ngx_http_modsecurity_module.so /etc/nginx/modules/ngx_http_modsecurity_module.so
+COPY --from=build /etc/nginx/modules/*.so /etc/nginx/modules/
 COPY --from=build /usr/local/lib/liblmdb.so /usr/local/lib/
 COPY --from=build /usr/share/TLS/dhparam-* /etc/ssl/certs/
 COPY --from=build /etc/modsecurity.d/unicode.mapping /etc/modsecurity.d/unicode.mapping

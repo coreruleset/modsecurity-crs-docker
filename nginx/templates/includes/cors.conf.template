@@ -1,5 +1,5 @@
-more_set_headers -s 403 'Content-Type' '${CORS_HEADER_403_CONTENT_TYPE}';
-more_set_headers -s 403 'Access-Control-Allow-Origin' '${CORS_HEADER_403_ALLOW_ORIGIN}';
-more_set_headers -s 403 'Access-Control-Max-Age' '${CORS_HEADER_403_MAX_AGE}';
-more_set_headers -s 403 'Access-Control-Allow-Methods' '${CORS_HEADER_403_ALLOW_METHODS}';
-more_set_headers 'Access-Control-Allow-Headers' '${CORS_HEADER_ACCESS_CONTROL_ALLOW_HEADERS}';
+more_set_headers -s 403 'Content-Type: ${CORS_HEADER_403_CONTENT_TYPE}';
+more_set_headers -s 403 'Access-Control-Allow-Origin: ${CORS_HEADER_403_ALLOW_ORIGIN}';
+more_set_headers -s 403 'Access-Control-Max-Age: ${CORS_HEADER_403_MAX_AGE}';
+more_set_headers -s 403 'Access-Control-Allow-Methods: ${CORS_HEADER_403_ALLOW_METHODS}';
+more_set_headers 'Access-Control-Allow-Headers: ${CORS_HEADER_ACCESS_CONTROL_ALLOW_HEADERS}';
