@@ -64,7 +64,8 @@ jobs:
         run: |
           . .github/workflows/configure-rules-for-test.sh \
             src/opt/modsecurity/configure-rules.conf \
-            "$(pwd)/${{ matrix.target }}.env"
+            README.md \
+            "${{ matrix.target }}.env"
           echo "Starting container ${{ matrix.target }}"
           docker run \
             --pull "never" \
