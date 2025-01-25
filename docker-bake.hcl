@@ -21,7 +21,7 @@ variable "nginx-version" {
 
 variable "httpd-version" {
     # renovate: depName=httpd datasource=docker
-    default = "2.4.62"
+    default = "2.4.63"
 }
 
 variable "lua-version" {
