@@ -54,7 +54,7 @@ RUN set -eux; \
     sed -ie "s/i386-linux-gnu/${ARCH}/g" build/pcre2.m4; \
     ./build.sh; \
     ./configure --with-yajl --with-ssdeep --with-pcre2 --with-maxmind --enable-silent-rules; \
-    make install; \
+    make -j$(nproc) install; \
     strip /usr/local/modsecurity/lib/lib*.so*
 
 # Build modules
@@ -74,7 +74,7 @@ RUN set -eux; \
     tar -xzf nginx-${NGINX_VERSION}.tar.gz; \
     cd ./nginx-${NGINX_VERSION}; \
     ./configure --with-compat ${modules}; \
-    make modules; \
+    make -j$(nproc) modules; \
     strip objs/*.so; \
     cp objs/*.so /etc/nginx/modules/; \
     mkdir /etc/modsecurity.d; \
