@@ -1,6 +1,6 @@
 ARG NGINX_VERSION="n/a"
 
-FROM nginxinc/nginx-unprivileged:${NGINX_VERSION}-alpine AS build
+FROM nginxinc/nginx-unprivileged:${NGINX_VERSION}-alpine@sha256:10484850d007b13fe46c1d03dfcc9e3e77eb347889b999ac57c9f693039e3e0f AS build
 
 ARG MODSEC3_VERSION="n/a"
 ARG LUA_VERSION="n/a"
@@ -83,7 +83,7 @@ RUN set -eux; \
     curl -sSL https://ssl-config.mozilla.org/ffdhe2048.txt -o /usr/share/TLS/dhparam-2048.pem; \
     curl -sSL https://ssl-config.mozilla.org/ffdhe4096.txt -o /usr/share/TLS/dhparam-4096.pem
 
-FROM nginxinc/nginx-unprivileged:${NGINX_VERSION}-alpine AS crs_release
+FROM nginxinc/nginx-unprivileged:${NGINX_VERSION}-alpine@sha256:10484850d007b13fe46c1d03dfcc9e3e77eb347889b999ac57c9f693039e3e0f AS crs_release
 
 ARG CRS_RELEASE
 

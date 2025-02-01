@@ -5,7 +5,6 @@ on:
     branches:
       - main
 env:
-  REPO: "owasp/modsecurity-crs"
   # sha256sum format: <hash><space><format (space for text)><file name>
   MODSECURITY_RECOMMENDED: "ccff8ba1f12428b34ff41960d8bf773dd9f62b9a7c77755247a027cb01896d4f  modsecurity.conf-recommended"
 
@@ -51,16 +50,35 @@ jobs:
         with:
           driver-opts: image=moby/buildkit:master
 
-      - name: Build images
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build ${{ matrix.target }}-verification
         uses: docker/bake-action@v4.1.0
         with:
           files: |
             ./docker-bake.hcl
           targets: ${{ matrix.target }}
+          # Build only linux/amd64 and tag the images as verification builds.
+          # Create a tar archive and load the image into Docker.
           set: |
             *.platform=linux/amd64
-          load: true
+            ${{ matrix.target }}.tags=${{ matrix.target }}-verification
+            *.output=type=docker,dest=${{ matrix.target }}-verification.tar
+            *.output=type=docker
           push: false
+
+      - name: Upload image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.target }}-verification.tar
+          path: ${{ matrix.target }}-verification.tar
+          retention-days: 7
+          overwrite: true
 
       - name: Run ${{ matrix.target }}
         run: |
@@ -68,13 +86,13 @@ jobs:
             src/opt/modsecurity/configure-rules.conf \
             README.md \
             "${{ matrix.target }}.env"
-          echo "Starting container ${{ matrix.target }}"
+          echo "Starting container ${{ matrix.target }}-verification"
           docker run \
             --pull "never" \
             -d \
             --name ${{ matrix.target }}-test \
             --env-file "${{ matrix.target }}.env" \
-            "${REPO}:${{ matrix.target }}"
+            "${{ matrix.target }}-verification"
           sleep 30
           docker logs ${{ matrix.target }}-test
 

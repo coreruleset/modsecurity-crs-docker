@@ -53,10 +53,7 @@ variable "lua-modules-debian" {
 
 variable "REPOS" {
     # List of repositories to tag
-    default = [
-        "owasp/modsecurity-crs",
-        "ghcr.io/coreruleset/modsecurity-crs",
-    ]
+    default = "owasp/modsecurity-crs, ghcr.io/coreruleset/modsecurity-crs"
 }
 
 variable "nginx-dynamic-modules" {
@@ -84,7 +81,7 @@ function "patch" {
 
 function "tag" {
     params = [tag]
-    result = [for repo in REPOS : "${repo}:${tag}"]
+    result = [for repo in split(",", REPOS) : "${trimspace(repo)}:${tag}"]
 }
 
 function "vtag" {
