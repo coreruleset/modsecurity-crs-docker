@@ -24,6 +24,10 @@ variable "httpd-version" {
     default = "2.4.63"
 }
 
+variable "modsecurity-nginx-version" {
+    default = "1.0.3"
+}
+
 variable "lua-version" {
     default = "5.3"
 }
@@ -150,6 +154,7 @@ target "nginx" {
         LUA_MODULES = join(" ", lua-modules-debian)
         NGINX_VERSION = "${nginx-version}"
         NGINX_DYNAMIC_MODULES = join(" ", nginx-dynamic-modules)
+        MODSECURITY_NGINX_VERSION = "${modsecurity-nginx-version}"
     }
     tags = concat(tag("nginx"),
         vtag("${crs-version}", "nginx")
@@ -163,9 +168,9 @@ target "nginx-alpine" {
         LUA_MODULES = join(" ", lua-modules-alpine)
         NGINX_DYNAMIC_MODULES = join(" ", nginx-dynamic-modules)
         NGINX_VERSION = "${nginx-version}"
+        MODSECURITY_NGINX_VERSION = "${modsecurity-nginx-version}"
     }
     tags = concat(tag("nginx-alpine"),
         vtag("${crs-version}", "nginx-alpine")
     )
 }
-
