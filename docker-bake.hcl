@@ -109,7 +109,7 @@ target "docker-metadata-action" {}
 
 target "platforms-base" {
     inherits = ["docker-metadata-action"]
-    context="."    
+    context="."
     platforms = ["linux/amd64", "linux/arm64/v8", "linux/arm/v7", "linux/i386"]
     labels = {
         "org.opencontainers.image.source" = "https://github.com/coreruleset/modsecurity-crs-docker"
