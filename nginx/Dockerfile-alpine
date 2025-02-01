@@ -5,6 +5,7 @@ FROM nginxinc/nginx-unprivileged:${NGINX_VERSION}-alpine AS build
 ARG MODSEC3_VERSION="n/a"
 ARG LUA_VERSION="n/a"
 ARG NGINX_DYNAMIC_MODULES="n/a"
+ARG MODSECURITY_NGINX_VERSION="n/a"
 
 USER root
 
@@ -49,7 +50,7 @@ RUN set -eux; \
     sed -ie "s/i386-linux-gnu/${ARCH}/g" build/pcre2.m4; \
     ./build.sh; \
     ./configure --with-yajl --with-ssdeep --with-lmdb --with-pcre2 --with-maxmind --enable-silent-rules; \
-    make install; \
+    make -j$(nproc) install; \
     strip /usr/local/modsecurity/lib/lib*.so*
 
    # Build modules
@@ -58,14 +59,18 @@ RUN set -eux; \
     for module in ${NGINX_DYNAMIC_MODULES}; \
     do \
         repo=$(echo "${module}" | awk -F'/' '{print $2}'); \
-        git clone -b master --depth 1 "https://github.com/${module}.git" ; \
+        if [ "${module}" == "owasp-modsecurity/ModSecurity-nginx" ]; then \
+          git clone -b v${MODSECURITY_NGINX_VERSION} --depth 1 "https://github.com/${module}.git"; \
+        else \
+          git clone -b master --depth 1 "https://github.com/${module}.git"; \
+        fi; \
         modules="${modules} --add-dynamic-module=../${repo}"; \
     done; \
     curl -sSL https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz -o nginx-${NGINX_VERSION}.tar.gz; \
     tar -xzf nginx-${NGINX_VERSION}.tar.gz; \
     cd ./nginx-${NGINX_VERSION}; \
     ./configure --with-compat ${modules}; \
-    make modules; \
+    make -j$(nproc) modules; \
     strip objs/*.so; \
     cp objs/*.so /etc/nginx/modules/; \
     mkdir /etc/modsecurity.d; \
