@@ -59,8 +59,8 @@ variable "REPOS" {
 variable "nginx-dynamic-modules" {
     # List of dynamic modules to include in the nginx build
     default = [
-        "owasp-modsecurity/ModSecurity-nginx",
-        "openresty/headers-more-nginx-module"
+        {owner: "owasp-modsecurity", name: "ModSecurity-nginx", version: "v1.0.3"},
+        {owner: "openresty", name: "headers-more-nginx-module", version: "master"}
     ]
 }
 
@@ -150,8 +150,7 @@ target "nginx" {
     args = {
         LUA_MODULES = join(" ", lua-modules-debian)
         NGINX_VERSION = "${nginx-version}"
-        NGINX_DYNAMIC_MODULES = join(" ", nginx-dynamic-modules)
-        MODSECURITY_NGINX_VERSION = "${modsecurity-nginx-version}"
+        NGINX_DYNAMIC_MODULES = join(" ", [for mod in nginx-dynamic-modules : join(" ", [mod.owner, mod.name, mod.version])])
     }
     tags = concat(tag("nginx"),
         vtag("${crs-version}", "nginx")
@@ -163,9 +162,8 @@ target "nginx-alpine" {
     dockerfile="nginx/Dockerfile-alpine"
     args = {
         LUA_MODULES = join(" ", lua-modules-alpine)
-        NGINX_DYNAMIC_MODULES = join(" ", nginx-dynamic-modules)
         NGINX_VERSION = "${nginx-version}"
-        MODSECURITY_NGINX_VERSION = "${modsecurity-nginx-version}"
+        NGINX_DYNAMIC_MODULES = join(" ", [for mod in nginx-dynamic-modules : join(" ", [mod.owner, mod.name, mod.version])])
     }
     tags = concat(tag("nginx-alpine"),
         vtag("${crs-version}", "nginx-alpine")
