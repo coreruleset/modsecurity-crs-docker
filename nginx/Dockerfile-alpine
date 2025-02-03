@@ -5,7 +5,6 @@ FROM nginxinc/nginx-unprivileged:${NGINX_VERSION}-alpine AS build
 ARG MODSEC3_VERSION="n/a"
 ARG LUA_VERSION="n/a"
 ARG NGINX_DYNAMIC_MODULES="n/a"
-ARG MODSECURITY_NGINX_VERSION="n/a"
 
 USER root
 
@@ -56,15 +55,15 @@ RUN set -eux; \
    # Build modules
 RUN set -eux; \
     modules=""; \
-    for module in ${NGINX_DYNAMIC_MODULES}; \
+    set -- ${NGINX_DYNAMIC_MODULES}; \
+    while [ ${#} -gt 0 ]; \
     do \
-        repo=$(echo "${module}" | awk -F'/' '{print $2}'); \
-        if [ "${module}" == "owasp-modsecurity/ModSecurity-nginx" ]; then \
-          git clone -b v${MODSECURITY_NGINX_VERSION} --depth 1 "https://github.com/${module}.git"; \
-        else \
-          git clone -b master --depth 1 "https://github.com/${module}.git"; \
-        fi; \
-        modules="${modules} --add-dynamic-module=../${repo}"; \
+        owner="${1}"; \
+        name="${2}"; \
+        version="${3}"; \
+        shift 3; \
+        git clone -b "${version}" --depth 1 "https://github.com/${owner}/${name}.git"; \
+        modules="${modules} --add-dynamic-module=../${name}"; \
     done; \
     curl -sSL https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz -o nginx-${NGINX_VERSION}.tar.gz; \
     tar -xzf nginx-${NGINX_VERSION}.tar.gz; \
