@@ -14,7 +14,7 @@ proxy_read_timeout 36000s;
 proxy_redirect off;
 
 proxy_pass_header Authorization;
-proxy_pass $upstream;
+proxy_pass ${BACKEND};
 
 SET_REAL_IP_FROM
 real_ip_header ${REAL_IP_HEADER};

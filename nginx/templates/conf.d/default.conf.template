@@ -11,7 +11,6 @@ server {
     listen ${PORT} default_server;
 
     server_name ${SERVER_NAME};
-    set $upstream ${BACKEND};
     set $always_redirect ${NGINX_ALWAYS_TLS_REDIRECT};
 
     PROXY_SSL_CONFIG
@@ -38,7 +37,6 @@ server {
     listen ${SSL_PORT} ssl;
 
     server_name ${SERVER_NAME};
-    set $upstream ${BACKEND};
 
     ssl_certificate ${SSL_CERT};
     ssl_certificate_key ${SSL_CERT_KEY};
