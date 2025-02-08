@@ -1,5 +1,7 @@
 #!/bin/sh -e
 
+printf "# # #\nRunning CRS plugin activation\n- - -\n\n"
+
 # Check if crs-setup.conf is overriden
 if [ -n "${MANUAL_MODE}" ]; then
   echo "Using manual config mode"
@@ -25,3 +27,4 @@ for suffix in "config" "before" "after"; do
     fi
 done
 
+printf -- "- - -\nFinished CRS plugin activation\n# # #\n\n"

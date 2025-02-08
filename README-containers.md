@@ -22,7 +22,6 @@ The stable tag format is `<CRS version>-<web server>[-<os>]-<date>`.
 Examples:
    * `4-nginx-202401121309`
    * `4.0-apache-alpine-202401121309`
-   * `4.0.0-openresty-alpine-fat-202401121309`
 
 ### Rolling Tags
 
@@ -36,4 +35,3 @@ The stable tag format is `<web server>[-<os>]`.
 Examples:
    * `nginx`
    * `apache-alpine`
-   * `openresty-alpine-fat`

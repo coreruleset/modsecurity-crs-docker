@@ -2,7 +2,7 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "local>coreruleset/renovate-config",
-    "schedule:weekly"
+    "schedule:daily"
   ],
   "enabledManagers": [
     "custom.regex"
@@ -11,9 +11,6 @@
     {
       "groupName": "all non-major dependencies",
       "groupSlug": "all-minor-patch",
-      "matchPackagePatterns": [
-        "*"
-      ],
       "matchUpdateTypes": [
         "minor",
         "patch"
@@ -24,14 +21,14 @@
         "Update",
         "Change",
         "Pending"
+      ],
+      "matchPackageNames": [
+        "*"
       ]
     },
     {
       "groupName": "all major dependencies",
       "groupSlug": "all-major",
-      "matchPackagePatterns": [
-        "*"
-      ],
       "matchUpdateTypes": [
         "major"
       ],
@@ -41,10 +38,15 @@
         "Update",
         "Change",
         "Pending"
+      ],
+      "matchPackageNames": [
+        "*"
       ]
     },
     {
-      "matchDepNames": ["ModSecurity2"],
+      "matchDepNames": [
+        "ModSecurity2"
+      ],
       "allowedVersions": "/^v2.*/"
     }
   ],
@@ -94,18 +96,6 @@
       ],
       "depNameTemplate": "coreruleset/coreruleset",
       "datasourceTemplate": "github-releases"
-    },
-    {
-      "description": "Docs: OpenResty",
-      "customType": "regex",
-      "fileMatch": [
-        "^README\\.md$"
-      ],
-      "matchStrings": [
-        "OpenResty (?<currentValue>\\d+\\.\\d+\\.\\d+(\\.\\d+)?)"
-      ],
-      "depNameTemplate": "openresty/openresty",
-      "datasourceTemplate": "docker"
     }
   ]
 }

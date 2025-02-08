@@ -5,9 +5,8 @@ on:
     branches:
       - main
 env:
-  REPO: "owasp/modsecurity-crs"
   # sha256sum format: <hash><space><format (space for text)><file name>
-  MODSECURITY_RECOMMENDED: "d9e164c508218202eba13d37cf661baacb8600706e618ce93ccc91c74c51449e  modsecurity.conf-recommended"
+  MODSECURITY_RECOMMENDED: "ccff8ba1f12428b34ff41960d8bf773dd9f62b9a7c77755247a027cb01896d4f  modsecurity.conf-recommended"
 
 jobs:
   prepare:
@@ -42,6 +41,8 @@ jobs:
       # https://github.com/docker/setup-qemu-action
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
+        with:
+          image: tonistiigi/binfmt:qemu-v9.2.0
 
       # https://github.com/docker/setup-buildx-action
       - name: Set up Docker Buildx
@@ -49,23 +50,60 @@ jobs:
         with:
           driver-opts: image=moby/buildkit:master
 
-      - name: Build images
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build ${{ matrix.target }}-verification
         uses: docker/bake-action@v4.1.0
         with:
           files: |
             ./docker-bake.hcl
           targets: ${{ matrix.target }}
+          # Build only linux/amd64 and tag the images as verification builds.
+          # Create a tar archive and load the image into Docker.
           set: |
             *.platform=linux/amd64
-          load: true
+            ${{ matrix.target }}.tags=${{ matrix.target }}-verification
+            *.output=type=docker,dest=${{ matrix.target }}-verification.tar
+            *.output=type=docker
           push: false
+
+      - name: Upload image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.target }}-verification.tar
+          path: ${{ matrix.target }}-verification.tar
+          retention-days: 7
+          overwrite: true
 
       - name: Run ${{ matrix.target }}
         run: |
-          echo "Starting container ${{ matrix.target }}"
-          docker run --pull "never" -d --name ${{ matrix.target }}-test "${REPO}:${{ matrix.target }}"
+          . .github/workflows/configure-rules-for-test.sh \
+            src/opt/modsecurity/configure-rules.conf \
+            README.md \
+            "${{ matrix.target }}.env"
+          echo "Starting container ${{ matrix.target }}-verification"
+          docker run \
+            --pull "never" \
+            -d \
+            --name ${{ matrix.target }}-test \
+            --env-file "${{ matrix.target }}.env" \
+            "${{ matrix.target }}-verification"
+          sleep 30
           docker logs ${{ matrix.target }}-test
 
       - name: Verify ${{ matrix.target }}
         run: |
           [ $(docker inspect ${{ matrix.target }}-test --format='{{.State.Running}}') = 'true' ]
+          if grep -q  "nginx "<<< "${{ matrix.target }}"; then
+            curl -q -D headers.txt http://localhost:8080/?test=../../etc/passwd
+            grep -q "HTTP/1.1 403 Forbidden" headers.txt
+            grep -q "Access-Control-Allow-Origin: *" headers.txt
+            grep -q "Access-Control-Max-Age: 3600" headers.txt
+            grep -q "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS" headers.txt
+            grep -q "Access-Control-Allow-Headers: *" headers.txt
+          fi

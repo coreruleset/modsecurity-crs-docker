@@ -1,32 +1,31 @@
 # docker-bake.hcl
 variable "modsec3-version" {
     # renovate: depName=ModSecurity3 packageName=owasp-modsecurity/ModSecurity datasource=github-releases
-    default = "3.0.12"
+    default = "3.0.13"
 }
 
 variable "modsec2-version" {
     # renovate: depName=ModSecurity2 packageName=owasp-modsecurity/ModSecurity datasource=github-releases
-    default = "2.9.7"
+    default = "2.9.8"
 }
 
 variable "crs-version" {
     # renovate: depName=coreruleset/coreruleset datasource=github-releases
-    default = "4.4.0"
+    default = "4.11.0"
 }
 
 variable "nginx-version" {
     # renovate: depName=nginxinc/nginx-unprivileged datasource=docker
-    default = "1.27.0"
+    default = "1.27.3"
 }
 
 variable "httpd-version" {
     # renovate: depName=httpd datasource=docker
-    default = "2.4.62"
+    default = "2.4.63"
 }
 
-variable "openresty-version" {
-    # renovate: depName=openresty/openresty datasource=docker
-    default = "1.25.3.1"
+variable "modsecurity-nginx-version" {
+    default = "1.0.3"
 }
 
 variable "lua-version" {
@@ -52,19 +51,16 @@ variable "lua-modules-debian" {
   ]
 }
 
-variable "lua-modules-luarocks" {
-  default = [
-    "lua-resty-openidc",
-    "lua-zlib",
-    "luasocket"
-  ]
-}
-
 variable "REPOS" {
     # List of repositories to tag
+    default = "owasp/modsecurity-crs, ghcr.io/coreruleset/modsecurity-crs"
+}
+
+variable "nginx-dynamic-modules" {
+    # List of dynamic modules to include in the nginx build
     default = [
-        "owasp/modsecurity-crs",
-        "ghcr.io/coreruleset/modsecurity-crs",
+        {owner: "owasp-modsecurity", name: "ModSecurity-nginx", version: "v1.0.3"},
+        {owner: "openresty", name: "headers-more-nginx-module", version: "master"}
     ]
 }
 
@@ -85,7 +81,7 @@ function "patch" {
 
 function "tag" {
     params = [tag]
-    result = [for repo in REPOS : "${repo}:${tag}"]
+    result = [for repo in split(",", REPOS) : "${trimspace(repo)}:${tag}"]
 }
 
 function "vtag" {
@@ -103,7 +99,6 @@ group "default" {
         "apache-alpine",
         "nginx",
         "nginx-alpine",
-        "openresty-alpine-fat"
     ]
 }
 
@@ -111,7 +106,7 @@ target "docker-metadata-action" {}
 
 target "platforms-base" {
     inherits = ["docker-metadata-action"]
-    context="."    
+    context="."
     platforms = ["linux/amd64", "linux/arm64/v8", "linux/arm/v7", "linux/i386"]
     labels = {
         "org.opencontainers.image.source" = "https://github.com/coreruleset/modsecurity-crs-docker"
@@ -153,8 +148,9 @@ target "nginx" {
     inherits = ["platforms-base"]
     dockerfile="nginx/Dockerfile"
     args = {
-        NGINX_VERSION = "${nginx-version}"
         LUA_MODULES = join(" ", lua-modules-debian)
+        NGINX_VERSION = "${nginx-version}"
+        NGINX_DYNAMIC_MODULES = join(" ", [for mod in nginx-dynamic-modules : join(" ", [mod.owner, mod.name, mod.version])])
     }
     tags = concat(tag("nginx"),
         vtag("${crs-version}", "nginx")
@@ -165,24 +161,11 @@ target "nginx-alpine" {
     inherits = ["platforms-base"]
     dockerfile="nginx/Dockerfile-alpine"
     args = {
-        NGINX_VERSION = "${nginx-version}"
         LUA_MODULES = join(" ", lua-modules-alpine)
+        NGINX_VERSION = "${nginx-version}"
+        NGINX_DYNAMIC_MODULES = join(" ", [for mod in nginx-dynamic-modules : join(" ", [mod.owner, mod.name, mod.version])])
     }
     tags = concat(tag("nginx-alpine"),
         vtag("${crs-version}", "nginx-alpine")
-    )
-}
-
-target "openresty-alpine-fat" {
-    inherits = ["platforms-base"]
-    platforms = ["linux/amd64", "linux/arm64/v8"]
-    dockerfile="openresty/Dockerfile-alpine"
-    args = {
-        OPENRESTY_VERSION = "${openresty-version}"
-        NGINX_VERSION = patch(openresty-version)
-        LUA_MODULES = join(" ", lua-modules-luarocks)
-    }
-    tags = concat(tag("openresty-alpine-fat"),
-        vtag("${crs-version}", "openresty-alpine-fat")
     )
 }

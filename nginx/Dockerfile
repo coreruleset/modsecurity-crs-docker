@@ -5,6 +5,7 @@ FROM nginxinc/nginx-unprivileged:${NGINX_VERSION} AS build
 ARG MODSEC3_VERSION="n/a"
 ARG LMDB_VERSION="n/a"
 ARG LUA_VERSION="n/a"
+ARG NGINX_DYNAMIC_MODULES="n/a"
 
 USER root
 
@@ -21,12 +22,12 @@ RUN set -eux; \
         git \
         libcurl4-gnutls-dev \
         libfuzzy-dev \
-        libgeoip-dev \
         liblua${LUA_VERSION}-dev \
         libpcre3-dev \
         libpcre2-dev \
         libtool \
         libxml2-dev \
+        libmaxminddb-dev \
         libyajl-dev \
         make \
         patch \
@@ -43,6 +44,7 @@ RUN set -eux; \
     make -C lmdb/libraries/liblmdb install; \
     strip /usr/local/lib/liblmdb*.so*
 
+
 RUN set -eux; \
     git clone https://github.com/owasp-modsecurity/ModSecurity --branch "v${MODSEC3_VERSION}" --depth 1 --recursive; \
     cd ModSecurity; \
@@ -50,20 +52,30 @@ RUN set -eux; \
     sed -ie "s/i386-linux-gnu/${ARCH}/g" build/ssdeep.m4; \
     sed -ie "s/i386-linux-gnu/${ARCH}/g" build/pcre2.m4; \
     ./build.sh; \
-    ./configure --with-yajl --with-ssdeep --with-geoip --with-pcre2 --enable-silent-rules; \
-    make install; \
+    ./configure --with-yajl --with-ssdeep --with-pcre2 --with-maxmind --enable-silent-rules; \
+    make -j$(nproc) install; \
     strip /usr/local/modsecurity/lib/lib*.so*
 
-# We use master
+# Build modules
 RUN set -eux; \
-    git clone -b master --depth 1 https://github.com/owasp-modsecurity/ModSecurity-nginx.git; \
-    curl -sSL https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz -o nginx-${NGINX_VERSION}.tar.gz; \
+    modules=""; \
+    set -- ${NGINX_DYNAMIC_MODULES}; \
+    while [ ${#} -gt 0 ]; \
+    do \
+        owner="${1}"; \
+        name="${2}"; \
+        version="${3}"; \
+        shift 3; \
+        git clone -b "${version}" --depth 1 "https://github.com/${owner}/${name}.git"; \
+        modules="${modules} --add-dynamic-module=../${name}"; \
+    done; \
+    curl -sSL "https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz" -o nginx-${NGINX_VERSION}.tar.gz; \
     tar -xzf nginx-${NGINX_VERSION}.tar.gz; \
     cd ./nginx-${NGINX_VERSION}; \
-    ./configure --with-compat --add-dynamic-module=../ModSecurity-nginx; \
-    make modules; \
-    strip objs/ngx_http_modsecurity_module.so; \
-    cp objs/ngx_http_modsecurity_module.so /etc/nginx/modules/; \
+    ./configure --with-compat ${modules}; \
+    make -j$(nproc) modules; \
+    strip objs/*.so; \
+    cp objs/*.so /etc/nginx/modules/; \
     mkdir /etc/modsecurity.d; \
     curl -sSL https://raw.githubusercontent.com/owasp-modsecurity/ModSecurity/v3/master/unicode.mapping \
          -o /etc/modsecurity.d/unicode.mapping
@@ -94,12 +106,12 @@ USER nginx
 
 WORKDIR /sources
 
-RUN curl -SL https://github.com/coreruleset/coreruleset/archive/v${CRS_RELEASE}.tar.gz -o v${CRS_RELEASE}.tar.gz; \
-    curl -SL https://github.com/coreruleset/coreruleset/releases/download/v${CRS_RELEASE}/coreruleset-${CRS_RELEASE}.tar.gz.asc -o coreruleset-${CRS_RELEASE}.tar.gz.asc; \
+RUN curl -sSL https://github.com/coreruleset/coreruleset/releases/download/v${CRS_RELEASE}/coreruleset-${CRS_RELEASE}-minimal.tar.gz -o v${CRS_RELEASE}-minimal.tar.gz; \
+    curl -sSL https://github.com/coreruleset/coreruleset/releases/download/v${CRS_RELEASE}/coreruleset-${CRS_RELEASE}-minimal.tar.gz.asc -o coreruleset-${CRS_RELEASE}-minimal.tar.gz.asc; \
     gpg --fetch-key https://coreruleset.org/security.asc; \
-    gpg --verify coreruleset-${CRS_RELEASE}.tar.gz.asc v${CRS_RELEASE}.tar.gz; \
-    tar -zxf v${CRS_RELEASE}.tar.gz --strip-components=1 -C /opt/owasp-crs; \
-    rm -f v${CRS_RELEASE}.tar.gz coreruleset-${CRS_RELEASE}.tar.gz.asc; \
+    gpg --verify coreruleset-${CRS_RELEASE}-minimal.tar.gz.asc v${CRS_RELEASE}-minimal.tar.gz; \
+    tar -zxf v${CRS_RELEASE}-minimal.tar.gz --strip-components=1 -C /opt/owasp-crs; \
+    rm -f v${CRS_RELEASE}-minimal.tar.gz coreruleset-${CRS_RELEASE}-minimal.tar.gz.asc; \
     mv -v /opt/owasp-crs/crs-setup.conf.example /opt/owasp-crs/crs-setup.conf
 
 FROM nginxinc/nginx-unprivileged:${NGINX_VERSION}
@@ -114,6 +126,11 @@ LABEL maintainer="Felipe Zipitria <felipe.zipitria@owasp.org>"
 ENV \
     ACCESSLOG=/var/log/nginx/access.log \
     BACKEND=http://localhost:80 \
+    CORS_HEADER_403_ALLOW_ORIGIN="*" \
+    CORS_HEADER_403_ALLOW_METHODS="GET, POST, PUT, DELETE, OPTIONS" \
+    CORS_HEADER_403_CONTENT_TYPE="text/plain" \
+    CORS_HEADER_403_MAX_AGE=3600 \
+    CORS_HEADER_ACCESS_CONTROL_ALLOW_HEADERS="*" \
     DNS_SERVER= \
     ERRORLOG=/var/log/nginx/error.log \
     KEEPALIVE_TIMEOUT=60s \
@@ -187,13 +204,12 @@ ENV \
     SSL_VERIFY=off \
     WORKER_CONNECTIONS=1024 \
     # CRS specific variables
-    PARANOIA=1 \
     ANOMALY_INBOUND=5 \
     ANOMALY_OUTBOUND=4 \
     BLOCKING_PARANOIA=1
 
 COPY --from=build /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC3_VERSION} /usr/local/modsecurity/lib/
-COPY --from=build /etc/nginx/modules/ngx_http_modsecurity_module.so /etc/nginx/modules/ngx_http_modsecurity_module.so
+COPY --from=build /etc/nginx/modules/*.so /etc/nginx/modules/
 COPY --from=build /usr/local/lib/liblmdb.so /usr/local/lib/
 COPY --from=build /usr/share/TLS/dhparam-* /etc/ssl/certs/
 COPY --from=build /etc/modsecurity.d/unicode.mapping /etc/modsecurity.d/unicode.mapping
@@ -203,7 +219,8 @@ COPY src/etc/modsecurity.d/modsecurity-override.conf /etc/nginx/templates/modsec
 COPY src/etc/modsecurity.d/setup.conf /etc/nginx/templates/modsecurity.d/setup.conf.template
 COPY nginx/docker-entrypoint.d/*.sh /docker-entrypoint.d/
 COPY src/opt/modsecurity/activate-plugins.sh /docker-entrypoint.d/94-activate-plugins.sh
-COPY src/opt/modsecurity/activate-rules.sh /docker-entrypoint.d/95-activate-rules.sh
+COPY src/opt/modsecurity/configure-rules.sh /docker-entrypoint.d/95-configure-rules.sh
+COPY src/opt/modsecurity/configure-rules.conf /docker-entrypoint.d/
 # We use the templating mechanism from the nginx image here.
 COPY nginx/templates /etc/nginx/templates/
 COPY src/bin/* /usr/local/bin/
@@ -216,12 +233,14 @@ RUN set -eux; \
     LD_LIBRARY_PATH="" apt-get install -y -qq --no-install-recommends --no-install-suggests \
         ca-certificates \
         curl \
+        ed \
         libcurl4-gnutls-dev \
         libfuzzy2 \
         liblua${LUA_VERSION} \
         ${LUA_MODULES} \
         libxml2 \
         libyajl2 \
+        libmaxminddb-dev \
         moreutils; \
     rm -rf /var/lib/apt/lists/*; \
     apt-get clean; \
