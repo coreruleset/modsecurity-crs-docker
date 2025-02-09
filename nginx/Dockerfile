@@ -1,12 +1,12 @@
+FROM image AS build
+
 ARG NGINX_VERSION="n/a"
-
-FROM nginxinc/nginx-unprivileged:${NGINX_VERSION} AS build
-
 ARG MODSEC3_VERSION="n/a"
 ARG LMDB_VERSION="n/a"
 ARG LUA_VERSION="n/a"
 ARG NGINX_DYNAMIC_MODULES="n/a"
 ARG NGINX_HOME="n/a"
+ARG READ_ONLY_FS="false"
 
 USER root
 
@@ -87,7 +87,7 @@ RUN set -eux; \
     curl -sSL https://ssl-config.mozilla.org/ffdhe2048.txt -o /usr/share/TLS/dhparam-2048.pem; \
     curl -sSL https://ssl-config.mozilla.org/ffdhe4096.txt -o /usr/share/TLS/dhparam-4096.pem
 
-FROM nginxinc/nginx-unprivileged:${NGINX_VERSION} AS crs_release
+FROM image AS crs_release
 
 ARG CRS_RELEASE
 
@@ -115,13 +115,14 @@ RUN curl -sSL https://github.com/coreruleset/coreruleset/releases/download/v${CR
     rm -f v${CRS_RELEASE}-minimal.tar.gz coreruleset-${CRS_RELEASE}-minimal.tar.gz.asc; \
     mv -v /opt/owasp-crs/crs-setup.conf.example /opt/owasp-crs/crs-setup.conf
 
-FROM nginxinc/nginx-unprivileged:${NGINX_VERSION}
+FROM image
 
 ARG MODSEC3_VERSION
 ARG LMDB_VERSION
 ARG LUA_VERSION
 ARG LUA_MODULES
 ARG NGINX_HOME
+ARG READ_ONLY_FS
 
 LABEL maintainer="Felipe Zipitria <felipe.zipitria@owasp.org>"
 
@@ -254,17 +255,25 @@ RUN set -eux; \
     ln -s /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC3_VERSION} /usr/local/modsecurity/lib/libmodsecurity.so.3.0; \
     ln -s /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC3_VERSION} /usr/local/modsecurity/lib/libmodsecurity.so.3; \
     ln -s /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC3_VERSION} /usr/local/modsecurity/lib/libmodsecurity.so; \
-    ln -sv /opt/owasp-crs /etc/modsecurity.d/; \
-    # move files that need to be writable so we can use tmpfs for them later
-    mkdir -p /usr/local/bootstrap/nginx /usr/local/bootstrap/modsecurity.d /usr/local/bootstrap/owasp-crs; \
-    mv "${NGINX_HOME}/"* /usr/local/bootstrap/nginx/; \
-    mv /etc/modsecurity.d/* /usr/local/bootstrap/modsecurity.d/; \
-    mv /opt/owasp-crs/* /usr/local/bootstrap/owasp-crs/; \
+    ln -sv /opt/owasp-crs /etc/modsecurity.d/
+
+RUN set -eux; \
+    if [ "${READ_ONLY_FS}" = "true" ]; then \
+        # move files that need to be writable so we can use tmpfs for them later
+        mkdir -p /usr/local/bootstrap/nginx /usr/local/bootstrap/modsecurity.d /usr/local/bootstrap/owasp-crs; \
+        mv "${NGINX_HOME}/"* /usr/local/bootstrap/nginx/; \
+        mv /etc/modsecurity.d/* /usr/local/bootstrap/modsecurity.d/; \
+        mv /opt/owasp-crs/* /usr/local/bootstrap/owasp-crs/; \
+        chown nginx:nginx \
+            "${NGINX_HOME}" \
+            /usr/local/bootstrap/*; \
+    else \
+        # only run this script in read-only configuration
+        rm /docker-entrypoint.d/0-move-writables.sh; \
+    fi; \
     chown nginx:nginx \
         /opt/owasp-crs \
-        /etc/modsecurity.d \
-        "${NGINX_HOME}" \
-        /usr/local/bootstrap/*
+        /etc/modsecurity.d
 
 USER nginx
 
