@@ -1,6 +1,6 @@
 ARG HTTPD_VERSION="n/a"
 
-FROM httpd:${HTTPD_VERSION} AS build
+FROM image AS build
 
 ARG MODSEC2_VERSION="n/a"
 ARG LUA_VERSION="n/a"
@@ -36,7 +36,7 @@ RUN set -eux; \
     make install; \
     make clean
 
-FROM httpd:${HTTPD_VERSION} AS crs_release
+FROM image AS crs_release
 
 ARG CRS_RELEASE
 
@@ -56,7 +56,7 @@ RUN set -eux; \
     rm -f v${CRS_RELEASE}-minimal.tar.gz coreruleset-${CRS_RELEASE}-minimal.tar.gz.asc; \
     mv -v /opt/owasp-crs/crs-setup.conf.example /opt/owasp-crs/crs-setup.conf
 
-FROM httpd:${HTTPD_VERSION}
+FROM image
 
 ARG MODSEC2_VERSION
 ARG LUA_VERSION

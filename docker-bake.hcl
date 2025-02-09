@@ -96,16 +96,11 @@ function "vtag" {
 group "default" {
     targets = [
         "apache",
-        "apache-alpine",
-        "nginx",
-        "nginx-alpine",
+        "nginx"
     ]
 }
 
-target "docker-metadata-action" {}
-
 target "platforms-base" {
-    inherits = ["docker-metadata-action"]
     context="."
     platforms = ["linux/amd64", "linux/arm64/v8", "linux/arm/v7", "linux/i386"]
     labels = {
@@ -121,51 +116,82 @@ target "platforms-base" {
 }
 
 target "apache" {
-    inherits = ["platforms-base"]
-    dockerfile="apache/Dockerfile"
-    args = {
-        HTTPD_VERSION = "${httpd-version}"
-        LUA_MODULES = join(" ", lua-modules-debian)
+    matrix = {
+        base = [
+            {
+                name = "debian"
+                dockerfile="apache/Dockerfile"
+                image = "docker-image://httpd:${httpd-version}"
+                lua_modules = join(" ", lua-modules-debian)
+                tag_base = "apache"
+            },
+            {
+                name = "alpine"
+                dockerfile = "apache/Dockerfile-alpine"
+                image = "docker-image://httpd:${httpd-version}-alpine"
+                lua_modules = join(" ", lua-modules-alpine)
+                tag_base = "apache-alpine"
+            }
+        ]
     }
-    tags = concat(tag("apache"),
-        vtag("${crs-version}", "apache")
-    )
-}
 
-target "apache-alpine" {
     inherits = ["platforms-base"]
-    dockerfile="apache/Dockerfile-alpine"
-    args = {
-        HTTPD_VERSION = "${httpd-version}"
-        LUA_MODULES = join(" ", lua-modules-alpine)
+    name = "apache-${base.name}"
+    contexts = {
+        image = base.image
     }
-    tags = concat(tag("apache-alpine"),
-        vtag("${crs-version}", "apache-alpine")
+    dockerfile = base.dockerfile
+    args = {
+        LUA_MODULES = base.lua_modules
+    }
+    tags = concat(tag(base.tag_base),
+        vtag("${crs-version}", base.tag_base)
     )
 }
 
 target "nginx" {
-    inherits = ["platforms-base"]
-    dockerfile="nginx/Dockerfile"
-    args = {
-        LUA_MODULES = join(" ", lua-modules-debian)
-        NGINX_VERSION = "${nginx-version}"
-        NGINX_DYNAMIC_MODULES = join(" ", [for mod in nginx-dynamic-modules : join(" ", [mod.owner, mod.name, mod.version])])
+    matrix = {
+        base = [
+            {
+                name = "debian"
+                dockerfile = "nginx/Dockerfile"
+                image = "docker-image://nginxinc/nginx-unprivileged:${nginx-version}"
+                lua_modules = join(" ", lua-modules-debian)
+                tag_base = "nginx"
+            },
+            {
+                name = "alpine"
+                dockerfile = "nginx/Dockerfile-alpine"
+                image = "docker-image://nginxinc/nginx-unprivileged:${nginx-version}-alpine"
+                lua_modules = join(" ", lua-modules-alpine)
+                tag_base = "nginx-alpine"
+            }
+        ],
+        read-only-fs = [
+            {
+                name = "writable"
+                read-only = "false"
+            },
+            {
+                name = "read-only"
+                read-only = "true"
+            }
+        ]
     }
-    tags = concat(tag("nginx"),
-        vtag("${crs-version}", "nginx")
-    )
-}
-
-target "nginx-alpine" {
     inherits = ["platforms-base"]
-    dockerfile="nginx/Dockerfile-alpine"
-    args = {
-        LUA_MODULES = join(" ", lua-modules-alpine)
-        NGINX_VERSION = "${nginx-version}"
-        NGINX_DYNAMIC_MODULES = join(" ", [for mod in nginx-dynamic-modules : join(" ", [mod.owner, mod.name, mod.version])])
+    name = "nginx-${base.name}-${read-only-fs.name}"
+    contexts = {
+        image = base.image
     }
-    tags = concat(tag("nginx-alpine"),
-        vtag("${crs-version}", "nginx-alpine")
+    dockerfile = base.dockerfile
+    args = {
+        NGINX_VERSION = nginx-version
+        LUA_MODULES = base.lua_modules
+        NGINX_DYNAMIC_MODULES = join(" ", [for mod in nginx-dynamic-modules : join(" ", [mod.owner, mod.name, mod.version])])
+        NGINX_HOME = "/etc/nginx"
+        READ_ONLY_FS = read-only-fs.read-only
+    }
+    tags = concat(tag(base.tag_base),
+        vtag("${crs-version}", base.tag_base)
     )
 }
