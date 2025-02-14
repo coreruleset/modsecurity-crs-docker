@@ -42,7 +42,7 @@ Examples:
 
 ## OS Variants
 
-* nginx – *latest stable ModSecurity v3 on Nginx 1.27.3 official stable base image, and latest stable OWASP CRS 4.11.0*
+* nginx – *latest stable ModSecurity v3 on Nginx 1.27.4 official stable base image, and latest stable OWASP CRS 4.11.0*
    * [nginx](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile)
    * [nginx-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile-alpine)
 * Apache httpd – *last stable ModSecurity v2 on Apache 2.4.63 official stable base image, and latest stable OWASP CRS 4.11.0*
