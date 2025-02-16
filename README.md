@@ -441,3 +441,29 @@ docker run \
    -e BACKEND="http://localhost:8081" \
    owasp/modsecurity-crs:apache
 ```
+
+## Kubernetes
+
+:warning: If you see this error in your k8s deployment logs:
+
+```
+...
+/docker-entrypoint.d/20-envsubst-on-templates.sh: 53: envsubst: Argument list too long
+```
+
+This happens because kubernetes is injecting service related environment variables. Adding `enableServiceLinks: false` in your pod spec, solves the problem:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-deployment
+spec:
+  replicas: 1
+  template:
+    spec:
+      enableServiceLinks: false
+      containers:
+        - name: my-container
+          image: owasp/modsecurity-crs:4.8.0-nginx-202411071011
+```
