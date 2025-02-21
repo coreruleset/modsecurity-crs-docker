@@ -48,6 +48,12 @@
         "ModSecurity2"
       ],
       "allowedVersions": "/^v2.*/"
+    },
+    {
+      "matchDepNames": [
+        "nginxinc/nginx-unprivileged"
+      ],
+      "allowedVersions": "/^[0-9]+\\.[0-9]*[02468]\\.[0-9]+$/"
     }
   ],
   "customManagers": [
