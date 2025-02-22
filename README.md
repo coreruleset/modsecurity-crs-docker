@@ -42,7 +42,7 @@ Examples:
 
 ## OS Variants
 
-* nginx – *latest stable ModSecurity v3 on Nginx 1.27.3 official stable base image, and latest stable OWASP CRS 4.11.0*
+* nginx – *latest stable ModSecurity v3 on Nginx 1.26.3 official stable base image, and latest stable OWASP CRS 4.11.0*
    * [nginx](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile)
    * [nginx-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile-alpine)
 * Apache httpd – *last stable ModSecurity v2 on Apache 2.4.63 official stable base image, and latest stable OWASP CRS 4.11.0*
@@ -440,4 +440,30 @@ docker run \
    -e CRS_ENABLE_TEST_MARKER=1 \
    -e BACKEND="http://localhost:8081" \
    owasp/modsecurity-crs:apache
+```
+
+## Kubernetes
+
+:warning: If you see this error in your k8s deployment logs:
+
+```
+...
+/docker-entrypoint.d/20-envsubst-on-templates.sh: 53: envsubst: Argument list too long
+```
+
+This happens because kubernetes is injecting service related environment variables. Adding `enableServiceLinks: false` in your pod spec, solves the problem:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-deployment
+spec:
+  replicas: 1
+  template:
+    spec:
+      enableServiceLinks: false
+      containers:
+        - name: my-container
+          image: owasp/modsecurity-crs:4.8.0-nginx-202411071011
 ```
