@@ -19,10 +19,11 @@ ModSecurity is an open source, cross platform web application firewall (WAF) eng
 Stable Tags are composed of:
    * CRS version, in the format `<major>[.<minor>[.<patch]]`
    * web server variant
-   * OS variant (optional)
+   * OS variant (optional, nginx only)
+   * writable (optional)
    * date, in the format `YYYYMMDDHHMM`
 
-The stable tag format is `<CRS version>-<web server>[-<os>]-<date>`.
+The stable tag format is `<CRS version>-<web server>[-<os>][-<writable>]-<date>`.
 Examples:
    * `4-nginx-202401121309`
    * `4.0-apache-alpine-202401121309`
@@ -34,8 +35,9 @@ Rolling tags are updated whenever a new stable tag release occurs. Rolling tags 
 Rolling Tags are composed of:
    * web server variant
    * OS variant (optional)
+   * writable (optional, nginx only)
 
-The stable tag format is `<web server>[-<os>]`.
+The stable tag format is `<web server>[-<os>][-<writable>]`.
 Examples:
    * `nginx`
    * `apache-alpine`
@@ -48,6 +50,17 @@ Examples:
 * Apache httpd – *last stable ModSecurity v2 on Apache 2.4.63 official stable base image, and latest stable OWASP CRS 4.11.0*
    * [apache](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/apache/Dockerfile)
    * [apache-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/apache/Dockerfile-alpine)
+
+## Read-only Root Filesystem
+
+> [!IMPORTANT]
+> Read-only filesystem variants are currently only available for images based on nginx.
+
+By default, the root filesystem of our containers are writable. We also provide images that are set up to run on a read-only filesystem for enhanced security.
+
+Examples:
+   * `nginx-read-only`
+   * `nginx-alpine-read-only`
 
 ### Notes regarding Openresty version of this image
 
@@ -65,13 +78,6 @@ We currently provide images for the following architectures:
 * linux/i386
 
 ### Building
-
-We require a version of `buildx` >= v0.9.1. [Visit the official documentation](https://docs.docker.com/build/architecture/#install-buildx) for instructions on installing and upgrading `buildx`. You can check which version you have using:
-
-```bash
-docker buildx version
-github.com/docker/buildx v0.9.1 ed00243a0ce2a0aee75311b06e32d33b44729689
-```
 
 If you want to see the targets of the build, use:
 

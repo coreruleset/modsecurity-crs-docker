@@ -191,7 +191,7 @@ target "nginx" {
         NGINX_HOME = "/etc/nginx"
         READ_ONLY_FS = read-only-fs.read-only
     }
-    tags = concat(tag(base.tag_base),
-        vtag("${crs-version}", base.tag_base)
+    tags = concat(tag("${base.tag_base}${equal(read-only-fs.read-only, "true") ? "-read-only" : ""}"),
+        vtag("${crs-version}", "${base.tag_base}${equal(read-only-fs.read-only, "true") ? "-read-only" : ""}")
     )
 }
