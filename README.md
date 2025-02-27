@@ -119,7 +119,7 @@ You can achieve the same results just by getting any version you want, and using
 git clone https://github.com/coreruleset/coreruleset.git myrules
 cd myrules
 git checkout ac2a0d1
-docker run -p 8080:8080 -ti -e PARANOIA=4 -v rules:/opt/owasp-crs/rules:ro --rm owasp/modsecurity-crs
+docker run -p 8080:8080 -ti -e BLOCKING_PARANOIA=4 -v rules:/opt/owasp-crs/rules:ro --rm owasp/modsecurity-crs
 ```
 
 ## Quick reference
@@ -412,8 +412,8 @@ docker run \
    -e MODSEC_AUDIT_LOG=/var/log/modsec_audit.log \
    -e LOGLEVEL=warn \
    -e ERRORLOG=/var/log/modsec_error.log \
-   -e PARANOIA=1 \
-   -e EXECUTING_PARANOIA=2 \
+   -e BLOCKING_PARANOIA=2 \
+   -e DETECTION_PARANOIA=2 \
    -e ENFORCE_BODYPROC_URLENCODED=1 \
    -e ANOMALY_INBOUND=10 \
    -e ANOMALY_OUTBOUND=5 \

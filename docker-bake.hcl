@@ -125,13 +125,13 @@ target "apache" {
                 lua_modules = join(" ", lua-modules-debian)
                 tag_base = "apache"
             },
-            {
-                name = "alpine"
-                dockerfile = "apache/Dockerfile-alpine"
-                image = "docker-image://httpd:${httpd-version}-alpine"
-                lua_modules = join(" ", lua-modules-alpine)
-                tag_base = "apache-alpine"
-            }
+            # {
+            #     name = "alpine"
+            #     dockerfile = "apache/Dockerfile-alpine"
+            #     image = "docker-image://httpd:${httpd-version}-alpine"
+            #     lua_modules = join(" ", lua-modules-alpine)
+            #     tag_base = "apache-alpine"
+            # }
         ]
     }
 
@@ -159,23 +159,23 @@ target "nginx" {
                 lua_modules = join(" ", lua-modules-debian)
                 tag_base = "nginx"
             },
-            {
-                name = "alpine"
-                dockerfile = "nginx/Dockerfile-alpine"
-                image = "docker-image://nginxinc/nginx-unprivileged:${nginx-version}-alpine"
-                lua_modules = join(" ", lua-modules-alpine)
-                tag_base = "nginx-alpine"
-            }
+            # {
+            #     name = "alpine"
+            #     dockerfile = "nginx/Dockerfile-alpine"
+            #     image = "docker-image://nginxinc/nginx-unprivileged:${nginx-version}-alpine"
+            #     lua_modules = join(" ", lua-modules-alpine)
+            #     tag_base = "nginx-alpine"
+            # }
         ],
         read-only-fs = [
             {
                 name = "writable"
                 read-only = "false"
             },
-            {
-                name = "read-only"
-                read-only = "true"
-            }
+            # {
+            #     name = "read-only"
+            #     read-only = "true"
+            # }
         ]
     }
     inherits = ["platforms-base"]

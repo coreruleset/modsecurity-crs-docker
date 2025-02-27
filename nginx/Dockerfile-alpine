@@ -203,7 +203,6 @@ ENV \
     SSL_VERIFY=off \
     WORKER_CONNECTIONS=1024 \
     # CRS specific variables
-    PARANOIA=1 \
     ANOMALY_INBOUND=5 \
     ANOMALY_OUTBOUND=4 \
     BLOCKING_PARANOIA=1
