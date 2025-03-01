@@ -1,0 +1,20 @@
+# .github/release.yml
+
+changelog:
+  exclude:
+    authors:
+      - octocat
+  categories:
+    - title: ⭐ New features
+      labels:
+        - feature
+        - enhancement
+    - title: 🛠 Fixes
+      labels:
+        - bug
+    - title: ⚙️ Dependency updates
+      labels:
+        - dependencies
+    - title: 🧰 Other changes
+      labels:
+        - "*"
