@@ -10,8 +10,6 @@ ARG READ_ONLY_FS="false"
 
 USER root
 
-# Note: libpcre3-dev (PCRE 1) is required by the build description,
-# even though the build will use PCRE2.
 RUN set -eux; \
     echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections; \
     apt-get update -qq; \
@@ -24,7 +22,6 @@ RUN set -eux; \
         libcurl4-gnutls-dev \
         libfuzzy-dev \
         liblua${LUA_VERSION}-dev \
-        libpcre3-dev \
         libpcre2-dev \
         libtool \
         libxml2-dev \
@@ -243,6 +240,7 @@ RUN set -eux; \
         libfuzzy2 \
         liblua${LUA_VERSION} \
         ${LUA_MODULES} \
+        libpcre2-8-0 \
         libxml2 \
         libyajl2 \
         libmaxminddb-dev \

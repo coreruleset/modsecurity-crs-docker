@@ -173,7 +173,7 @@ RUN set -eux; \
         libfuzzy2 \
         liblua${LUA_VERSION} \
         ${LUA_MODULES} \
-        libpcre2 \
+        libpcre2-8-0 \
         libxml2 \
         libyajl2; \
     update-ca-certificates -f; \

@@ -184,6 +184,7 @@ RUN set -eux; \
         ${LUA_MODULES} \
         moreutils \
         openssl \
+        pcre2 \
         sed \
         tzdata \
         yajl; \
