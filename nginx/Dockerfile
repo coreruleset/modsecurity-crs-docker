@@ -2,6 +2,7 @@ FROM image AS build
 
 ARG NGINX_VERSION="n/a"
 ARG MODSEC3_VERSION="n/a"
+ARG MODSEC3_FLAGS="n/a"
 ARG LMDB_VERSION="n/a"
 ARG LUA_VERSION="n/a"
 ARG NGINX_DYNAMIC_MODULES="n/a"
@@ -50,7 +51,7 @@ RUN set -eux; \
     sed -ie "s/i386-linux-gnu/${ARCH}/g" build/ssdeep.m4; \
     sed -ie "s/i386-linux-gnu/${ARCH}/g" build/pcre2.m4; \
     ./build.sh; \
-    ./configure --with-yajl --with-ssdeep --with-pcre2 --with-maxmind --enable-silent-rules; \
+    ./configure ${MODSEC3_FLAGS}; \
     make -j$(nproc) install; \
     strip /usr/local/modsecurity/lib/lib*.so*
 

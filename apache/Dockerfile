@@ -3,6 +3,7 @@ ARG HTTPD_VERSION="n/a"
 FROM image AS build
 
 ARG MODSEC2_VERSION="n/a"
+ARG MODSEC2_FLAGS="n/a"
 ARG LUA_VERSION="n/a"
 
 RUN set -eux; \
@@ -31,7 +32,7 @@ RUN set -eux; \
     tar -zxvf v${MODSEC2_VERSION}.tar.gz; \
     cd ModSecurity-${MODSEC2_VERSION}; \
     ./autogen.sh; \
-    ./configure --with-yajl --with-ssdeep --with-pcre2; \
+    ./configure ${MODSEC2_FLAGS}; \
     make; \
     make install; \
     make clean
