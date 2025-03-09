@@ -22,7 +22,7 @@ while read -r line; do
   test_value="$(cut -d'|' -f5 <<< "${line}")"
 
   if ! grep -q "${var_name}" "${readme_file}"; then
-    echo "Failed to find environment variable `${var_name}` in README."
+    echo "Failed to find environment variable '${var_name}' in README."
     exit 1
   fi
 

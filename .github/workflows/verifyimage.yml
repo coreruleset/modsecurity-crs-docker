@@ -147,3 +147,12 @@ jobs:
             --log-file "tests/logs/${modsec_version}/error.log" \
             --overrides "tests/regression/${backend}-overrides.yaml" \
             --show-failures-only
+
+      - name: Upload logs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ${{ matrix.target }}-error.log
+          path: "crs/tests/logs/${{ contains(matrix.target, 'apache') && 'modsec2-apache' || 'modsec3-nginx' }}/error.log"
+          retention-days: 7
+          overwrite: true
