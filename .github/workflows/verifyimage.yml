@@ -128,6 +128,8 @@ jobs:
             's#image: owasp/modsecurity-crs:${{ contains(matrix.target, 'apache') && 'apache' || 'nginx' }}.*#image: ${{ matrix.target }}-verification#' \
             crs/tests/docker-compose.yml
       - name: Run CRS tests for ${{ matrix.target }}
+        # Log flushing isn't reliable enough for go-ftw (https://github.com/coreruleset/go-ftw/issues/473)
+        if: ${{!contains(matrix.target, 'nginx-alpine')}}
         run: |
           cd crs
           modsec_version="${{ contains(matrix.target, 'apache') && 'modsec2-apache' || 'modsec3-nginx' }}"
