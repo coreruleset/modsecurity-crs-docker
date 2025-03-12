@@ -4,9 +4,17 @@ variable "modsec3-version" {
     default = "3.0.14"
 }
 
+variable "modsec3-flags" {
+    default = "--with-yajl --with-ssdeep --with-lmdb --with-pcre2 --with-maxmind --enable-silent-rules"
+}
+
 variable "modsec2-version" {
     # renovate: depName=ModSecurity2 packageName=owasp-modsecurity/ModSecurity datasource=github-releases
     default = "2.9.8"
+}
+
+variable "modsec2-flags" {
+    default = "--with-yajl --with-ssdeep --with-pcre2"
 }
 
 variable "crs-version" {
@@ -109,7 +117,9 @@ target "platforms-base" {
     args = {
         CRS_RELEASE = "${crs-version}"
         MODSEC2_VERSION = "${modsec2-version}"
+        MODSEC2_FLAGS = modsec2-flags
         MODSEC3_VERSION = "${modsec3-version}"
+        MODSEC3_FLAGS = modsec3-flags
         LUA_VERSION = "${lua-version}"
         LMDB_VERSION = "${lmdb-version}"
     }
@@ -125,13 +135,13 @@ target "apache" {
                 lua_modules = join(" ", lua-modules-debian)
                 tag_base = "apache"
             },
-            # {
-            #     name = "alpine"
-            #     dockerfile = "apache/Dockerfile-alpine"
-            #     image = "docker-image://httpd:${httpd-version}-alpine"
-            #     lua_modules = join(" ", lua-modules-alpine)
-            #     tag_base = "apache-alpine"
-            # }
+            {
+                name = "alpine"
+                dockerfile = "apache/Dockerfile-alpine"
+                image = "docker-image://httpd:${httpd-version}-alpine"
+                lua_modules = join(" ", lua-modules-alpine)
+                tag_base = "apache-alpine"
+            }
         ]
     }
 
@@ -159,13 +169,13 @@ target "nginx" {
                 lua_modules = join(" ", lua-modules-debian)
                 tag_base = "nginx"
             },
-            # {
-            #     name = "alpine"
-            #     dockerfile = "nginx/Dockerfile-alpine"
-            #     image = "docker-image://nginxinc/nginx-unprivileged:${nginx-version}-alpine"
-            #     lua_modules = join(" ", lua-modules-alpine)
-            #     tag_base = "nginx-alpine"
-            # }
+            {
+                name = "alpine"
+                dockerfile = "nginx/Dockerfile-alpine"
+                image = "docker-image://nginxinc/nginx-unprivileged:${nginx-version}-alpine"
+                lua_modules = join(" ", lua-modules-alpine)
+                tag_base = "nginx-alpine"
+            }
         ],
         read-only-fs = [
             {

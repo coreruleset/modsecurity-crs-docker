@@ -2,6 +2,7 @@ FROM image AS build
 
 ARG NGINX_VERSION="n/a"
 ARG MODSEC3_VERSION="n/a"
+ARG MODSEC3_FLAGS="n/a"
 ARG LMDB_VERSION="n/a"
 ARG LUA_VERSION="n/a"
 ARG NGINX_DYNAMIC_MODULES="n/a"
@@ -10,8 +11,6 @@ ARG READ_ONLY_FS="false"
 
 USER root
 
-# Note: libpcre3-dev (PCRE 1) is required by the build description,
-# even though the build will use PCRE2.
 RUN set -eux; \
     echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections; \
     apt-get update -qq; \
@@ -24,7 +23,6 @@ RUN set -eux; \
         libcurl4-gnutls-dev \
         libfuzzy-dev \
         liblua${LUA_VERSION}-dev \
-        libpcre3-dev \
         libpcre2-dev \
         libtool \
         libxml2-dev \
@@ -53,7 +51,7 @@ RUN set -eux; \
     sed -ie "s/i386-linux-gnu/${ARCH}/g" build/ssdeep.m4; \
     sed -ie "s/i386-linux-gnu/${ARCH}/g" build/pcre2.m4; \
     ./build.sh; \
-    ./configure --with-yajl --with-ssdeep --with-pcre2 --with-maxmind --enable-silent-rules; \
+    ./configure ${MODSEC3_FLAGS}; \
     make -j$(nproc) install; \
     strip /usr/local/modsecurity/lib/lib*.so*
 
@@ -243,6 +241,7 @@ RUN set -eux; \
         libfuzzy2 \
         liblua${LUA_VERSION} \
         ${LUA_MODULES} \
+        libpcre2-8-0 \
         libxml2 \
         libyajl2 \
         libmaxminddb-dev \
