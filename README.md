@@ -95,7 +95,7 @@ docker buildx bake -f docker-bake.hcl
 To build a specific target for a single platform only (replace target and platform strings in the example with the your choices):
 
 ```bash
-docker buildx bake -f docker-bake.hcl --set "*.platform=linux/amd64" nginx-alpine
+docker buildx bake -f docker-bake.hcl --set "*.platform=linux/amd64" nginx-alpine-writable
 ```
 
 ### Notes regarding Openresty version of the image
