@@ -53,7 +53,11 @@ RUN set -eux; \
     make -j$(nproc) install; \
     strip /usr/local/modsecurity/lib/lib*.so*
 
-   # Build modules
+# Build modules
+# Note the `sed` line. It patches the configure test for ModSecurity-nginx
+# so that it works with GCC 14+.
+# Once https://github.com/owasp-modsecurity/ModSecurity-nginx/pull/275 has
+# been released, this workaround can be removed again.
 RUN set -eux; \
     modules=""; \
     set -- ${NGINX_DYNAMIC_MODULES}; \
@@ -66,6 +70,7 @@ RUN set -eux; \
         git clone -b "${version}" --depth 1 "https://github.com/${owner}/${name}.git"; \
         modules="${modules} --add-dynamic-module=../${name}"; \
     done; \
+    sed -iE "s/ngx_feature_test='printf(\"hello\");'/ngx_feature_test='msc_init();'/" ModSecurity-nginx/config; \
     curl -sSL "https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz" -o nginx-${NGINX_VERSION}.tar.gz; \
     tar -xzf nginx-${NGINX_VERSION}.tar.gz; \
     cd ./nginx-${NGINX_VERSION}; \
