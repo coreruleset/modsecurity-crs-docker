@@ -60,8 +60,8 @@
     {
       "description": "Bake file",
       "customType": "regex",
-      "fileMatch": [
-        "^docker-bake\\.hcl$"
+      "managerFilePatterns": [
+        "/^docker-bake\\.hcl$/"
       ],
       "matchStrings": [
         "depName=(?<depName>[^\\s]+)(?:\\s+packageName=(?<packageName>[^\\s]+))?\\s+datasource=(?<datasource>[^\\s]+)\\s+[^\"]+\"(?<currentValue>[^\"]+)\""
@@ -70,8 +70,8 @@
     {
       "description": "Docs: nginx",
       "customType": "regex",
-      "fileMatch": [
-        "^README\\.md$"
+      "managerFilePatterns": [
+        "/^README\\.md$/"
       ],
       "matchStrings": [
         ".*on [Nn]ginx (?<currentValue>\\d+\\.\\d+\\.\\d+)"
@@ -82,8 +82,8 @@
     {
       "description": "Docs: httpd",
       "customType": "regex",
-      "fileMatch": [
-        "^README\\.md$"
+      "managerFilePatterns": [
+        "/^README\\.md$/"
       ],
       "matchStrings": [
         ".*on Apache (?<currentValue>\\d+\\.\\d+\\.\\d+)"
@@ -94,8 +94,8 @@
     {
       "description": "Docs: CRS",
       "customType": "regex",
-      "fileMatch": [
-        "^README\\.md$"
+      "managerFilePatterns": [
+        "/^README\\.md$/"
       ],
       "matchStrings": [
         "OWASP CRS (?<currentValue>\\d+\\.\\d+\\.\\d+)"
