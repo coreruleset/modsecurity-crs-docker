@@ -92,7 +92,7 @@ docker buildx create --use --platform linux/amd64,linux/i386,linux/arm64,linux/a
 docker buildx bake -f docker-bake.hcl
 ```
 
-To build a specific target for a single platform only (replace target and platform strings in the example with the your choices):
+To build a specific target for a single platform only (replace target and platform strings in the example with your choices):
 
 ```bash
 docker buildx bake -f docker-bake.hcl --set "*.platform=linux/amd64" nginx-alpine-writable
@@ -158,13 +158,13 @@ These variables are common to image variants and will set defaults based on the 
 | BACKEND | Partial URL for the remote server of the `ProxyPass` (httpd) and `proxy_pass` (nginx) directives | `http://localhost:80` | - |
 | ERRORLOG | Location of the error log file | `/proc/self/fd/2` | - |
 | LOGLEVEL | Minimum level for log messages to be logged to the error log | `warn` | - |
-| METRICS_ALLOW_FROM | A single range of IP adresses that can access the metrics | `127.0.0.0/255.0.0.0 ::1/128` | `127.0.0.0/24` |
-| METRICS_DENY_FROM | A range of IP adresses that cannot access the metrics | `All` | `all` |
+| METRICS_ALLOW_FROM | A single range of IP addresses that can access the metrics | `127.0.0.0/255.0.0.0 ::1/128` | `127.0.0.0/24` |
+| METRICS_DENY_FROM | A range of IP addresses that cannot access the metrics | `All` | `all` |
 | METRICSLOG | Location of metrics log file | `/dev/null` | - |
 | PROXY_SSL_CERT | A string indicating the path to the PEM-encoded X.509 certificate data file or token identifier of the proxied server | `/usr/local/apache2/conf/proxy.crt` | `/etc/nginx/conf/proxy.crt` |
 | PROXY_SSL_CERT_KEY | A string indicating the path to the PEM-encoded private key file of the proxied server | `/usr/local/apache2/conf/proxy.key` | `/etc/nginx/conf/proxy.key` |
 | PROXY_SSL_CIPHERS| A string indicating the cipher suite to connect to the backend via TLS | `"ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384"` | - |
-| PROXY_SSL_PROTOCOLS | TLS protocols to enable for the connection to the backend | `"all -SSLv3 -TLSv1 -TLSv1.1"` | `TTLSv1.2 TLSv1.3` |
+| PROXY_SSL_PROTOCOLS | TLS protocols to enable for the connection to the backend | `"all -SSLv3 -TLSv1 -TLSv1.1"` | `TLSv1.2 TLSv1.3` |
 | PROXY_SSL  | SSL Proxy Engine Operation Switch | `off` | - |
 | PROXY_SSL_VERIFY | A string value indicating the type of proxy server Certificate verification | `none` | `off` |
 | PROXY_TIMEOUT  | Number of seconds for proxied requests to time out | `60` | `60s` |
@@ -173,7 +173,7 @@ These variables are common to image variants and will set defaults based on the 
 | SSL_CERT_KEY | A string indicating the path to the PEM-encoded private key file of the proxied server | `/usr/local/apache2/conf/server.key` | `/etc/nginx/conf/server.key` |
 | SSL_CIPHERS| A string indicating the cipher suite for incoming TLS connections | `"ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384"` | - |
 | SSL_OCSP_STAPLING | Enable / disable OCSP stapling | `On` | `on` |
-| SSL_PROTOCOLS | TLS protocols to enable for the connection to the backend | `"all -SSLv3 -TLSv1 -TLSv1.1"` | `TTLSv1.2 TLSv1.3` |
+| SSL_PROTOCOLS | TLS protocols to enable for the connection to the backend | `"all -SSLv3 -TLSv1 -TLSv1.1"` | `TLSv1.2 TLSv1.3` |
 
 ### Apache ENV Variables
 
@@ -221,7 +221,7 @@ These variables are common to image variants and will set defaults based on the 
 | PROXY_SSL_VERIFY_DEPTH  | An integer value indicating the verification depth for the client certificate chain (Default: `1`) |
 | REAL_IP_HEADER | Name of the header containing the real IP value(s) (Default: `X-REAL-IP`). See [real_ip_header](http://nginx.org/en/docs/http/ngx_http_realip_module.html#real_ip_header) |
 | REAL_IP_PROXY_HEADER | Name of the header containing `$remote_addr` to be passed to proxy (Default: `X-REAL-IP`). See [proxy_set_header](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_set_header) |
-| REAL_IP_RECURSIVE | A string value indicating whether to use recursive reaplacement on addresses in `REAL_IP_HEADER` (Allowed values: `on`, `off`. Default: `on`). See [real_ip_recursive](http://nginx.org/en/docs/http/ngx_http_realip_module.html#real_ip_recursive) |
+| REAL_IP_RECURSIVE | A string value indicating whether to use recursive replacement on addresses in `REAL_IP_HEADER` (Allowed values: `on`, `off`. Default: `on`). See [real_ip_recursive](http://nginx.org/en/docs/http/ngx_http_realip_module.html#real_ip_recursive) |
 | SERVER_TOKENS | A boolean value for enabling / disabling emission of server identifying information in the `Server` HTTP response header and on error pages. (Allowed values: `on`, `off`, `build`. Default: `off`). |
 | SET_REAL_IP_FROM | A string of comma separated IP, CIDR, or UNIX domain socket addresses that are trusted to replace addresses in `REAL_IP_HEADER` (Default: `127.0.0.1`). See [set_real_ip_from](http://nginx.org/en/docs/http/ngx_http_realip_module.html#set_real_ip_from) |
 | SSL_DH_BITS | A numeric value indicating the size (in bits) to use for the generated DH-params file (Default 2048) |
@@ -256,11 +256,11 @@ All these variables impact in configuration directives in the modsecurity engine
 | MODSEC_DEBUG_LOGLEVEL  | An integer indicating the verboseness of the debug log data (Default: `0`). Accepted values: `0` - `9`. See [SecDebugLogLevel](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-(v2.x)#secdebugloglevel). |
 | MODSEC_DEFAULT_PHASE1_ACTION | ModSecurity string with the contents for the default action in phase 1 (Default: `'phase:1,log,auditlog,pass,tag:\'\${MODSEC_TAG}\''`) |
 | MODSEC_DEFAULT_PHASE2_ACTION | ModSecurity string with the contents for the default action in phase 2 (Default: `'phase:2,log,auditlog,pass,tag:\'\${MODSEC_TAG}\''`) |
-| MODSEC_DISABLE_BACKEND_COMPRESSION  | A string indicating whether or not to disable backend compression (Default: `On`). Allowed values: `On`, `Off`. See [SecDisableBackendCompression](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-(v2.x)#secdisablebackendcompression) for more. Only supported in ModSecurity 2.x, will have not effect on 3.x |
+| MODSEC_DISABLE_BACKEND_COMPRESSION  | A string indicating whether or not to disable backend compression (Default: `On`). Allowed values: `On`, `Off`. See [SecDisableBackendCompression](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-(v2.x)#secdisablebackendcompression) for more. Only supported in ModSecurity 2.x, will have no effect on 3.x |
 | MODSEC_PCRE_MATCH_LIMIT  | An integer value indicating the limit for the number of internal executions in the PCRE function (Default: `100000`) (Only valid for Apache - v2). See [SecPcreMatchLimit](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-(v2.x)#SecPcreMatchLimit) |
 | MODSEC_PCRE_MATCH_LIMIT_RECURSION  | An integer value indicating the limit for the depth of recursion when calling PCRE function (Default: `100000`) |
 | MODSEC_REQ_BODY_ACCESS  | A string value allowing ModSecurity to access request bodies (Default: `On`). Allowed values: `On`, `Off`. See [SecRequestBodyAccess](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-(v2.x)#secrequestbodyaccess) for more information. |
-| MODSEC_REQ_BODY_JSON_DEPTH_LIMIT | An integer value indicating the maximun JSON request depth (Default: `512`). See [SecRequestBodyJsonDepthLimit](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-%28v2.x%29#SecRequestBodyJsonDepthLimit) for additional information. |
+| MODSEC_REQ_BODY_JSON_DEPTH_LIMIT | An integer value indicating the maximum JSON request depth (Default: `512`). See [SecRequestBodyJsonDepthLimit](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-%28v2.x%29#SecRequestBodyJsonDepthLimit) for additional information. |
 | MODSEC_REQ_BODY_LIMIT_ACTION  | A string value for the action when `SecRequestBodyLimit` is reached (Default: `Reject`). Accepted values: `Reject`, `ProcessPartial`. See [SecRequestBodyLimitAction](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-(v2.x)#secrequestbodylimitaction) for additional information. |
 | MODSEC_REQ_BODY_LIMIT  | An integer value indicating the maximum request body size  accepted for buffering (Default: `13107200`). See [SecRequestBodyLimit](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-(v2.x)#secrequestbodylimit) for additional information. |
 | MODSEC_REQ_BODY_NOFILES_LIMIT  | An integer indicating the maximum request body size ModSecurity will accept for buffering (Default: `131072`). See [SecRequestBodyNoFilesLimit](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-(v2.x)#secrequestbodynofileslimit) for more information. |
@@ -269,7 +269,7 @@ All these variables impact in configuration directives in the modsecurity engine
 | MODSEC_RESP_BODY_LIMIT  | An integer value indicating the maximum response body size accepted for buffering (Default: `1048576`) |
 | MODSEC_RESP_BODY_MIMETYPE  | A string with the list of mime types that will be analyzed in the response (Default: `'text/plain text/html text/xml'`). You might consider adding `application/json` documented [here](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-\(v2.x\)#secresponsebodymimetype). |
 | MODSEC_RULE_ENGINE  | A string value enabling ModSecurity itself (Default: `On`). Accepted values: `On`, `Off`, `DetectionOnly`. See [SecRuleEngine](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-%28v2.x%29#secruleengine) for additional information. |
-| MODSEC_SERVER_SIGNATURE  | Sets the directive [SecServerSignature](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-%28v2.x%29#secserversignature) and instructs ModSecurity to change the data presented in the "Server:" response header token when Apache `ServerTokens` directive is set to `Full`. Also see Apache `SERVER_TOKENS`. Only supported in ModSecurity 2.x, will have not effect on 3.x. (Default: `Apache`). |
+| MODSEC_SERVER_SIGNATURE  | Sets the directive [SecServerSignature](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-%28v2.x%29#secserversignature) and instructs ModSecurity to change the data presented in the "Server:" response header token when Apache `ServerTokens` directive is set to `Full`. Also see Apache `SERVER_TOKENS`. Only supported in ModSecurity 2.x, will have no effect on 3.x. (Default: `Apache`). |
 | MODSEC_STATUS_ENGINE  | A string used to configure the status engine, which sends statistical information (Default: `Off`). Accepted values: `On`, `Off`. See [SecStatusEngine](https://github.com/owasp-modsecurity/ModSecurity/wiki/Reference-Manual-%28v2.x%29#SecStatusEngine) for additional information. |
 | MODSEC_TAG  | A string indicating the default tag action, which will be inherited by the rules in the same configuration context (Default: `modsecurity`) |
 | MODSEC_TMP_DIR  | A string indicating the path where temporary files will be created (Default: `/tmp/modsecurity/tmp`) |
@@ -331,15 +331,15 @@ You can set the `*_ALWAYS_TLS_REDIRECT` environment variables to always redirect
 The owasp/modsecurity-crs container images in their default configuration (i.e., without manual changes to / overrides of configuration files) act as reverse proxies and require a running backend at the address specified through the `BACKEND` environment variable.
 
 > [!IMPORTANT]
-> Make sure to set the `BACKEND` variable to an address where a web server is listening. Otherwise nothing useful will happen when you send requests to the owasp/modsecurity-crs container (at least not with the default configurational).
+> Make sure to set the `BACKEND` variable to an address where a web server is listening. Otherwise nothing useful will happen when you send requests to the owasp/modsecurity-crs container (at least not with the default configuration).
 
-ModSecurity is often used in a reverse proxy setup with the following porperties:
+ModSecurity is often used in a reverse proxy setup with the following properties:
 - reverse proxy acts as public end point
 - reverse proxy performs TLS termination (necessary for ModSecurity to inspect content)
 - ModSecurity runs on the reverse proxy to filter traffic
 - only benign traffic is passed to the backend
 
-This allows one to use ModSecurity without modifying the webserver hosting the underlying application and also protects web servers that ModSecurity cannot currently be embedd into.
+This allows one to use ModSecurity without modifying the webserver hosting the underlying application and also protects web servers that ModSecurity cannot currently be embedded into.
 
 Tips:
 * the application web server (the one receiving traffic from the reverse proxy) should not listen on a public interface. Only the reverse proxy should be exposed to the public. With Docker, this could mean setting up a network for both containers and only exposing the reverse proxy with `-p 8080:8080`, for example. `docker compose` takes care of this automatically. See the `docker-compose.yaml` for an example setup.
@@ -392,7 +392,7 @@ docker start modseccrs
 
 ## Full docker run example of possible setup
 
-The following example illustrates how to use `docker run` with some of the variables. It's purpose is illustration only and it should not be used to run a container in production.
+The following example illustrates how to use `docker run` with some of the variables. Its purpose is illustration only and it should not be used to run a container in production.
 
 Some important things to note:
 - Error and audit logs are enabled and mapped to files on the host, so that their contents are accessible and don't pollute the container filesystem. Docker requires these files to exist, otherwise they would be created as directories, hence the use of the `touch ...` commands.
