@@ -33,7 +33,7 @@ variable "httpd-version" {
 }
 
 variable "modsecurity-nginx-version" {
-    default = "1.0.3"
+    default = "1.0.4"
 }
 
 variable "lua-version" {
@@ -67,7 +67,7 @@ variable "REPOS" {
 variable "nginx-dynamic-modules" {
     # List of dynamic modules to include in the nginx build
     default = [
-        {owner: "owasp-modsecurity", name: "ModSecurity-nginx", version: "v1.0.3"},
+        {owner: "owasp-modsecurity", name: "ModSecurity-nginx", version: "v${modsecurity-nginx-version}"},
         {owner: "openresty", name: "headers-more-nginx-module", version: "master"}
     ]
 }
