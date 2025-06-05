@@ -19,7 +19,7 @@ variable "modsec2-flags" {
 
 variable "crs-version" {
     # renovate: depName=coreruleset/coreruleset datasource=github-releases
-    default = "4.14.0"
+    default = "4.15.0"
 }
 
 variable "nginx-version" {
