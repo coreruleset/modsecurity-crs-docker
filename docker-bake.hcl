@@ -10,7 +10,7 @@ variable "modsec3-flags" {
 
 variable "modsec2-version" {
     # renovate: depName=ModSecurity2 packageName=owasp-modsecurity/ModSecurity datasource=github-releases
-    default = "2.9.10"
+    default = "2.9.11"
 }
 
 variable "modsec2-flags" {
