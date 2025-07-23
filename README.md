@@ -214,7 +214,7 @@ These variables are common to image variants and will set defaults based on the 
 | CORS_HEADER_403_ALLOW_METHODS | The value of the [Access-Control-Request-Method](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Request-Method) header for `403` responses. Determines the allowed request methods for the resource. Default: `"GET, POST, PUT, DELETE, OPTIONS"` |
 | CORS_HEADER_403_CONTENT_TYPE | The value of the  `Content-Type` header for `403` responses. Default: (`"text/plain"`) |
 | CORS_HEADER_403_MAX_AGE | The value of the [Access-Control-Max-Age](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Max-Age) header for `403` responses. The number of seconds that preflight requests for this resource may be cached by the browser. (Default: `3600`) |
-| DNS_SERVER  | A string indicating the name servers used to resolve names of upstream servers into addresses. For localhost backend this value should not be defined (Default: _not defined_) |
+| DNS_SERVER  | Deprecated. Use `RESOLVERS`.
 | KEEPALIVE_TIMEOUT  | Number of seconds for a keep-alive client connection to stay open on the server side (Default: `60s`) |
 | NGINX_ALWAYS_TLS_REDIRECT | A string value indicating if http should redirect to https (Allowed values: `on`, `off`. Default: `off`) |
 | PORT | An int value indicating the port where the webserver is listening to | `8080` | We run as unprivileged user. |
@@ -222,6 +222,8 @@ These variables are common to image variants and will set defaults based on the 
 | REAL_IP_HEADER | Name of the header containing the real IP value(s) (Default: `X-REAL-IP`). See [real_ip_header](http://nginx.org/en/docs/http/ngx_http_realip_module.html#real_ip_header) |
 | REAL_IP_PROXY_HEADER | Name of the header containing `$remote_addr` to be passed to proxy (Default: `X-REAL-IP`). See [proxy_set_header](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_set_header) |
 | REAL_IP_RECURSIVE | A string value indicating whether to use recursive replacement on addresses in `REAL_IP_HEADER` (Allowed values: `on`, `off`. Default: `on`). See [real_ip_recursive](http://nginx.org/en/docs/http/ngx_http_realip_module.html#real_ip_recursive) |
+| RESOLVERS  | A string of one or more DNS server IP addresses (IPv4 or IPv6, space separated, with optional port number. See [nginx docs](https://nginx.org/en/docs/http/ngx_http_core_module.html#resolver)). The name servers are used to resolve names of upstream servers into addresses. If this variable is not set, the `nameserver` entry from `/etc/resolv.conf` will be used. For localhost backend the variable should not be set (Default: _not defined_) |
+| RESOLVER_CONFIG  | A string of options for the `resolver` directive (see [nginx docs](https://nginx.org/en/docs/http/ngx_http_core_module.html#resolver)) (Default: `valid=5s`)
 | SERVER_TOKENS | A boolean value for enabling / disabling emission of server identifying information in the `Server` HTTP response header and on error pages. (Allowed values: `on`, `off`, `build`. Default: `off`). |
 | SET_REAL_IP_FROM | A string of comma separated IP, CIDR, or UNIX domain socket addresses that are trusted to replace addresses in `REAL_IP_HEADER` (Default: `127.0.0.1`). See [set_real_ip_from](http://nginx.org/en/docs/http/ngx_http_realip_module.html#set_real_ip_from) |
 | SSL_DH_BITS | A numeric value indicating the size (in bits) to use for the generated DH-params file (Default 2048) |

@@ -15,6 +15,6 @@ http {
     keepalive_timeout ${KEEPALIVE_TIMEOUT};
     sendfile on;
 
-    resolver DNS_SERVER valid=5s;
+    resolver RESOLVERS RESOLVER_CONFIG;
     include /etc/nginx/conf.d/*.conf;
 }
