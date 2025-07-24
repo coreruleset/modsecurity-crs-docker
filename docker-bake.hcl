@@ -10,7 +10,7 @@ variable "modsec3-flags" {
 
 variable "modsec2-version" {
     # renovate: depName=ModSecurity2 packageName=owasp-modsecurity/ModSecurity datasource=github-releases
-    default = "2.9.9"
+    default = "2.9.11"
 }
 
 variable "modsec2-flags" {
@@ -19,7 +19,7 @@ variable "modsec2-flags" {
 
 variable "crs-version" {
     # renovate: depName=coreruleset/coreruleset datasource=github-releases
-    default = "4.14.0"
+    default = "4.16.0"
 }
 
 variable "nginx-version" {
@@ -29,11 +29,11 @@ variable "nginx-version" {
 
 variable "httpd-version" {
     # renovate: depName=httpd datasource=docker
-    default = "2.4.63"
+    default = "2.4.65"
 }
 
 variable "modsecurity-nginx-version" {
-    default = "1.0.3"
+    default = "1.0.4"
 }
 
 variable "lua-version" {
@@ -67,7 +67,7 @@ variable "REPOS" {
 variable "nginx-dynamic-modules" {
     # List of dynamic modules to include in the nginx build
     default = [
-        {owner: "owasp-modsecurity", name: "ModSecurity-nginx", version: "v1.0.3"},
+        {owner: "owasp-modsecurity", name: "ModSecurity-nginx", version: "v${modsecurity-nginx-version}"},
         {owner: "openresty", name: "headers-more-nginx-module", version: "master"}
     ]
 }
