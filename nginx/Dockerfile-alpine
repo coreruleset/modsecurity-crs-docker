@@ -135,7 +135,6 @@ ENV \
     CORS_HEADER_403_CONTENT_TYPE="text/plain" \
     CORS_HEADER_403_MAX_AGE=3600 \
     CORS_HEADER_ACCESS_CONTROL_ALLOW_HEADERS="*" \
-    DNS_SERVER= \
     ERRORLOG=/var/log/nginx/error.log \
     KEEPALIVE_TIMEOUT=60s \
     LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib \
@@ -193,6 +192,8 @@ ENV \
     REAL_IP_HEADER="X-REAL-IP" \
     REAL_IP_PROXY_HEADER="X-REAL-IP" \
     REAL_IP_RECURSIVE="on" \
+    RESOLVERS= \
+    RESOLVER_CONFIG="valid=5s"\
     SERVER_NAME=localhost \
     SERVER_TOKENS=off \
     SET_REAL_IP_FROM="127.0.0.1" \
