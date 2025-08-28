@@ -74,7 +74,8 @@ ENV \
     BACKEND=http://localhost:8080 \
     BACKEND_WS=ws://localhost:8081 \
     ERRORLOG='/proc/self/fd/2' \
-    H2_PROTOCOLS='h2 http/1.1' \
+    H2_DIRECT=on \
+    H2_PROTOCOLS='h2 h2c http/1.1' \
     LOGLEVEL=warn \
     METRICS_ALLOW_FROM='127.0.0.0/255.0.0.0 ::1/128' \
     METRICS_DENY_FROM='All' \

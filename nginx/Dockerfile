@@ -135,6 +135,7 @@ ENV \
     CORS_HEADER_403_MAX_AGE=3600 \
     CORS_HEADER_ACCESS_CONTROL_ALLOW_HEADERS="*" \
     ERRORLOG=/var/log/nginx/error.log \
+    HTTP2=on \
     KEEPALIVE_TIMEOUT=60s \
     LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib \
     LOGLEVEL=warn \
