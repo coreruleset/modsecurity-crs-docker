@@ -71,7 +71,7 @@ ENV \
     APACHE_ERRORLOG_FORMAT='"[%{u}t] [%-m:%l] [pid %P:tid %T] %7F: %E: [client\ %a] %M% ,\ referer\ %{Referer}i"' \
     APACHE_LOGFORMAT='"%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""' \
     APACHE_METRICS_LOGFORMAT='"%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""' \
-    BACKEND=http://localhost:8080 \
+    BACKEND=http://localhost:80 \
     BACKEND_WS=ws://localhost:8081 \
     ERRORLOG='/proc/self/fd/2' \
     H2_DIRECT=on \

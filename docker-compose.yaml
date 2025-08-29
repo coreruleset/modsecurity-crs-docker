@@ -1,12 +1,4 @@
 # This docker-compose file starts owasp/modsecurity-crs
-#
-# ATTENTION!
-# Some of the environment variables at the bottom of this
-# docker-compose.yaml file and TLS are only available
-# for self-built images based on Dockerfile-2.9-apache,
-# and only if build args SETTLS and SETPROXY were set during
-# the build of the parent owasp/modsecurity:2.9-apache image.
-
 x-defaults: &default-settings
   environment:
     SERVERNAME: localhost
@@ -28,18 +20,6 @@ x-defaults: &default-settings
     #
     # New in CRS 4
     REPORTING_LEVEL: 2
-
-    #######################################################
-    # Reverse Proxy mode
-    # (only available if SETPROXY was enabled during the
-    # parent ModSecurity image)
-    #######################################################
-    # PROXYLOCATION: Application Backend of Reverse Proxy
-    # PROXYLOCATION: http://app:8000/
-    #
-    # If needed: add own httpd-proxy.conf (only available if SETPROXY
-    # was enabled during build of parent ModSecurity image)
-    #  - ./httpd-proxy.conf:/usr/local/apache2/conf/extra/httpd-proxy.conf
 
     #######################################################
     # Various CRS Variables with Default Values
@@ -73,8 +53,6 @@ x-defaults: &default-settings
 
     #######################################################
     # Add TLS server certificate and key
-    # (only available if SETPROXY was enabled during the
-    # parent ModSecurity image)
     #######################################################
     #  - ./server.crt:/usr/local/apache2/conf/server.crt
     #  - ./server.key:/usr/local/apache2/conf/server.key
@@ -83,15 +61,13 @@ services:
   crs-apache:
     image: owasp/modsecurity-crs:apache
     ports:
-      - "80:8080"
-      # only available if SETTLS was enabled:      
+      - "8080:8080"
       - "443:8443"
     <<: *default-settings
 
   crs-nginx:
     image: owasp/modsecurity-crs:nginx
     ports:
-      - "80:8080"
-      # only available if SETTLS was enabled:
+      - "8080:8080"
       - "443:8443"
     <<: *default-settings

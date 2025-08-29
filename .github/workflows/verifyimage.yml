@@ -88,26 +88,89 @@ jobs:
             README.md \
             "${{ matrix.target }}.env"
           echo "Starting container ${{ matrix.target }}-verification"
+          # The backend is a dummy
           docker run \
             --pull "never" \
             -d \
             --name ${{ matrix.target }}-test \
             --env-file "${{ matrix.target }}.env" \
+            -p 8080:8080 \
+            -e BACKEND=http://localhost:9999 \
             "${{ matrix.target }}-verification"
-          sleep 30
-          docker logs ${{ matrix.target }}-test
 
       - name: Verify ${{ matrix.target }}
         run: |
-          [ $(docker inspect ${{ matrix.target }}-test --format='{{.State.Running}}') = 'true' ]
-          if grep -q  "nginx "<<< "${{ matrix.target }}"; then
-            curl -q -D headers.txt http://localhost:8080/?test=../../etc/passwd
+          HOST_AND_PORT="localhost:8080"
+          counter=10
+          while true; do
+            printf "Checking whether container is running..."
+            if [ $(docker inspect ${{ matrix.target }}-test --format='{{.State.Running}}') = 'true' ]; then
+              echo "ok"
+              printf "Trying to connect..."
+              if curl -s --connect-timeout 5 --max-time 1 "${HOST_AND_PORT}" > /dev/null 2>&1; then
+                echo "ok"
+                break
+              fi
+            fi
+
+            echo "failed"
+            ((counter--))
+            if [ ${counter} -gt 0 ]; then
+              echo "Will retry in 5 seconds"
+              sleep 5
+            else
+              printf "No more retries. Here'se the log output from the container\n\n\n"
+              docker logs ${{ matrix.target }}-test
+              exit 1
+            fi
+          done
+
+          if grep -q  "nginx"<<< "${{ matrix.target }}"; then
+            printf "\n\n### nginx tests ###\n\n"
+
+            printf "Storing headers for sample attack..."
+            curl -s -D headers.txt -o /dev/null "${HOST_AND_PORT}/?test=../../etc/passwd"
+            printf "...done\n\n\n"
+
+            printf "Check status 403..."
             grep -q "HTTP/1.1 403 Forbidden" headers.txt
+            printf "yes\n\n\n"
+
+            printf "Check 'Access-Control-Allow-Origin' header..."
             grep -q "Access-Control-Allow-Origin: *" headers.txt
+            printf "yes\n\n\n"
+
+            printf "Check 'Access-Control-Max-Age' header..."
             grep -q "Access-Control-Max-Age: 3600" headers.txt
+            printf "yes\n\n\n"
+
+            printf "Check 'Access-Control-Allow-Methods' header..."
             grep -q "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS" headers.txt
+            printf "yes\n\n\n"
+
+            printf "Check 'Access-Control-Allow-Headers'..."
             grep -q "Access-Control-Allow-Headers: *" headers.txt
+            printf "yes\n\n\n"
+
+            echo "### nginx tests - done ###"
           fi
+
+          printf "\n\n### generic tests ###\n\n"
+
+          echo "Test HTTP/2 upgrade..."
+          curl -v --http2 --no-progress-meter -o /dev/null "${HOST_AND_PORT}" 2>&1 | tee out.txt
+          grep -iP "< 101 Switching Protocols|< HTTP/2" < out.txt | tee out2.txt
+          wc -l out2.txt | grep -qoP "\d+" | xargs -I % test % -eq 2
+          rm out*.txt
+          printf "...yes\n\n\n"
+
+          echo "Test HTTP/2 prior knowledge..."
+          curl -v --http2-prior-knowledge --no-progress-meter -o /dev/null "${HOST_AND_PORT}" 2>&1 | tee out.txt
+          grep -iq "< HTTP/2" out.txt
+          grep -iqv "< 101 Switching Protocols" out.txt
+          printf "...yes\n\n\n"
+
+          echo "### generic tests - done ###"
 
       - name: Checkout CRS
         uses: actions/checkout@v4
