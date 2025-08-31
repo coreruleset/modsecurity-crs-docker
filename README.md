@@ -184,7 +184,8 @@ These variables are common to image variants and will set defaults based on the 
 | APACHE_LOGFORMAT | A string value indicating the LogFormat that apache should use. (Default: `'"%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""'` (combined). Tip: use single quotes outside your double quoted format string.) ⚠️ Do not add a `|` as part of the log format. It is used internally.  |
 | APACHE_METRICS_LOGFORMAT | A string value indicating the LogFormat that the additional log apache metrics should use. (Default:'"%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""' (combined). Tip: use single quotes outside your double quoted format string.) ⚠️ Do not add a `|` as part of the log format. It is used internally.  |
 | BACKEND_WS | A string indicating the IP/URL of the WebSocket service (Default: `ws://localhost:8081`) |
-| H2_PROTOCOLS  | A string value indicating the protocols supported by the HTTP2 module (Default: `h2 http/1.1`) |
+| H2_DIRECT | A string indicating whether unencrypted HTTP/2 connections are allowed without upgrading from HTTP/1.1. This mode is also called "prior knowledge. (Allowed values: `on`, `off`. Default: `on`) |
+| H2_PROTOCOLS  | A string value indicating the protocols supported by the HTTP/2 module (Default: `h2 h2c http/1.1`) |
 | MUTEX | Configure mutex and lock file directory for all specified mutexes (see [Mutex](https://httpd.apache.org/docs/2.4/mod/core.html#mutex)) (Default: `default`) |
 | PORT | An int value indicating the port where the webserver is listening to | `8080` | - |
 | PROXY_ERROR_OVERRIDE  | A string indicating that errors from the backend services should be overridden by this proxy server (see [ProxyErrorOverride](https://httpd.apache.org/docs/2.4/mod/mod_proxy.html#proxyerroroverride) directive). (Allowed values: `on`, `off`. Default: `on`) |
@@ -215,6 +216,7 @@ These variables are common to image variants and will set defaults based on the 
 | CORS_HEADER_403_CONTENT_TYPE | The value of the  `Content-Type` header for `403` responses. Default: (`"text/plain"`) |
 | CORS_HEADER_403_MAX_AGE | The value of the [Access-Control-Max-Age](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Max-Age) header for `403` responses. The number of seconds that preflight requests for this resource may be cached by the browser. (Default: `3600`) |
 | DNS_SERVER  | Deprecated. Use `RESOLVERS`.
+| HTTP2 | A string value indicating whether HTTP/2 should be enabled (for all locations) (Allowed values: `on`, `off`. Default: `on`) |
 | KEEPALIVE_TIMEOUT  | Number of seconds for a keep-alive client connection to stay open on the server side (Default: `60s`) |
 | NGINX_ALWAYS_TLS_REDIRECT | A string value indicating if http should redirect to https (Allowed values: `on`, `off`. Default: `off`) |
 | PORT | An int value indicating the port where the webserver is listening to | `8080` | We run as unprivileged user. |
