@@ -119,7 +119,7 @@ jobs:
               echo "Will retry in 5 seconds"
               sleep 5
             else
-              printf "No more retries. Here'se the log output from the container\n\n\n"
+              printf "No more retries. Here's the log output from the container\n\n\n"
               docker logs ${{ matrix.target }}-test
               exit 1
             fi
