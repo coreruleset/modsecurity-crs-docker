@@ -66,7 +66,10 @@ can_set() {
   rule="${1}"
   tx_var_name="${2}"
 
-  if ! grep -q "id:${rule}" "${setup_conf_path}" -a ! grep -Eq "setvar:'?tx\.${tx_var_name}" "${setup_conf_path}"; then
+  if ! grep -q "id:${rule}" "${setup_conf_path}"; then
+    return 1
+  fi
+  if grep -Eq "setvar:'?tx\.${tx_var_name}" "${setup_conf_path}"; then
     return 1
   fi
   return 0
@@ -108,6 +111,9 @@ while read -r line; do
     if ! can_set "${rule}" "${tx_var_name}"; then
       if [ "${legacy}" = "true" ]; then
         echo "Legacy variable ${var_name} (${rule}) set but nothing found to substitute. Skipping"
+        continue
+      elif [ "${legacy}" = "false" -a "${rule}" != "900000" ]; then
+        echo "Non-legacy variable ${var_name} (${rule}) set but nothing found to substitute. Skipping"
         continue
       fi
       echo "Failed to find rule ${rule} to set ${tx_var_name}=${var_value} for ${var_name} in ${setup_conf_path}. Aborting"
