@@ -17,14 +17,19 @@ if [ -n "${MANUAL_MODE}" ]; then
   return
 fi
 
-
+# Default config file path
 setup_conf_path="/etc/modsecurity.d/owasp-crs/crs-setup.conf"
 
+# Accept optional config file
+if [ -n "${CONFIG_FILE}" ]; then
+  setup_conf_path="${CONFIG_FILE}"
+fi
+
 set_value() {
-  local rule="${1}"
-  local var_name="${2}"
-  local tx_var_name="${3}"
-  local var_value="${4}"
+  rule="${1}"
+  var_name="${2}"
+  tx_var_name="${3}"
+  var_value="${4}"
   echo "Configuring ${rule} for ${var_name} with ${tx_var_name}=${var_value}"
 
   # For each rule, we do one pass to uncomment the rule (up to first blank line after the rule),
@@ -58,16 +63,13 @@ should_set() {
 }
 
 can_set() {
-  local rule="${1}"
-  local tx_var_name="${2}"
+  rule="${1}"
+  tx_var_name="${2}"
 
-  if ! grep -q "id:${rule}" "${setup_conf_path}"; then
+  if ! grep -q "id:${rule}" "${setup_conf_path}" -a ! grep -Eq "setvar:'?tx\.${tx_var_name}" "${setup_conf_path}"; then
     return 1
-  elif ! grep -Eq "setvar:'?tx\.${tx_var_name}" "${setup_conf_path}"; then
-    return 1
-  else
-    return 0
   fi
+  return 0
 }
 
 get_legacy() {
@@ -80,7 +82,7 @@ get_var_name() {
 
 get_var_value() {
   # Get the variable name, produce "${<var name>}" and use eval to expand
-  eval "echo $(echo "${1}" | awk -F'\|' '{print "${"$2"}"}')"
+  eval "echo $(echo "${1}" | awk -F'\|' '{print "${"$2"}"}' || true)"
 }
 
 get_rule() {
@@ -121,7 +123,7 @@ var="${MODSEC_DEFAULT_PHASE1_ACTION}"
 if should_set "${var}"; then
   if ! grep -Eq "^SecDefaultAction.*phase:1" "${setup_conf_path}"; then
     echo "Failed to find definition of SecDefaultAction for phase 1 in ${setup_conf_path}. Aborting"
-    exit 1
+    exit 2
   fi
   ed -s "${setup_conf_path}" <<EOF 2 > /dev/null
 /^SecDefaultAction.*phase:1/
@@ -133,7 +135,7 @@ var="${MODSEC_DEFAULT_PHASE2_ACTION}"
 if should_set "${var}"; then
   if ! grep -Eq "^SecDefaultAction.*phase:2" "${setup_conf_path}"; then
     echo "Failed to find definition of SecDefaultAction for phase 2 in ${setup_conf_path}. Aborting"
-    exit 1
+    exit 3
   fi
   ed -s "${setup_conf_path}" <<EOF 2 > /dev/null
 /^SecDefaultAction.*phase:2/
