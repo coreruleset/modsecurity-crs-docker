@@ -57,7 +57,7 @@ set_value() {
     ed -s "${setup_conf_path}" <<EOF 2 > /dev/null
 /id:${rule}/
 -
-.,/^$/ s/#//
+.,/\"$/ s/#//
 wq
 EOF
   fi
@@ -67,12 +67,25 @@ EOF
   # by either `,`, `'`, or `"`, depending on whether it's the last line of the rule
   # and whether the expression is enclosed in single quotes.
   # Use `#` as pattern delimiter, as `/` is part of some variable values.
-  ed -s "${setup_conf_path}" <<EOF 2 > /dev/null
+  # Try to find and update the variable (with or without quotes)
+  if ed -s "${setup_conf_path}" <<EOF 2 > /dev/null
 /id:${rule}/
-/setvar:[']*tx\.${tx_var_name}=/
-s#=[^,'"]*#=${var_value}#
+/setvar:tx\.${tx_var_name}=/
+s#=[^,"']*#=${var_value}#
 wq
 EOF
+  then
+    # Success with unquoted pattern
+    true
+  else
+    # Try with quoted pattern
+    ed -s "${setup_conf_path}" <<EOF 2 > /dev/null
+/id:${rule}/
+/setvar:'tx\.${tx_var_name}=/
+s#=.*'\"#=${var_value}'\"#
+wq
+EOF
+  fi
 }
 
 should_set() {

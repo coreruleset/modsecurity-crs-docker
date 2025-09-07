@@ -83,8 +83,17 @@ jobs:
 
       - name: Run ${{ matrix.target }}
         run: |
+          # get the major version from the matrix.target 
+          # Format: apache-debian-3-3-7, apache-alpine-4-18-0, nginx-debian-writable-3-3-7, nginx-alpine-writable-4-18-0
+          if echo "${{ matrix.target }}" | grep -q "nginx"; then
+            # nginx format: nginx-debian-writable-3-3-7 (5 parts) -> get $4
+            CRS_VERSION="v$(echo "${{ matrix.target }}" | awk -F'-' '{print $4}')"
+          else
+            # apache format: apache-debian-3-3-7 (4 parts) -> get $3
+            CRS_VERSION="v$(echo "${{ matrix.target }}" | awk -F'-' '{print $3}')"
+          fi
           . .github/workflows/configure-rules-for-test.sh \
-            src/opt/modsecurity/configure-rules.conf \
+            src/opt/modsecurity/configure-rules.${CRS_VERSION}.conf \
             README.md \
             "${{ matrix.target }}.env"
           echo "Starting container ${{ matrix.target }}-verification"
