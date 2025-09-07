@@ -25,11 +25,28 @@ if [ -n "${CONFIG_FILE}" ]; then
   setup_conf_path="${CONFIG_FILE}"
 fi
 
+# Detect CRS version based on the config file content
+detect_crs_version() {
+  if grep -q "tx\.blocking_paranoia_level" "${setup_conf_path}"; then
+    echo "v4"
+  elif grep -q "tx\.paranoia_level" "${setup_conf_path}"; then
+    echo "v3"
+  else
+    echo "Unknown CRS version"
+    exit 10
+  fi
+}
+
+# Get the CRS version
+CRS_VERSION="$(detect_crs_version)"
+echo "Detected CRS config file version: ${CRS_VERSION}"
+
 set_value() {
   rule="${1}"
   var_name="${2}"
   tx_var_name="${3}"
   var_value="${4}"
+  
   echo "Configuring ${rule} for ${var_name} with ${tx_var_name}=${var_value}"
 
   # For each rule, we do one pass to uncomment the rule (up to first blank line after the rule),
@@ -40,7 +57,7 @@ set_value() {
     ed -s "${setup_conf_path}" <<EOF 2 > /dev/null
 /id:${rule}/
 -
-.,/^#\?$/ s/#//
+.,/^$/ s/#//
 wq
 EOF
   fi
@@ -52,8 +69,8 @@ EOF
   # Use `#` as pattern delimiter, as `/` is part of some variable values.
   ed -s "${setup_conf_path}" <<EOF 2 > /dev/null
 /id:${rule}/
-/setvar:'\?tx\.${tx_var_name}=/
-s#=[^,'"]\+#=${var_value}#
+/setvar:[']*tx\.${tx_var_name}=/
+s#=[^,'"]*#=${var_value}#
 wq
 EOF
 }
@@ -68,8 +85,7 @@ can_set() {
 
   if ! grep -q "id:${rule}" "${setup_conf_path}"; then
     return 1
-  fi
-  if grep -Eq "setvar:'?tx\.${tx_var_name}" "${setup_conf_path}"; then
+  elif ! grep -Eq "setvar:'?tx\.${tx_var_name}" "${setup_conf_path}"; then
     return 1
   fi
   return 0
@@ -96,6 +112,14 @@ get_tx_var_name() {
   echo "${1}" | awk -F'\|' '{print $4}'
 }
 
+get_tx_var_name() {
+  echo "${1}" | awk -F'\|' '{print $4}'
+}
+
+get_test_value() {
+  echo "${1}" | awk -F'\|' '{print $5}'
+}
+
 while read -r line; do
   if [ -z "${line}" ] || echo "${line}" | grep -Eq "^#"; then
     continue
@@ -106,14 +130,11 @@ while read -r line; do
   var_value="$(get_var_value "${line}")"
   rule="$(get_rule "${line}")"
   tx_var_name="$(get_tx_var_name "${line}")"
-
+  
   if should_set "${var_value}" "${tx_var_name}"; then
     if ! can_set "${rule}" "${tx_var_name}"; then
       if [ "${legacy}" = "true" ]; then
         echo "Legacy variable ${var_name} (${rule}) set but nothing found to substitute. Skipping"
-        continue
-      elif [ "${legacy}" = "false" -a "${rule}" != "900000" ]; then
-        echo "Non-legacy variable ${var_name} (${rule}) set but nothing found to substitute. Skipping"
         continue
       fi
       echo "Failed to find rule ${rule} to set ${tx_var_name}=${var_value} for ${var_name} in ${setup_conf_path}. Aborting"
@@ -122,7 +143,7 @@ while read -r line; do
 
     set_value "${rule}" "${var_name}" "${tx_var_name}" "${var_value}"
   fi
-done < "${DIRECTORY}/configure-rules.conf"
+done < "${DIRECTORY}/configure-rules.${CRS_VERSION}.conf"
 
 # Add SecDefaultActions
 var="${MODSEC_DEFAULT_PHASE1_ACTION}"
