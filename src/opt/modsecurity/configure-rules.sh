@@ -46,7 +46,7 @@ set_value() {
   var_name="${2}"
   tx_var_name="${3}"
   var_value="${4}"
-  
+
   echo "Configuring ${rule} for ${var_name} with ${tx_var_name}=${var_value}"
 
   # For each rule, we do one pass to uncomment the rule (up to first blank line after the rule),
@@ -68,24 +68,12 @@ EOF
   # and whether the expression is enclosed in single quotes.
   # Use `#` as pattern delimiter, as `/` is part of some variable values.
   # Try to find and update the variable (with or without quotes)
-  if ed -s "${setup_conf_path}" <<EOF 2 > /dev/null
+  ed -s "${setup_conf_path}" <<EOF 2 > /dev/null
 /id:${rule}/
-/setvar:tx\.${tx_var_name}=/
-s#=[^,"']*#=${var_value}#
+/setvar:'\?tx\.${tx_var_name}=/
+s#=[^,'"]\+#=${var_value}#
 wq
 EOF
-  then
-    # Success with unquoted pattern
-    true
-  else
-    # Try with quoted pattern
-    ed -s "${setup_conf_path}" <<EOF 2 > /dev/null
-/id:${rule}/
-/setvar:'tx\.${tx_var_name}=/
-s#=[^'"]'\"#=${var_value}'\"#
-wq
-EOF
-  fi
 }
 
 should_set() {
