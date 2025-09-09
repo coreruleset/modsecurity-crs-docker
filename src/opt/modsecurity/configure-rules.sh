@@ -57,7 +57,7 @@ set_value() {
     ed -s "${setup_conf_path}" <<EOF 2 > /dev/null
 /id:${rule}/
 -
-.,/\"$/ s/#//
+.,/^#\?$/ s/#//
 wq
 EOF
   fi
