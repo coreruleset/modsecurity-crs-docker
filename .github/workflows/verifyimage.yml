@@ -85,7 +85,7 @@ jobs:
         run: |
           # get the major version from the matrix.target 
           # The targets end with `<major>-<minor>-<patch>`.
-           CRS_VERSION="v$(awk -F'-' '{print $NR-2}' <<< "${{ matrix.target }})"
+          CRS_VERSION="v$(awk -F'-' '{print $NR-2}' <<< ${{ matrix.target }})"
           . .github/workflows/configure-rules-for-test.sh \
             "src/opt/modsecurity/configure-rules.${CRS_VERSION}.conf" \
             README.md \
