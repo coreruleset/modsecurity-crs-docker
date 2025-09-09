@@ -125,14 +125,6 @@ get_tx_var_name() {
   echo "${1}" | awk -F'\|' '{print $4}'
 }
 
-get_tx_var_name() {
-  echo "${1}" | awk -F'\|' '{print $4}'
-}
-
-get_test_value() {
-  echo "${1}" | awk -F'\|' '{print $5}'
-}
-
 while read -r line; do
   if [ -z "${line}" ] || echo "${line}" | grep -Eq "^#"; then
     continue
@@ -143,7 +135,6 @@ while read -r line; do
   var_value="$(get_var_value "${line}")"
   rule="$(get_rule "${line}")"
   tx_var_name="$(get_tx_var_name "${line}")"
-  
   if should_set "${var_value}" "${tx_var_name}"; then
     if ! can_set "${rule}" "${tx_var_name}"; then
       if [ "${legacy}" = "true" ]; then
