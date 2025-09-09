@@ -1,6 +1,6 @@
 ---
 name: Check length of Docker Hub README file
-on:  # yamllint disable-line rule:truthy
+on: # yamllint disable-line rule:truthy
   pull_request:
     branches:
       - master
@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # actions/checkout@v5
         with:
           fetch-depth: 1
       - name: Check README-containers.md length

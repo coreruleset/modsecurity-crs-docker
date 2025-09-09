@@ -11,10 +11,10 @@ jobs:
       targets: ${{ steps.generate.outputs.targets }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # actions/checkout@v5
       - name: List targets
         id: generate
-        uses: docker/bake-action/subaction/list-targets@v4
+        uses: docker/bake-action/subaction/list-targets@3acf805d94d93a86cce4ca44798a76464a75b88c # docker/bake-action/subaction/list-targets@v6
 
   build:
     name: Build ${{ matrix.target }}
@@ -30,33 +30,33 @@ jobs:
         target: ${{ fromJson(needs.prepare.outputs.targets) }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # actions/checkout@v5
         with:
           fetch-depth: 1
-      
+
       - name: Install Cosign
-        uses: sigstore/cosign-installer@v3.4.0
+        uses: sigstore/cosign-installer@d58896d6a1865668819e1d91763c7751a165e159 # sigstore/cosign-installer@v3.9.2
 
       # https://github.com/docker/setup-qemu-action
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392 # docker/setup-qemu-action@v3
         with:
           image: tonistiigi/binfmt:qemu-v9.2.0
 
       # https://github.com/docker/setup-buildx-action
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3.0.0
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # docker/setup-buildx-action@v3.11.1
         with:
           driver-opts: image=moby/buildkit:master
 
       - name: Login to DockerHub
-        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
+        uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # docker/login-action@v3.5.0
         with:
           username: ${{ secrets.dockerhub_user }}
           password: ${{ secrets.dockerhub_token }}
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
+        uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # docker/login-action@v3.5.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -64,7 +64,7 @@ jobs:
 
       - name: 'Build and push ${{ matrix.target }}'
         id: build-and-push
-        uses: docker/bake-action@v4.1.0
+        uses: docker/bake-action@3acf805d94d93a86cce4ca44798a76464a75b88c # docker/bake-action@v6.9.0
         with:
           files: |
             ./docker-bake.hcl
