@@ -82,7 +82,7 @@ EOF
     ed -s "${setup_conf_path}" <<EOF 2 > /dev/null
 /id:${rule}/
 /setvar:'tx\.${tx_var_name}=/
-s#=.*'\"#=${var_value}'\"#
+s#=[^'"]'\"#=${var_value}'\"#
 wq
 EOF
   fi
