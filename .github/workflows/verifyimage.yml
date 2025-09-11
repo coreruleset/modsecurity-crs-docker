@@ -83,8 +83,11 @@ jobs:
 
       - name: Run ${{ matrix.target }}
         run: |
+          # get the major version from the matrix.target 
+          # The targets end with `<major>-<minor>-<patch>`.
+          CRS_VERSION="v$(awk -F'-' '{print $(NF-2)}' <<< ${{ matrix.target }})"
           . .github/workflows/configure-rules-for-test.sh \
-            src/opt/modsecurity/configure-rules.conf \
+            "src/opt/modsecurity/configure-rules.${CRS_VERSION}.conf" \
             README.md \
             "${{ matrix.target }}.env"
           echo "Starting container ${{ matrix.target }}-verification"

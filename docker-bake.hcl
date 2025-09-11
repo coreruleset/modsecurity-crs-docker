@@ -17,9 +17,20 @@ variable "modsec2-flags" {
     default = "--with-yajl --with-ssdeep --with-pcre2"
 }
 
-variable "crs-version" {
+variable "previous-major-crs-version" {
+    default = "3.3.7"
+}
+
+variable "major-crs-version" {
     # renovate: depName=coreruleset/coreruleset datasource=github-releases
     default = "4.18.0"
+}
+
+variable "crs-versions" {
+  default = { 
+    "previous" = previous-major-crs-version,
+    "latest" = major-crs-version
+  }
 }
 
 variable "nginx-version" {
@@ -115,7 +126,6 @@ target "platforms-base" {
         "org.opencontainers.image.source" = "https://github.com/coreruleset/modsecurity-crs-docker"
     }
     args = {
-        CRS_RELEASE = "${crs-version}"
         MODSEC2_VERSION = "${modsec2-version}"
         MODSEC2_FLAGS = modsec2-flags
         MODSEC3_VERSION = "${modsec3-version}"
@@ -127,6 +137,7 @@ target "platforms-base" {
 
 target "apache" {
     matrix = {
+        crs_release = crs-versions
         base = [
             {
                 name = "debian"
@@ -146,21 +157,23 @@ target "apache" {
     }
 
     inherits = ["platforms-base"]
-    name = "apache-${base.name}"
+    name = "apache-${base.name}-${replace(crs_release, ".", "-")}"
     contexts = {
         image = base.image
     }
     dockerfile = base.dockerfile
     args = {
+        CRS_RELEASE = "${crs_release}"
         LUA_MODULES = base.lua_modules
     }
     tags = concat(tag(base.tag_base),
-        vtag("${crs-version}", base.tag_base)
+        vtag("${crs_release}", base.tag_base)
     )
 }
 
 target "nginx" {
     matrix = {
+        crs_release = crs-versions
         base = [
             {
                 name = "debian"
@@ -175,6 +188,7 @@ target "nginx" {
                 image = "docker-image://nginxinc/nginx-unprivileged:${nginx-version}-alpine"
                 lua_modules = join(" ", lua-modules-alpine)
                 tag_base = "nginx-alpine"
+                crs_release = crs-versions
             }
         ],
         read-only-fs = [
@@ -189,12 +203,13 @@ target "nginx" {
         ]
     }
     inherits = ["platforms-base"]
-    name = "nginx-${base.name}-${read-only-fs.name}"
+    name = "nginx-${base.name}-${read-only-fs.name}-${replace(crs_release, ".", "-")}"
     contexts = {
         image = base.image
     }
     dockerfile = base.dockerfile
     args = {
+        CRS_RELEASE = crs_release
         NGINX_VERSION = nginx-version
         LUA_MODULES = base.lua_modules
         NGINX_DYNAMIC_MODULES = join(" ", [for mod in nginx-dynamic-modules : join(" ", [mod.owner, mod.name, mod.version])])
@@ -202,6 +217,6 @@ target "nginx" {
         READ_ONLY_FS = read-only-fs.read-only
     }
     tags = concat(tag("${base.tag_base}${equal(read-only-fs.read-only, "true") ? "-read-only" : ""}"),
-        vtag("${crs-version}", "${base.tag_base}${equal(read-only-fs.read-only, "true") ? "-read-only" : ""}")
+        vtag("${crs_release}", "${base.tag_base}${equal(read-only-fs.read-only, "true") ? "-read-only" : ""}")
     )
 }

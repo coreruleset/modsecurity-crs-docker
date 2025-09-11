@@ -24,9 +24,14 @@ Stable Tags are composed of:
    * date, in the format `YYYYMMDDHHMM`
 
 The stable tag format is `<CRS version>-<web server>[-<os>][-<writable>]-<date>`.
-Examples:
-   * `4-nginx-202401121309`
-   * `4.0-apache-alpine-202401121309`
+Examples (do not blindly copy these labels):
+   * `4-nginx-202509051009`
+   * `4.18-nginx-202509051009`
+   * `4.18.0-nginx-202509051009`
+Or for the previous major release:
+   * `3-nginx-alpine-202509051009`
+   * `3.3-nginx-alpine-202509051009`
+   * `3.3.7-nginx-alpine-202509051009`
 
 ### Rolling Tags
 
