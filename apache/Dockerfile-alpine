@@ -1,3 +1,6 @@
+# syntax=docker/dockerfile:1
+# check=skip=SecretsUsedInArgOrEnv
+
 ARG HTTPD_VERSION="n/a"
 
 FROM image AS build
