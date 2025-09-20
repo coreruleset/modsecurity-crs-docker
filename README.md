@@ -78,8 +78,7 @@ Our builds are based on the official Apache httpd, nginx and Openresty images, w
 We currently provide images for the following architectures:
 
 * linux/amd64
-* linux/arm/v7
-* linux/arm64/v8
+* linux/arm64
 * linux/i386
 
 ### Building
@@ -93,7 +92,7 @@ docker buildx bake -f ./docker-bake.hcl --print
 To build for any platforms of your choosing, just use this example:
 
 ```bash
-docker buildx create --use --platform linux/amd64,linux/i386,linux/arm64,linux/arm/v7
+docker buildx create --use --platform linux/amd64,linux/i386,linux/arm64
 docker buildx bake -f docker-bake.hcl
 ```
 
