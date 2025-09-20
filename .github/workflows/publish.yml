@@ -73,12 +73,12 @@ jobs:
           provenance: true
           sbom: true
 
-      - name: Sign the images with GitHub OIDC Token
+      - name: 'Sign the image for ${{ matrix.target }} with GitHub OIDC Token'
         env:
           METADATA: ${{ steps.build-and-push.outputs.metadata }}
         run: |
-          DIGEST=$(echo ${METADATA} | jq -r '.[] | ."containerimage.digest"')
-          TAGS=$(echo ${METADATA} | jq -r '.[] | ."image.name" | tostring' | tr ',' '\n')
+          DIGEST=$(echo ${METADATA} | jq -r '."${{ matrix.target }}" ."containerimage.digest"')
+          TAGS=$(echo ${METADATA} | jq -r '."${{ matrix.target }}" ."image.name" | tostring' | tr ',' '\n')
           images=""
           for tag in ${TAGS}; do
             images+="${tag}@${DIGEST} "

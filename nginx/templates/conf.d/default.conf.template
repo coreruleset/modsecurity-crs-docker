@@ -38,8 +38,8 @@ server {
 
     server_name ${SERVER_NAME};
 
-    ssl_certificate ${SSL_CERT};
-    ssl_certificate_key ${SSL_CERT_KEY};
+    ssl_certificate ${SSL_CERT_FILE};
+    ssl_certificate_key ${SSL_CERT_KEY_FILE};
     ssl_session_timeout 1d;
     ssl_session_cache shared:MozSSL:10m;
     ssl_session_tickets off;
