@@ -121,7 +121,7 @@ group "default" {
 
 target "platforms-base" {
     context="."
-    platforms = ["linux/amd64", "linux/arm64/v8", "linux/arm/v7", "linux/i386"]
+    platforms = ["linux/amd64", "linux/arm64", "linux/i386"]
     labels = {
         "org.opencontainers.image.source" = "https://github.com/coreruleset/modsecurity-crs-docker"
     }
