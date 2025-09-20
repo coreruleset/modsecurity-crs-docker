@@ -13,7 +13,7 @@ jobs:
   prepare:
     runs-on: ubuntu-latest
     outputs:
-      targets: ${{ steps.generate.outputs.targets }}
+      matrix: ${{ steps.generate.outputs.matrix }}
     steps:
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # actions/checkout@v5
@@ -34,7 +34,7 @@ jobs:
       - prepare
     strategy:
       matrix:
-        target: ${{ fromJson(needs.prepare.outputs.targets) }}
+        include: ${{ fromJson(needs.prepare.outputs.matrix) }}
     steps:
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # actions/checkout@v5
