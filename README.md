@@ -1,7 +1,5 @@
 # OWASP CRS Docker Image
 
-[![dockeri.co](http://dockeri.co/image/owasp/modsecurity-crs)](https://hub.docker.com/r/owasp/modsecurity-crs/)
-
 [![Build Status](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Fcoreruleset%2Fmodsecurity-crs-docker%2Fbadge%3Fref%3Dmain&style=flat)](https://actions-badge.atrox.dev/coreruleset/modsecurity-crs-docker/goto?ref=main
 ) [![GitHub issues](https://img.shields.io/github/issues-raw/coreruleset/modsecurity-crs-docker.svg)](https://github.com/coreruleset/modsecurity-crs-docker/issues
 ) [![GitHub PRs](https://img.shields.io/github/issues-pr-raw/coreruleset/modsecurity-crs-docker.svg)](https://github.com/coreruleset/modsecurity-crs-docker/pulls
@@ -78,8 +76,7 @@ Our builds are based on the official Apache httpd, nginx and Openresty images, w
 We currently provide images for the following architectures:
 
 * linux/amd64
-* linux/arm/v7
-* linux/arm64/v8
+* linux/arm64
 * linux/i386
 
 ### Building
@@ -93,7 +90,7 @@ docker buildx bake -f ./docker-bake.hcl --print
 To build for any platforms of your choosing, just use this example:
 
 ```bash
-docker buildx create --use --platform linux/amd64,linux/i386,linux/arm64,linux/arm/v7
+docker buildx create --use --platform linux/amd64,linux/i386,linux/arm64
 docker buildx bake -f docker-bake.hcl
 ```
 
