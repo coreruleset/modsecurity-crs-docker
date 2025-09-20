@@ -139,6 +139,10 @@ docker run -p 8080:8080 -ti -e BLOCKING_PARANOIA=4 -v rules:/opt/owasp-crs/rules
 
 ModSecurity is an open source, cross platform Web Application Firewall (WAF) engine for Apache, IIS and Nginx. It has a robust event-based programming language which provides protection from a range of attacks against web applications and allows for HTTP traffic monitoring, logging and real-time analysis.
 
+## SSL files naming breaking change
+
+`SSL` related variables have been renamed to highlight they are a path to a file, so docker doesn't complain about sensitive usage in the case of variables ending in `_KEY`.
+
 ### Nginx based images breaking change
 
 | ⚠️ WARNING          |
@@ -166,16 +170,16 @@ These variables are common to image variants and will set defaults based on the 
 | METRICS_ALLOW_FROM | A single range of IP addresses that can access the metrics | `127.0.0.0/255.0.0.0 ::1/128` | `127.0.0.0/24` |
 | METRICS_DENY_FROM | A range of IP addresses that cannot access the metrics | `All` | `all` |
 | METRICSLOG | Location of metrics log file | `/dev/null` | - |
-| PROXY_SSL_CERT | A string indicating the path to the PEM-encoded X.509 certificate data file or token identifier of the proxied server | `/usr/local/apache2/conf/proxy.crt` | `/etc/nginx/conf/proxy.crt` |
-| PROXY_SSL_CERT_KEY | A string indicating the path to the PEM-encoded private key file of the proxied server | `/usr/local/apache2/conf/proxy.key` | `/etc/nginx/conf/proxy.key` |
+| PROXY_SSL_CERT_FILE | A string indicating the path to the PEM-encoded X.509 certificate data file or token identifier of the proxied server | `/usr/local/apache2/conf/proxy.crt` | `/etc/nginx/conf/proxy.crt` |
+| PROXY_SSL_CERT_KEY_FILE | A string indicating the path to the PEM-encoded private key file of the proxied server | `/usr/local/apache2/conf/proxy.key` | `/etc/nginx/conf/proxy.key` |
 | PROXY_SSL_CIPHERS| A string indicating the cipher suite to connect to the backend via TLS | `"ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384"` | - |
 | PROXY_SSL_PROTOCOLS | TLS protocols to enable for the connection to the backend | `"all -SSLv3 -TLSv1 -TLSv1.1"` | `TLSv1.2 TLSv1.3` |
 | PROXY_SSL  | SSL Proxy Engine Operation Switch | `off` | - |
 | PROXY_SSL_VERIFY | A string value indicating the type of proxy server Certificate verification | `none` | `off` |
 | PROXY_TIMEOUT  | Number of seconds for proxied requests to time out | `60` | `60s` |
 | SERVER_NAME | The server name | `localhost` | - |
-| SSL_CERT | A string indicating the path to the PEM-encoded X.509 certificate data file or token identifier of the proxied server | `/usr/local/apache2/conf/server.crt` | `/etc/nginx/conf/server.crt` |
-| SSL_CERT_KEY | A string indicating the path to the PEM-encoded private key file of the proxied server | `/usr/local/apache2/conf/server.key` | `/etc/nginx/conf/server.key` |
+| SSL_CERT_FILE | A string indicating the path to the PEM-encoded X.509 certificate data file or token identifier of the proxied server | `/usr/local/apache2/conf/server.crt` | `/etc/nginx/conf/server.crt` |
+| SSL_CERT_KEY_FILE | A string indicating the path to the PEM-encoded private key file of the proxied server | `/usr/local/apache2/conf/server.key` | `/etc/nginx/conf/server.key` |
 | SSL_CIPHERS| A string indicating the cipher suite for incoming TLS connections | `"ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384"` | - |
 | SSL_OCSP_STAPLING | Enable / disable OCSP stapling | `On` | `on` |
 | SSL_PROTOCOLS | TLS protocols to enable for the connection to the backend | `"all -SSLv3 -TLSv1 -TLSv1.1"` | `TLSv1.2 TLSv1.3` |
@@ -195,7 +199,7 @@ These variables are common to image variants and will set defaults based on the 
 | PORT | An int value indicating the port where the webserver is listening to | `8080` | - |
 | PROXY_ERROR_OVERRIDE  | A string indicating that errors from the backend services should be overridden by this proxy server (see [ProxyErrorOverride](https://httpd.apache.org/docs/2.4/mod/mod_proxy.html#proxyerroroverride) directive). (Allowed values: `on`, `off`. Default: `on`) |
 | PROXY_PRESERVE_HOST  | A string indicating the use of incoming Host HTTP request header for proxy request (Default: `on`) |
-| PROXY_SSL_CA_CERT  | A string indicating the path to the PEM-encoded list of accepted CA certificates for the proxied server (Default: `/etc/ssl/certs/ca-certificates.ca`) |
+| PROXY_SSL_CA_CERT_FILE  | A string indicating the path to the PEM-encoded list of accepted CA certificates for the proxied server (Default: `/etc/ssl/certs/ca-certificates.crt`) |
 | PROXY_SSL_CHECK_PEER_NAME  | A string indicating if the host name checking for remote server certificates is to be enabled (Default: `on`) |
 | REMOTEIP_INT_PROXY  | A string indicating the client intranet IP addresses trusted to present the RemoteIPHeader value (Default: `10.1.0.0/16`) |
 | REQ_HEADER_FORWARDED_PROTO  | A string indicating the transfer protocol of the initial request (Default: `https`) |
