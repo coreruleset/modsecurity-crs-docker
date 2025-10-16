@@ -199,6 +199,7 @@ These variables are common to image variants and will set defaults based on the 
 | PROXY_SSL_CA_CERT_FILE  | A string indicating the path to the PEM-encoded list of accepted CA certificates for the proxied server (Default: `/etc/ssl/certs/ca-certificates.crt`) |
 | PROXY_SSL_CHECK_PEER_NAME  | A string indicating if the host name checking for remote server certificates is to be enabled (Default: `on`) |
 | REMOTEIP_INT_PROXY  | A string indicating the client intranet IP addresses trusted to present the RemoteIPHeader value (Default: `10.1.0.0/16`) |
+| REMOTEIP_HEADER   | A string indicating the header to use for RemoteIPHeader value (Default: `X-Forwarded-For`)  |
 | REQ_HEADER_FORWARDED_PROTO  | A string indicating the transfer protocol of the initial request (Default: `https`) |
 | SERVER_ADMIN  | A string value indicating the address where problems with the server should be e-mailed (Default: `root@localhost`) |
 | SERVER_SIGNATURE | A string value configuring the footer on server-generated documents (Allowed values: `On`, `Off`, `EMail`. Default: `Off`) |
