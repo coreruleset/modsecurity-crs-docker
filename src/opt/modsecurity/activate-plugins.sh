@@ -3,9 +3,10 @@
 printf "# # #\nRunning CRS plugin activation\n- - -\n\n"
 
 # Check if crs-setup.conf is overriden
-if [ -n "${MANUAL_MODE}" ]; then
+if [ "${MANUAL_MODE}" = "true" ]; then
   echo "Using manual config mode"
-  return; # Don't use exit on a sourced script
+  # Don't use exit on a sourced script
+  return
 fi
 
 # Plugins can be disabled entirely by setting CRS_DISABLE_PLUGINS.
