@@ -11,7 +11,7 @@ printf "# # #\nRunning CRS rule configuration\n- - -\n"
 DIRECTORY="$(cd "$(dirname "$0")" && pwd)"
 
 # Check if crs-setup.conf is overriden
-if [ -n "${MANUAL_MODE}" ]; then
+if [ "${MANUAL_MODE}" = "true" ]; then
   echo "Using manual config mode"
   # Don't use exit on a sourced script
   return
