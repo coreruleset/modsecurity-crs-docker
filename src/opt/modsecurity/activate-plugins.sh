@@ -3,7 +3,7 @@
 printf "# # #\nRunning CRS plugin activation\n- - -\n\n"
 
 # Check if crs-setup.conf is overriden
-if [ -n "${MANUAL_MODE}" ]; then
+if [ "${MANUAL_MODE}" = "1" ]; then
   echo "Using manual config mode"
   return; # Don't use exit on a sourced script
 fi

@@ -309,7 +309,7 @@ All these variables impact in configuration directives in the modsecurity engine
 | DETECTION_PARANOIA | (:new: Replaces `EXECUTING_PARANOIA` in CRSv4) An integer indicating the detection_paranoia_level (Default: `BLOCKING_PARANOIA`) |
 | ENFORCE_BODYPROC_URLENCODED | A boolean indicating the enforce_bodyproc_urlencoded (Default: `0`) |
 | EXECUTING_PARANOIA | An integer indicating the executing_paranoia_level (Default: `PARANOIA`) |
-| MANUAL_MODE | A boolean indicating that you are providing your own `crs-setup.conf` file mounted as volume. (Default: `0`). ⚠️ None of the following variables are used if you set it to `1`. |
+| MANUAL_MODE | A boolean indicating that you are providing your own `crs-setup.conf` file mounted as volume. (Default: `0` == automatic mode). ⚠️  None of the following variables are used if you set it to `1`. |
 | MAX_FILE_SIZE | An integer indicating the max_file_size (Default: `unlimited`) |
 | MAX_NUM_ARGS | An integer indicating the max_num_args (Default: `unlimited`) |
 | PARANOIA | An integer from `1` through `4`, indicating the paranoia level (Default: `1`) |
