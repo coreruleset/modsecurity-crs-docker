@@ -183,6 +183,7 @@ ENV \
     MODSEC_UPLOAD_KEEP_FILES=Off \
     NGINX_ALWAYS_TLS_REDIRECT=off \
     NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx \
+    NGINX_X_FORWARDED_PROTO='$scheme' \
     PORT=8080 \
     PROXY_SSL_CERT_FILE=/etc/nginx/conf/proxy.crt \
     PROXY_SSL_CERT_KEY_FILE=/etc/nginx/conf/proxy.key \

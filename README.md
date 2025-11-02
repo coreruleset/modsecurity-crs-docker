@@ -226,6 +226,7 @@ These variables are common to image variants and will set defaults based on the 
 | HTTP2 | A string value indicating whether HTTP/2 should be enabled (for all locations) (Allowed values: `on`, `off`. Default: `on`) |
 | KEEPALIVE_TIMEOUT  | Number of seconds for a keep-alive client connection to stay open on the server side (Default: `60s`) |
 | NGINX_ALWAYS_TLS_REDIRECT | A string value indicating if http should redirect to https (Allowed values: `on`, `off`. Default: `off`) |
+| NGINX_X_FORWARDED_PROTO | A string indicating the transfer protocol of the initial request (Default: `$scheme`) |
 | PORT | An int value indicating the port where the webserver is listening to | `8080` | We run as unprivileged user. |
 | PROXY_SSL_VERIFY_DEPTH  | An integer value indicating the verification depth for the client certificate chain (Default: `1`) |
 | REAL_IP_HEADER | Name of the header containing the real IP value(s) (Default: `X-REAL-IP`). See [real_ip_header](http://nginx.org/en/docs/http/ngx_http_realip_module.html#real_ip_header) |
