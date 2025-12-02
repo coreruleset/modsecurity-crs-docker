@@ -23,7 +23,7 @@ variable "previous-major-crs-version" {
 
 variable "major-crs-version" {
     # renovate: depName=coreruleset/coreruleset datasource=github-releases
-    default = "4.20.0"
+    default = "4.21.0"
 }
 
 variable "crs-versions" {
