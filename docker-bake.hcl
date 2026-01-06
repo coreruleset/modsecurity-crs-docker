@@ -18,7 +18,7 @@ variable "modsec2-flags" {
 }
 
 variable "previous-major-crs-version" {
-    default = "3.3.7"
+    default = "3.3.8"
 }
 
 variable "major-crs-version" {
