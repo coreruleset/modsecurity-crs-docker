@@ -219,12 +219,14 @@ RUN set -eux; \
     echo 'Include conf/extra/httpd-modsecurity.conf' >> /usr/local/apache2/conf/httpd.conf; \
     sed -i -E 's|(MaxRequestWorkers[ ]*)[0-9]*|\1${WORKER_CONNECTIONS}|' /usr/local/apache2/conf/extra/httpd-mpm.conf; \
     mkdir -p /var/log/apache2; \
+    mkdir -p /var/log/modsecurity/audit/; \
     mkdir -p /tmp/modsecurity/data; \
     mkdir -p /tmp/modsecurity/upload; \
     mkdir -p /tmp/modsecurity/tmp; \
     chown -R httpd:httpd \
         /var/log/ \
         /usr/local/apache2/ \
+        /var/log/modsecurity/audit/ \
         /etc/modsecurity.d \
         /tmp/modsecurity \
         /opt/owasp-crs

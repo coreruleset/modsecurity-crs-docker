@@ -277,7 +277,9 @@ RUN set -eux; \
         # only run this script in read-only configuration
         rm /docker-entrypoint.d/0-move-writables.sh; \
     fi; \
+    mkdir -p /var/log/modsecurity/audit; \
     chown nginx:nginx \
+        /var/log/modsecurity/audit \
         /opt/owasp-crs \
         /etc/modsecurity.d
 
