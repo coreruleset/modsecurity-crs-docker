@@ -44,6 +44,7 @@ variable "httpd-version" {
 }
 
 variable "modsecurity-nginx-version" {
+    # renovate: depName=ModSecurity-nginx packageName=owasp-modsecurity/ModSecurity-nginx datasource=github-releases
     default = "1.0.4"
 }
 
@@ -52,6 +53,7 @@ variable "lua-version" {
 }
 
 variable "lmdb-version" {
+    # renovate: depName=lmdb packageName=LMDB/lmdb datasource=github-releases
     default = "0.9.29"
 }
 
