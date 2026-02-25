@@ -51,6 +51,7 @@ RUN set -eux; \
     ARCH=$(gcc -print-multiarch); \
     sed -ie "s/i386-linux-gnu/${ARCH}/g" build/ssdeep.m4; \
     sed -ie "s/i386-linux-gnu/${ARCH}/g" build/pcre2.m4; \
+    curl -sSL https://patch-diff.githubusercontent.com/raw/owasp-modsecurity/ModSecurity/pull/3473.patch | patch -p1; \
     ./build.sh; \
     ./configure ${MODSEC3_FLAGS}; \
     make -j$(nproc) install; \
