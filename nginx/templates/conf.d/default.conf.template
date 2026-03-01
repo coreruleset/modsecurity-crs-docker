@@ -13,6 +13,8 @@ server {
     server_name ${SERVER_NAME};
     set $always_redirect ${NGINX_ALWAYS_TLS_REDIRECT};
 
+    port_in_redirect off;
+
     PROXY_SSL_CONFIG
 
     location / {
@@ -37,6 +39,8 @@ server {
     listen ${SSL_PORT} ssl;
 
     server_name ${SERVER_NAME};
+
+    port_in_redirect off;
 
     ssl_certificate ${SSL_CERT_FILE};
     ssl_certificate_key ${SSL_CERT_KEY_FILE};
