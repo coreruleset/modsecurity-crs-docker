@@ -155,6 +155,15 @@ An example can be seen in the [docker-compose](https://github.com/coreruleset/mo
 
 Both nginx and httpd containers now run with an **unprivileged user**. This means that we cannot bind to ports below 1024, so you might need to correct your `PORT` and `SSL_PORT` settings. Now the defaults for both nginx and httpd are `8080` and `8443`.
 
+### Nginx `port_in_redirect` breaking change
+
+> [!WARNING]
+> nginx now has [`port_in_redirect`](https://nginx.org/en/docs/http/ngx_http_core_module.html#port_in_redirect) set to `off` in all server blocks.
+
+Previously, nginx's default `port_in_redirect on` caused the internal listening port (e.g., `8080` or `8443`) to be included in redirect `Location` headers (e.g., when nginx adds a trailing slash: `/address` → `http://example.com:8080/address/`). This broke setups where the container is behind a reverse proxy and the external port differs from the internal port.
+
+With `port_in_redirect off`, nginx omits the port from redirect URLs, so clients follow redirects using the correct external port. **If you relied on the port being included in nginx-generated redirects, you will need to mount a custom `default.conf.template` and re-enable this directive.**
+
 ### Common ENV Variables
 
 These variables are common to image variants and will set defaults based on the image name.
