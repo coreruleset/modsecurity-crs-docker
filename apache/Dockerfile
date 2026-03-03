@@ -194,6 +194,7 @@ RUN set -eux; \
     mkdir -p /tmp/modsecurity/upload; \
     mkdir -p /tmp/modsecurity/tmp; \
     mkdir -p /var/log/apache2/; \
+    mkdir -p /var/log/modsecurity/audit/; \
     ln -s /opt/owasp-crs /etc/modsecurity.d/; \
     sed -i -E 's|(Listen) [0-9]+|\1 ${PORT}|' /usr/local/apache2/conf/httpd.conf; \
     sed -i -E 's|(ServerTokens) Full|\1 ${SERVER_TOKENS}|' /usr/local/apache2/conf/extra/httpd-default.conf; \
@@ -220,6 +221,7 @@ RUN set -eux; \
     sed -i -E 's|(MaxRequestWorkers[ ]*)[0-9]*|\1${WORKER_CONNECTIONS}|' /usr/local/apache2/conf/extra/httpd-mpm.conf; \
     chown -R httpd:httpd \
         /var/log/ \
+        /var/log/modsecurity/audit/ \
         /usr/local/apache2/ \
         /etc/modsecurity.d \
         /tmp/modsecurity \
