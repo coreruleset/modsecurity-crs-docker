@@ -209,6 +209,7 @@ These variables are common to image variants and will set defaults based on the 
 | SSL_PORT | Port number where the SSL enabled webserver is listening | `8443` | - |
 | SSL_SESSION_TICKETS | A string to enable or disable the use of [TLS session tickets](https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslsessiontickets) (RFC 5077). (Default: `off`) |
 | TIMEOUT  | Number of seconds before receiving and sending timeout (Default: `60`) |
+| USE_EXTENDED_LOGFORMAT | A boolean value to enable the [extended log format](https://www.netnea.com/cms/apache-tutorial-5_extending-access-log/#step_4_configuring_the_new,_extended_log_format). When `true`, `APACHE_LOGFORMAT` is overridden with the extended format that includes ModSecurity anomaly scores and other extended fields. (Allowed values: `true`, `false`. Default: `false`) |
 | WORKER_CONNECTIONS  | Maximum number of MPM request worker processes (Default: `400`) |
 
 > [!NOTE]
