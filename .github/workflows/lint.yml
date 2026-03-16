@@ -8,6 +8,9 @@ on: # yamllint disable-line rule:truthy
     paths:
       - 'README-containers.md'
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
