@@ -17,7 +17,7 @@ variable "modsec2-flags" {
     default = "--with-yajl --with-ssdeep --with-pcre2"
 }
 
-variable "previous-major-crs-version" {
+variable "v3-lts-crs-version" {
     default = "3.3.8"
 }
 
@@ -26,9 +26,13 @@ variable "major-crs-version" {
     default = "4.25.0"
 }
 
+variable "v4-lts-crs-version" {
+    default = "4.25.0"
+}
+
 variable "crs-versions" {
-  default = { 
-    "previous" = previous-major-crs-version,
+  default = {
+    "previous" = v3-lts-crs-version,
     "latest" = major-crs-version
   }
 }
@@ -112,6 +116,14 @@ function "vtag" {
     )
 }
 
+function "ltag" {
+    params = [semver, variant]
+    result = concat(
+        tag("${minor(semver)}-${variant}-lts"),
+        tag("${patch(semver)}-${variant}-lts")
+    )
+}
+
 group "default" {
     targets = [
         "apache",
@@ -166,8 +178,10 @@ target "apache" {
         CRS_RELEASE = "${crs_release}"
         LUA_MODULES = base.lua_modules
     }
-    tags = concat(tag(base.tag_base),
-        vtag("${crs_release}", base.tag_base)
+    tags = concat(
+        tag(base.tag_base),
+        vtag("${crs_release}", base.tag_base),
+        equal(crs_release, v4-lts-crs-version) ? ltag("${crs_release}", base.tag_base) : []
     )
 }
 
@@ -216,7 +230,9 @@ target "nginx" {
         NGINX_HOME = "/etc/nginx"
         READ_ONLY_FS = read-only-fs.read-only
     }
-    tags = concat(tag("${base.tag_base}${equal(read-only-fs.read-only, "true") ? "-read-only" : ""}"),
-        vtag("${crs_release}", "${base.tag_base}${equal(read-only-fs.read-only, "true") ? "-read-only" : ""}")
+    tags = concat(
+        tag("${base.tag_base}${equal(read-only-fs.read-only, "true") ? "-read-only" : ""}"),
+        vtag("${crs_release}", "${base.tag_base}${equal(read-only-fs.read-only, "true") ? "-read-only" : ""}"),
+        equal(crs_release, v4-lts-crs-version) ? ltag("${crs_release}", "${base.tag_base}${equal(read-only-fs.read-only, "true") ? "-read-only" : ""}") : []
     )
 }
