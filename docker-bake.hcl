@@ -17,7 +17,7 @@ variable "modsec2-flags" {
     default = "--with-yajl --with-ssdeep --with-pcre2"
 }
 
-variable "v3-lts-crs-version" {
+variable "previous-lts-crs-version" {
     default = "3.3.9"
 }
 
@@ -32,7 +32,7 @@ variable "v4-lts-crs-version" {
 
 variable "crs-versions" {
   default = [
-    { tag = "previous", version = v3-lts-crs-version },
+    { tag = "previous-lts", version = v3-lts-crs-version },
     { tag = "lts",      version = v4-lts-crs-version },
     { tag = "latest",   version = major-crs-version }
   ]
