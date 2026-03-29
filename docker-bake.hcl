@@ -33,6 +33,7 @@ variable "v4-lts-crs-version" {
 variable "crs-versions" {
   default = {
     "previous" = v3-lts-crs-version,
+    "lts" = v4-lts-crs-version,
     "latest" = major-crs-version
   }
 }
@@ -116,7 +117,7 @@ function "vtag" {
     )
 }
 
-function "ltag" {
+function "lts-tag" {
     params = [semver, variant]
     result = concat(
         tag("${minor(semver)}-${variant}-lts"),
@@ -181,7 +182,7 @@ target "apache" {
     tags = concat(
         tag(base.tag_base),
         vtag("${crs_release}", base.tag_base),
-        equal(crs_release, v4-lts-crs-version) ? ltag("${crs_release}", base.tag_base) : []
+        equal(crs_release, v4-lts-crs-version) ? lts-tag("${crs_release}", base.tag_base) : []
     )
 }
 
@@ -233,6 +234,6 @@ target "nginx" {
     tags = concat(
         tag("${base.tag_base}${equal(read-only-fs.read-only, "true") ? "-read-only" : ""}"),
         vtag("${crs_release}", "${base.tag_base}${equal(read-only-fs.read-only, "true") ? "-read-only" : ""}"),
-        equal(crs_release, v4-lts-crs-version) ? ltag("${crs_release}", "${base.tag_base}${equal(read-only-fs.read-only, "true") ? "-read-only" : ""}") : []
+        equal(crs_release, v4-lts-crs-version) ? lts-tag("${crs_release}", "${base.tag_base}${equal(read-only-fs.read-only, "true") ? "-read-only" : ""}") : []
     )
 }
