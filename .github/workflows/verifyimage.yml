@@ -92,9 +92,9 @@ jobs:
 
       - name: Run ${{ matrix.target }}
         run: |
-          # get the major version from the matrix.target 
-          # The targets end with `<major>-<minor>-<patch>`.
-          CRS_VERSION="v$(awk -F'-' '{print $(NF-2)}' <<< ${{ matrix.target }})"
+          # get the major CRS version from the matrix.target
+          # Targets ending with "previous" are v3; all others are v4.
+          CRS_VERSION="$([[ "${{ matrix.target }}" == *-previous ]] && echo v3 || echo v4)"
           . .github/workflows/configure-rules-for-test.sh \
             "src/opt/modsecurity/configure-rules.${CRS_VERSION}.conf" \
             README.md \

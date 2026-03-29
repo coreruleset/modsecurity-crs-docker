@@ -31,11 +31,11 @@ variable "v4-lts-crs-version" {
 }
 
 variable "crs-versions" {
-  default = {
-    "previous" = v3-lts-crs-version,
-    "lts" = v4-lts-crs-version,
-    "latest" = major-crs-version
-  }
+  default = [
+    { tag = "previous", version = v3-lts-crs-version },
+    { tag = "lts",      version = v4-lts-crs-version },
+    { tag = "latest",   version = major-crs-version }
+  ]
 }
 
 variable "nginx-version" {
@@ -150,7 +150,7 @@ target "platforms-base" {
 
 target "apache" {
     matrix = {
-        crs_release = crs-versions
+        crs_entry = crs-versions
         base = [
             {
                 name = "debian"
@@ -170,25 +170,25 @@ target "apache" {
     }
 
     inherits = ["platforms-base"]
-    name = "apache-${base.name}-${replace(crs_release, ".", "-")}"
+    name = "apache-${base.name}-${crs_entry.tag}"
     contexts = {
         image = base.image
     }
     dockerfile = base.dockerfile
     args = {
-        CRS_RELEASE = "${crs_release}"
+        CRS_RELEASE = crs_entry.version
         LUA_MODULES = base.lua_modules
     }
     tags = concat(
         tag(base.tag_base),
-        vtag("${crs_release}", base.tag_base),
-        equal(crs_release, v4-lts-crs-version) ? lts-tag("${crs_release}", base.tag_base) : []
+        vtag("${crs_entry.version}", base.tag_base),
+        equal(crs_entry.tag, "lts") ? lts-tag("${crs_entry.version}", base.tag_base) : []
     )
 }
 
 target "nginx" {
     matrix = {
-        crs_release = crs-versions
+        crs_entry = crs-versions
         base = [
             {
                 name = "debian"
@@ -218,13 +218,13 @@ target "nginx" {
         ]
     }
     inherits = ["platforms-base"]
-    name = "nginx-${base.name}-${read-only-fs.name}-${replace(crs_release, ".", "-")}"
+    name = "nginx-${base.name}-${read-only-fs.name}-${crs_entry.tag}"
     contexts = {
         image = base.image
     }
     dockerfile = base.dockerfile
     args = {
-        CRS_RELEASE = crs_release
+        CRS_RELEASE = crs_entry.version
         NGINX_VERSION = nginx-version
         LUA_MODULES = base.lua_modules
         NGINX_DYNAMIC_MODULES = join(" ", [for mod in nginx-dynamic-modules : join(" ", [mod.owner, mod.name, mod.version])])
@@ -233,7 +233,7 @@ target "nginx" {
     }
     tags = concat(
         tag("${base.tag_base}${equal(read-only-fs.read-only, "true") ? "-read-only" : ""}"),
-        vtag("${crs_release}", "${base.tag_base}${equal(read-only-fs.read-only, "true") ? "-read-only" : ""}"),
-        equal(crs_release, v4-lts-crs-version) ? lts-tag("${crs_release}", "${base.tag_base}${equal(read-only-fs.read-only, "true") ? "-read-only" : ""}") : []
+        vtag("${crs_entry.version}", "${base.tag_base}${equal(read-only-fs.read-only, "true") ? "-read-only" : ""}"),
+        equal(crs_entry.tag, "lts") ? lts-tag("${crs_entry.version}", "${base.tag_base}${equal(read-only-fs.read-only, "true") ? "-read-only" : ""}") : []
     )
 }
