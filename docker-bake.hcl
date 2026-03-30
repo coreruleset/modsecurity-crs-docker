@@ -32,7 +32,7 @@ variable "v4-lts-crs-version" {
 
 variable "crs-versions" {
   default = [
-    { tag = "previous-lts", version = v3-lts-crs-version },
+    { tag = "previous-lts", version = previous-lts-crs-version },
     { tag = "lts",      version = v4-lts-crs-version },
     { tag = "latest",   version = major-crs-version }
   ]
