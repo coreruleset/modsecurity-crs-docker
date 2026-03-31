@@ -45,6 +45,23 @@ Examples:
    * `nginx`
    * `apache-alpine`
 
+### LTS Tags
+
+LTS (Long-Term Support) tags are stable tags pointing to a designated LTS release. They are updated less frequently than stable tags and are intended for users who prioritize stability over new features.
+
+LTS Tags are composed of:
+   * CRS version, in the format `<minor>` or `<minor>.<patch>`
+   * web server variant
+   * OS variant (optional)
+   * `lts` suffix
+
+The LTS tag format is `<CRS version>-<web server>[-<os>]-lts`.
+Examples:
+   * `4.25-nginx-lts`
+   * `4.25.0-nginx-lts`
+   * `4.25-apache-lts`
+   * `4.25.0-apache-alpine-lts`
+
 ## OS Variants
 
 * nginx – *latest stable ModSecurity v3 on Nginx 1.28.2 official stable base image, and latest stable OWASP CRS 4.25.0*

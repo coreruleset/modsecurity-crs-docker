@@ -17,8 +17,8 @@ variable "modsec2-flags" {
     default = "--with-yajl --with-ssdeep --with-pcre2"
 }
 
-variable "previous-major-crs-version" {
-    default = "3.3.8"
+variable "previous-lts-crs-version" {
+    default = "3.3.9"
 }
 
 variable "major-crs-version" {
@@ -26,11 +26,16 @@ variable "major-crs-version" {
     default = "4.25.0"
 }
 
+variable "v4-lts-crs-version" {
+    default = "4.25.0"
+}
+
 variable "crs-versions" {
-  default = { 
-    "previous" = previous-major-crs-version,
-    "latest" = major-crs-version
-  }
+  default = [
+    { tag = "previous-lts", version = previous-lts-crs-version },
+    { tag = "lts",      version = v4-lts-crs-version },
+    { tag = "latest",   version = major-crs-version }
+  ]
 }
 
 variable "nginx-version" {
@@ -112,6 +117,14 @@ function "vtag" {
     )
 }
 
+function "lts-tag" {
+    params = [semver, variant]
+    result = concat(
+        tag("${minor(semver)}-${variant}-lts"),
+        tag("${patch(semver)}-${variant}-lts")
+    )
+}
+
 group "default" {
     targets = [
         "apache",
@@ -137,7 +150,7 @@ target "platforms-base" {
 
 target "apache" {
     matrix = {
-        crs_release = crs-versions
+        crs_entry = crs-versions
         base = [
             {
                 name = "debian"
@@ -157,23 +170,25 @@ target "apache" {
     }
 
     inherits = ["platforms-base"]
-    name = "apache-${base.name}-${replace(crs_release, ".", "-")}"
+    name = "apache-${base.name}-${crs_entry.tag}"
     contexts = {
         image = base.image
     }
     dockerfile = base.dockerfile
     args = {
-        CRS_RELEASE = "${crs_release}"
+        CRS_RELEASE = crs_entry.version
         LUA_MODULES = base.lua_modules
     }
-    tags = concat(tag(base.tag_base),
-        vtag("${crs_release}", base.tag_base)
+    tags = concat(
+        tag(base.tag_base),
+        vtag("${crs_entry.version}", base.tag_base),
+        equal(crs_entry.tag, "lts") ? lts-tag("${crs_entry.version}", base.tag_base) : []
     )
 }
 
 target "nginx" {
     matrix = {
-        crs_release = crs-versions
+        crs_entry = crs-versions
         base = [
             {
                 name = "debian"
@@ -203,20 +218,22 @@ target "nginx" {
         ]
     }
     inherits = ["platforms-base"]
-    name = "nginx-${base.name}-${read-only-fs.name}-${replace(crs_release, ".", "-")}"
+    name = "nginx-${base.name}-${read-only-fs.name}-${crs_entry.tag}"
     contexts = {
         image = base.image
     }
     dockerfile = base.dockerfile
     args = {
-        CRS_RELEASE = crs_release
+        CRS_RELEASE = crs_entry.version
         NGINX_VERSION = nginx-version
         LUA_MODULES = base.lua_modules
         NGINX_DYNAMIC_MODULES = join(" ", [for mod in nginx-dynamic-modules : join(" ", [mod.owner, mod.name, mod.version])])
         NGINX_HOME = "/etc/nginx"
         READ_ONLY_FS = read-only-fs.read-only
     }
-    tags = concat(tag("${base.tag_base}${equal(read-only-fs.read-only, "true") ? "-read-only" : ""}"),
-        vtag("${crs_release}", "${base.tag_base}${equal(read-only-fs.read-only, "true") ? "-read-only" : ""}")
+    tags = concat(
+        tag("${base.tag_base}${equal(read-only-fs.read-only, "true") ? "-read-only" : ""}"),
+        vtag("${crs_entry.version}", "${base.tag_base}${equal(read-only-fs.read-only, "true") ? "-read-only" : ""}"),
+        equal(crs_entry.tag, "lts") ? lts-tag("${crs_entry.version}", "${base.tag_base}${equal(read-only-fs.read-only, "true") ? "-read-only" : ""}") : []
     )
 }
