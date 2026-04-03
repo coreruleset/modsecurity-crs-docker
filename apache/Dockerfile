@@ -150,6 +150,7 @@ ENV \
     SSL_PROTOCOLS="all -SSLv3 -TLSv1 -TLSv1.1" \
     SSL_SESSION_TICKETS=off \
     TIMEOUT=60 \
+    USE_EXTENDED_LOGFORMAT=false \
     WORKER_CONNECTIONS=400 \
     # CRS specific variables
     ANOMALY_INBOUND=5 \
