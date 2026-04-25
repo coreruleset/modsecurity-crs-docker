@@ -16,6 +16,8 @@ http {
     sendfile on;
     http2 ${HTTP2};
 
+    port_in_redirect ${NGINX_PORT_IN_REDIRECT};
+
     resolver RESOLVERS RESOLVER_CONFIG;
     include /etc/nginx/conf.d/*.conf;
 }
