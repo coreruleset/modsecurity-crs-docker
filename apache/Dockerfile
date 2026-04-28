@@ -214,6 +214,8 @@ COPY src/opt/modsecurity/* /opt/modsecurity/
 COPY apache/docker-entrypoint.sh /
 COPY --from=runtime_deps /staging/ /
 
+USER root
+
 RUN set -eux; \
     mkdir -p /etc/modsecurity.d/; \
     mkdir -p /tmp/modsecurity/data; \
