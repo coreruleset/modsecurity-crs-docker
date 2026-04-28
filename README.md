@@ -175,11 +175,11 @@ Both nginx and httpd containers now run with an **unprivileged user**. This mean
 ### Nginx `port_in_redirect` breaking change
 
 > [!WARNING]
-> nginx now has [`port_in_redirect`](https://nginx.org/en/docs/http/ngx_http_core_module.html#port_in_redirect) set to `off` in all server blocks.
+> [`port_in_redirect`](https://nginx.org/en/docs/http/ngx_http_core_module.html#port_in_redirect) is set to `off` via `NGINX_PORT_IN_REDIRECT` in the `http` block (applies globally, including any custom server blocks you mount).
 
 Previously, nginx's default `port_in_redirect on` caused the internal listening port (e.g., `8080` or `8443`) to be included in redirect `Location` headers (e.g., when nginx adds a trailing slash: `/address` → `http://example.com:8080/address/`). This broke setups where the container is behind a reverse proxy and the external port differs from the internal port.
 
-With `port_in_redirect off`, nginx omits the port from redirect URLs, so clients follow redirects using the correct external port. **If you relied on the port being included in nginx-generated redirects, you will need to mount a custom `default.conf.template` and re-enable this directive.**
+With `port_in_redirect off` (the default), nginx omits the port from redirect URLs, so clients follow redirects using the correct external port. **If you relied on the port being included in nginx-generated redirects, set `NGINX_PORT_IN_REDIRECT=on`.**
 
 ### Common ENV Variables
 
@@ -252,6 +252,8 @@ These variables are common to image variants and will set defaults based on the 
 | HTTP2 | A string value indicating whether HTTP/2 should be enabled (for all locations) (Allowed values: `on`, `off`. Default: `on`) |
 | KEEPALIVE_TIMEOUT  | Number of seconds for a keep-alive client connection to stay open on the server side (Default: `60s`) |
 | NGINX_ALWAYS_TLS_REDIRECT | A string value indicating if http should redirect to https (Allowed values: `on`, `off`. Default: `off`) |
+| NGINX_PORT_IN_REDIRECT | Controls nginx's [`port_in_redirect`](https://nginx.org/en/docs/http/ngx_http_core_module.html#port_in_redirect) directive in the `http` block. When `off`, nginx omits the internal port (e.g., `8080`) from redirect URLs — correct for most reverse-proxy deployments. Set to `on` only if you need nginx to include its listening port in redirects. (Allowed values: `on`, `off`. Default: `off`) |
+| NGINX_X_FORWARDED_PORT | A string indicating the port of the initial request, sent as the `X-Forwarded-Port` header to the upstream backend. Can be set to a fixed port (e.g., `443`) when the container is behind a reverse proxy. (Default: `$server_port`) |
 | NGINX_X_FORWARDED_PROTO | A string indicating the transfer protocol of the initial request (Default: `$scheme`) |
 | PORT | An int value indicating the port where the webserver is listening to | `8080` | We run as unprivileged user. |
 | PROXY_SSL_VERIFY_DEPTH  | An integer value indicating the verification depth for the client certificate chain (Default: `1`) |
