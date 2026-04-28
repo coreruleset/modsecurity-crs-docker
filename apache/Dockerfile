@@ -3,7 +3,7 @@
 
 ARG HTTPD_VERSION="n/a"
 
-FROM image AS build
+FROM build_image AS build
 
 ARG MODSEC2_VERSION="n/a"
 ARG MODSEC2_FLAGS="n/a"
@@ -40,7 +40,7 @@ RUN set -eux; \
     make install; \
     make clean
 
-FROM image AS crs_release
+FROM build_image AS crs_release
 
 ARG CRS_RELEASE
 
@@ -59,6 +59,53 @@ RUN set -eux; \
     tar -zxf v${CRS_RELEASE}-minimal.tar.gz --strip-components=1 -C /opt/owasp-crs; \
     rm -f v${CRS_RELEASE}-minimal.tar.gz coreruleset-${CRS_RELEASE}-minimal.tar.gz.asc; \
     mv -v /opt/owasp-crs/crs-setup.conf.example /opt/owasp-crs/crs-setup.conf
+
+FROM build_image AS runtime_deps
+
+ARG LUA_VERSION="n/a"
+ARG LUA_MODULES=""
+
+# hadolint ignore=DL3008,SC2086
+RUN set -eux; \
+    echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections; \
+    apt-get update -qq; \
+    apt-get install -y -qq --no-install-recommends --no-install-suggests \
+        ca-certificates \
+        curl \
+        ed \
+        iproute2 \
+        libcurl3-gnutls \
+        libfuzzy2 \
+        liblua${LUA_VERSION} \
+        ${LUA_MODULES} \
+        libpcre2-8-0 \
+        libxml2 \
+        libyajl2; \
+    update-ca-certificates -f; \
+    mkdir /staging; \
+    for pkg in \
+        ca-certificates \
+        curl \
+        ed \
+        iproute2 \
+        libcurl3-gnutls \
+        libfuzzy2 \
+        liblua${LUA_VERSION} \
+        libpcre2-8-0 \
+        libxml2 \
+        libyajl2 \
+        ${LUA_MODULES}; \
+    do \
+        dpkg -L "${pkg}" 2>/dev/null \
+        | grep -Ev "^(/usr/share/doc/|/usr/share/man/|/usr/share/lintian/)|\.$" \
+        | while IFS= read -r f; do \
+            if [ -f "${f}" ] || [ -L "${f}" ]; then \
+                cp --parents -d "${f}" /staging/; \
+            fi; \
+        done; \
+    done; \
+    apt-get clean; \
+    rm -rf /var/lib/apt/lists/*
 
 FROM image
 
@@ -165,28 +212,9 @@ COPY apache/conf/extra/*.conf /usr/local/apache2/conf/extra/
 COPY src/etc/modsecurity.d/*.conf /etc/modsecurity.d/
 COPY src/opt/modsecurity/* /opt/modsecurity/
 COPY apache/docker-entrypoint.sh /
+COPY --from=runtime_deps /staging/ /
 
-RUN set -eux; \
-    echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections; \
-    apt-get update -qq; \
-    apt-get install -qq -y --no-install-recommends --no-install-suggests \
-        ca-certificates \
-        curl \
-        ed \
-        gnupg \
-        iproute2 \
-        libcurl3-gnutls \
-        libfuzzy2 \
-        liblua${LUA_VERSION} \
-        ${LUA_MODULES} \
-        libpcre2-8-0 \
-        libxml2 \
-        libyajl2; \
-    update-ca-certificates -f; \
-    apt-get clean; \
-    rm -rf /var/lib/apt/lists/*
-
-RUN useradd --system httpd
+USER root
 
 RUN set -eux; \
     mkdir -p /etc/modsecurity.d/; \
@@ -219,7 +247,7 @@ RUN set -eux; \
     echo 'Include conf/extra/httpd-locations.conf' >> /usr/local/apache2/conf/httpd.conf; \
     echo 'Include conf/extra/httpd-modsecurity.conf' >> /usr/local/apache2/conf/httpd.conf; \
     sed -i -E 's|(MaxRequestWorkers[ ]*)[0-9]*|\1${WORKER_CONNECTIONS}|' /usr/local/apache2/conf/extra/httpd-mpm.conf; \
-    chown -R httpd:httpd \
+    chown -R www-data:www-data \
         /var/log/ \
         /var/log/modsecurity/audit/ \
         /usr/local/apache2/ \
@@ -227,7 +255,7 @@ RUN set -eux; \
         /tmp/modsecurity \
         /opt/owasp-crs
 
-USER httpd
+USER www-data
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
