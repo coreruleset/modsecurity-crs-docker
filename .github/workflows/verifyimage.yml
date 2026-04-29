@@ -202,6 +202,18 @@ jobs:
           sed -i \
             's#image: owasp/modsecurity-crs:${{ contains(matrix.target, 'apache') && 'apache' || 'nginx' }}.*#image: ${{ matrix.target }}-verification#' \
             crs/tests/docker-compose.yml
+      - name: Patch nginx overrides for nginx 1.30.0 (920100-4 now returns 405)
+        run: |
+          python3 -c "
+          with open('crs/tests/regression/nginx-overrides.yaml') as f:
+            c = f.read()
+          c = c.replace(
+            'Nginx returns a 400 bad request\"\n    output:\n      status: 400',
+            'Nginx returns a 405 bad request\"\n    output:\n      status: 405'
+          )
+          with open('crs/tests/regression/nginx-overrides.yaml', 'w') as f:
+            f.write(c)
+          "
       - name: Run CRS tests for ${{ matrix.target }}
         # Log flushing isn't reliable enough for go-ftw (https://github.com/coreruleset/go-ftw/issues/473)
         if: ${{!contains(matrix.target, 'nginx-alpine')}}
