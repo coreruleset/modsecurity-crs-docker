@@ -27,12 +27,10 @@ RUN set -eux; \
         libyajl-dev \
         lua${LUA_VERSION}-dev \
         make \
-        pkgconf \
-        wget
+        pkgconf
 
 RUN set -eux; \
-    wget --quiet https://github.com/owasp-modsecurity/ModSecurity/archive/refs/tags/v${MODSEC2_VERSION}.tar.gz; \
-    tar -zxvf v${MODSEC2_VERSION}.tar.gz; \
+    git clone https://github.com/owasp-modsecurity/ModSecurity --branch "v${MODSEC2_VERSION}" --depth 1 --recursive ModSecurity-${MODSEC2_VERSION}; \
     cd ModSecurity-${MODSEC2_VERSION}; \
     ./autogen.sh; \
     ./configure ${MODSEC2_FLAGS}; \
