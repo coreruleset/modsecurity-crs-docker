@@ -1,7 +1,7 @@
 # docker-bake.hcl
 variable "modsec3-version" {
     # renovate: depName=ModSecurity3 packageName=owasp-modsecurity/ModSecurity datasource=github-releases
-    default = "3.0.14"
+    default = "3.0.15"
 }
 
 variable "modsec3-flags" {
@@ -10,7 +10,7 @@ variable "modsec3-flags" {
 
 variable "modsec2-version" {
     # renovate: depName=ModSecurity2 packageName=owasp-modsecurity/ModSecurity datasource=github-releases
-    default = "2.9.12"
+    default = "2.9.13"
 }
 
 variable "modsec2-flags" {
@@ -23,10 +23,7 @@ variable "previous-lts-crs-version" {
 
 variable "major-crs-version" {
     # renovate: depName=coreruleset/coreruleset datasource=github-releases
-    default = "4.25.0"
-}
-
-variable "v4-lts-crs-version" {
+    default = "4.26.0"
     default = "4.25.0"
 }
 
@@ -40,12 +37,12 @@ variable "crs-versions" {
 
 variable "nginx-version" {
     # renovate: depName=nginxinc/nginx-unprivileged datasource=docker
-    default = "1.28.2"
+    default = "1.30.0"
 }
 
 variable "httpd-version" {
     # renovate: depName=httpd datasource=docker
-    default = "2.4.66"
+    default = "2.4.67"
 }
 
 variable "modsecurity-nginx-version" {
