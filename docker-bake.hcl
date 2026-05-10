@@ -24,6 +24,9 @@ variable "previous-lts-crs-version" {
 variable "major-crs-version" {
     # renovate: depName=coreruleset/coreruleset datasource=github-releases
     default = "4.26.0"
+}
+
+variable "v4-lts-crs-version" {
     default = "4.25.0"
 }
 
