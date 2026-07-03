@@ -10,7 +10,7 @@ variable "modsec3-flags" {
 
 variable "modsec2-version" {
     # renovate: depName=ModSecurity2 packageName=owasp-modsecurity/ModSecurity datasource=github-releases
-    default = "2.9.13"
+    default = "2.9.14"
 }
 
 variable "modsec2-flags" {
@@ -23,7 +23,7 @@ variable "previous-lts-crs-version" {
 
 variable "major-crs-version" {
     # renovate: depName=coreruleset/coreruleset datasource=github-releases
-    default = "4.27.0"
+    default = "4.28.0"
 }
 
 variable "v4-lts-crs-version" {
