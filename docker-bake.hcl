@@ -19,7 +19,7 @@ variable "modsec2-flags" {
 
 variable "previous-lts-crs-version" {
     # renovate: depName=coreruleset-v3-lts packageName=coreruleset/coreruleset datasource=github-releases
-    default = "3.3.9"
+    default = "3.3.10"
 }
 
 variable "major-crs-version" {
@@ -29,7 +29,7 @@ variable "major-crs-version" {
 
 variable "v4-lts-crs-version" {
     # renovate: depName=coreruleset-v4-lts packageName=coreruleset/coreruleset datasource=github-releases
-    default = "4.25.0"
+    default = "4.25.1"
 }
 
 variable "crs-versions" {
