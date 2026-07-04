@@ -101,8 +101,8 @@ jobs:
           TARGET: ${{ matrix.target }}
         run: |
           set -euo pipefail
-          repo=$(jq -r --arg t "$TARGET" '.target[$t].tags[0] | split(":")[0]' bake-metadata.json)
-          echo "repo=$repo" >> "$GITHUB_OUTPUT"
+          repo="$(jq -r --arg t "${TARGET}" '.target[$t].tags[0] | split(":")[0]' bake-metadata.json)"
+          echo "repo=${repo}" >> "${GITHUB_OUTPUT}"
 
       - name: 'Build and push ${{ matrix.target }} (${{ matrix.platform }}) by digest'
         id: build-and-push
