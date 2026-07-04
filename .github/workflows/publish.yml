@@ -14,7 +14,7 @@ jobs:
     outputs:
       # [{"target":"<target name>","platform":"<arch name>"},...]
       matrix: ${{ steps.plan.outputs.matrix }}
-      # # ["<target name>",...]
+      # ["<target name>",...]
       targets: ${{ steps.plan.outputs.targets }}
     steps:
       - name: Checkout
