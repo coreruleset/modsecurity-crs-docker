@@ -30,13 +30,15 @@ jobs:
         run: |
           set -euo pipefail
           docker buildx bake --print default > bake-metadata.json
-          matrix=$(jq -c '[
+          # [{"target":"<target name>","platform":"<arch name>"},...]
+          matrix="$(jq -c '[
             .target | to_entries[] | .key as $target | .value.platforms[] |
             {target: $target, platform: .}
-          ]' bake-metadata.json)
-          targets=$(jq -c '.target | keys' bake-metadata.json)
-          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
-          echo "targets=$targets" >> "$GITHUB_OUTPUT"
+          ]' bake-metadata.json)"
+          # ["<target name>",...]
+          targets="$(jq -c '.target | keys' bake-metadata.json)"
+          echo "matrix=${matrix}" >> "${GITHUB_OUTPUT}"
+          echo "targets=${targets}" >> "${GITHUB_OUTPUT}"
 
       - name: Upload bake metadata
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # actions/upload-artifact@v7.0.1
