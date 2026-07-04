@@ -217,5 +217,5 @@ jobs:
           images=()
           while IFS= read -r tag; do
             images+=("${tag}@${DIGEST}")
-          done < <(jq -r --arg t "$TARGET" '.target[$t].tags[]' bake-metadata.json)
+          done < <(jq -r --arg t "${TARGET}" '.target[$t].tags[]' bake-metadata.json)
           cosign sign --yes "${images[@]}"
