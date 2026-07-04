@@ -113,6 +113,8 @@ jobs:
           targets: ${{ matrix.target }}
           set: |
             ${{ matrix.target }}.platform=${{ matrix.platform }}
+            # don't push tags; we do that at the end when all architectures have been built to
+            # avoid a race condition, where only the last built image would be tagged
             ${{ matrix.target }}.tags=
             ${{ matrix.target }}.output=type=image,name=${{ steps.repo.outputs.repo }},push-by-digest=true,name-canonical=true,push=true
           provenance: true
@@ -124,7 +126,7 @@ jobs:
           TARGET: ${{ matrix.target }}
         run: |
           set -euo pipefail
-          digest=$(echo "$METADATA" | jq -r --arg t "$TARGET" '.[$t]."containerimage.digest"')
+          digest="$(echo "${METADATA}" | jq -r --arg t "${TARGET}" '.[$t]."containerimage.digest"')"
           mkdir -p /tmp/digests
           touch "/tmp/digests/${digest#sha256:}"
 
