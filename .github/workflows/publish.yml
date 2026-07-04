@@ -12,7 +12,9 @@ jobs:
     permissions:
       contents: read
     outputs:
+      # [{"target":"<target name>","platform":"<arch name>"},...]
       matrix: ${{ steps.plan.outputs.matrix }}
+      # # ["<target name>",...]
       targets: ${{ steps.plan.outputs.targets }}
     steps:
       - name: Checkout
