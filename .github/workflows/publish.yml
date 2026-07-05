@@ -104,6 +104,9 @@ jobs:
           repo="$(jq -r --arg t "${TARGET}" '.target[$t].tags[0] | split(":")[0]' bake-metadata.json)"
           echo "repo=${repo}" >> "${GITHUB_OUTPUT}"
 
+      # tags= clears the target's tags so this per-platform build doesn't push them; we tag
+      # everything at the end in the merge job, once all architectures have been built, to
+      # avoid a race condition where only the last-built platform would keep the tag
       - name: 'Build and push ${{ matrix.target }} (${{ matrix.platform }}) by digest'
         id: build-and-push
         uses: docker/bake-action@3acf805d94d93a86cce4ca44798a76464a75b88c # docker/bake-action@v6.9.0
@@ -113,8 +116,6 @@ jobs:
           targets: ${{ matrix.target }}
           set: |
             ${{ matrix.target }}.platform=${{ matrix.platform }}
-            # don't push tags; we do that at the end when all architectures have been built to
-            # avoid a race condition, where only the last built image would be tagged
             ${{ matrix.target }}.tags=
             ${{ matrix.target }}.output=type=image,name=${{ steps.repo.outputs.repo }},push-by-digest=true,name-canonical=true,push=true
           provenance: true
