@@ -12,26 +12,49 @@ jobs:
     permissions:
       contents: read
     outputs:
-      matrix: ${{ steps.generate.outputs.matrix }}
+      # [{"target":"<target name>","platform":"<arch name>"},...]
+      matrix: ${{ steps.plan.outputs.matrix }}
+      # ["<target name>",...]
+      targets: ${{ steps.plan.outputs.targets }}
     steps:
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # actions/checkout@v5
-      - name: List targets
-        id: generate
-        uses: docker/bake-action/subaction/matrix@5be5f02ff8819ecd3092ea6b2e6261c31774f2b4 # v6
         with:
-          target: default
-          fields: platforms
+          persist-credentials: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # docker/setup-buildx-action@v3.11.1
+
+      - name: Resolve bake configuration
+        id: plan
+        run: |
+          set -euo pipefail
+          docker buildx bake --print default > bake-metadata.json
+          # [{"target":"<target name>","platform":"<arch name>"},...]
+          matrix="$(jq -c '[
+            .target | to_entries[] | .key as $target | .value.platforms[] |
+            {target: $target, platform: .}
+          ]' bake-metadata.json)"
+          # ["<target name>",...]
+          targets="$(jq -c '.target | keys' bake-metadata.json)"
+          echo "matrix=${matrix}" >> "${GITHUB_OUTPUT}"
+          echo "targets=${targets}" >> "${GITHUB_OUTPUT}"
+
+      - name: Upload bake metadata
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # actions/upload-artifact@v7.0.1
+        with:
+          name: bake-metadata
+          path: bake-metadata.json
+          retention-days: 1
 
   build:
-    name: Build ${{ matrix.target }}
-    runs-on: ${{ startsWith(matrix.platforms, 'linux/arm') && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
+    name: Build ${{ matrix.target }} (${{ matrix.platform }})
+    runs-on: ${{ startsWith(matrix.platform, 'linux/arm') && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     needs:
       - prepare
     permissions:
       contents: read
       packages: write
-      id-token: write # needed for signing the images with GitHub OIDC Token
     strategy:
       matrix:
         include: ${{ fromJson(needs.prepare.outputs.matrix) }}
@@ -40,9 +63,12 @@ jobs:
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # actions/checkout@v5
         with:
           fetch-depth: 1
+          persist-credentials: false
 
-      - name: Install Cosign
-        uses: sigstore/cosign-installer@d58896d6a1865668819e1d91763c7751a165e159 # sigstore/cosign-installer@v3.9.2
+      - name: Download bake metadata
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # actions/download-artifact@v8.0.1
+        with:
+          name: bake-metadata
 
       # https://github.com/docker/setup-qemu-action
       - name: Set up QEMU
@@ -69,7 +95,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 'Build and push ${{ matrix.target }}'
+      - name: Determine push-by-digest repository
+        id: repo
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          set -euo pipefail
+          repo="$(jq -r --arg t "${TARGET}" '.target[$t].tags[0] | split(":")[0]' bake-metadata.json)"
+          echo "repo=${repo}" >> "${GITHUB_OUTPUT}"
+
+      - name: 'Build and push ${{ matrix.target }} (${{ matrix.platform }}) by digest'
         id: build-and-push
         uses: docker/bake-action@3acf805d94d93a86cce4ca44798a76464a75b88c # docker/bake-action@v6.9.0
         with:
@@ -77,19 +112,112 @@ jobs:
             ./docker-bake.hcl
           targets: ${{ matrix.target }}
           set: |
-            *.platform=${{ matrix.platforms }}
-          push: true
+            ${{ matrix.target }}.platform=${{ matrix.platform }}
+            # don't push tags; we do that at the end when all architectures have been built to
+            # avoid a race condition, where only the last built image would be tagged
+            ${{ matrix.target }}.tags=
+            ${{ matrix.target }}.output=type=image,name=${{ steps.repo.outputs.repo }},push-by-digest=true,name-canonical=true,push=true
           provenance: true
           sbom: true
 
-      - name: 'Sign the image for ${{ matrix.target }} with GitHub OIDC Token'
+      - name: Export digest
         env:
           METADATA: ${{ steps.build-and-push.outputs.metadata }}
+          TARGET: ${{ matrix.target }}
         run: |
-          DIGEST=$(echo ${METADATA} | jq -r '."${{ matrix.target }}" ."containerimage.digest"')
-          TAGS=$(echo ${METADATA} | jq -r '."${{ matrix.target }}" ."image.name" | tostring' | tr ',' '\n')
-          images=""
-          for tag in ${TAGS}; do
-            images+="${tag}@${DIGEST} "
+          set -euo pipefail
+          digest="$(echo "${METADATA}" | jq -r --arg t "${TARGET}" '.[$t]."containerimage.digest"')"
+          mkdir -p /tmp/digests
+          touch "/tmp/digests/${digest#sha256:}"
+
+      - name: Platform slug
+        id: slug
+        run: echo "slug=$(echo '${{ matrix.platform }}' | tr '/' '-')" >> "$GITHUB_OUTPUT"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # actions/upload-artifact@v7.0.1
+        with:
+          name: digests-${{ matrix.target }}-${{ steps.slug.outputs.slug }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merge:
+    name: Merge ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    needs:
+      - prepare
+      - build
+    permissions:
+      contents: read
+      packages: write
+      id-token: write # needed for signing the images with GitHub OIDC Token
+    strategy:
+      matrix:
+        target: ${{ fromJson(needs.prepare.outputs.targets) }}
+    steps:
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@d58896d6a1865668819e1d91763c7751a165e159 # sigstore/cosign-installer@v3.9.2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # docker/setup-buildx-action@v3.11.1
+
+      - name: Login to DockerHub
+        uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # docker/login-action@v3.5.0
+        with:
+          username: ${{ secrets.dockerhub_user }}
+          password: ${{ secrets.dockerhub_token }}
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # docker/login-action@v3.5.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download bake metadata
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # actions/download-artifact@v8.0.1
+        with:
+          name: bake-metadata
+
+      - name: Download digests
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # actions/download-artifact@v8.0.1
+        with:
+          path: /tmp/digests
+          pattern: digests-${{ matrix.target }}-*
+          merge-multiple: true
+
+      - name: 'Create and push manifest list for ${{ matrix.target }}'
+        id: manifest
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          set -euo pipefail
+          repo=$(jq -r --arg t "$TARGET" '.target[$t].tags[0] | split(":")[0]' bake-metadata.json)
+          first_tag=$(jq -r --arg t "$TARGET" '.target[$t].tags[0]' bake-metadata.json)
+
+          tag_args=()
+          while IFS= read -r tag; do
+            tag_args+=(-t "$tag")
+          done < <(jq -r --arg t "$TARGET" '.target[$t].tags[]' bake-metadata.json)
+
+          sources=()
+          for digest_file in /tmp/digests/*; do
+            sources+=("${repo}@sha256:$(basename "$digest_file")")
           done
-          cosign sign --yes ${images}
+
+          docker buildx imagetools create "${tag_args[@]}" "${sources[@]}"
+          digest=$(docker buildx imagetools inspect "$first_tag" --format '{{json .Manifest}}' | jq -r '.digest')
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+
+      - name: 'Sign the manifest for ${{ matrix.target }} with GitHub OIDC Token'
+        env:
+          DIGEST: ${{ steps.manifest.outputs.digest }}
+          TARGET: ${{ matrix.target }}
+        run: |
+          set -euo pipefail
+          images=()
+          while IFS= read -r tag; do
+            images+=("${tag}@${DIGEST}")
+          done < <(jq -r --arg t "${TARGET}" '.target[$t].tags[]' bake-metadata.json)
+          cosign sign --yes "${images[@]}"
