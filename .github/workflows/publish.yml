@@ -154,6 +154,10 @@ jobs:
       packages: write
       id-token: write # needed for signing the images with GitHub OIDC Token
     strategy:
+      # cap concurrent merge jobs so they don't collectively burst past GHCR's
+      # manifest-push rate limit (all 12 targets pushing at once has triggered
+      # 429 Too Many Requests on ghcr.io)
+      max-parallel: 4
       matrix:
         target: ${{ fromJson(needs.prepare.outputs.targets) }}
     steps:
@@ -207,7 +211,18 @@ jobs:
             sources+=("${repo}@sha256:$(basename "$digest_file")")
           done
 
-          docker buildx imagetools create "${tag_args[@]}" "${sources[@]}"
+          max_attempts=5
+          attempt=1
+          until docker buildx imagetools create "${tag_args[@]}" "${sources[@]}"; do
+            if [ "${attempt}" -ge "${max_attempts}" ]; then
+              echo "imagetools create failed after ${max_attempts} attempts" >&2
+              exit 1
+            fi
+            sleep_seconds=$((attempt * 5))
+            echo "imagetools create failed (attempt ${attempt}/${max_attempts}); retrying in ${sleep_seconds}s" >&2
+            sleep "${sleep_seconds}"
+            attempt=$((attempt + 1))
+          done
           digest=$(docker buildx imagetools inspect "$first_tag" --format '{{json .Manifest}}' | jq -r '.digest')
           echo "digest=$digest" >> "$GITHUB_OUTPUT"
 
