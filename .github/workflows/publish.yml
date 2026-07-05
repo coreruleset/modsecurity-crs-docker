@@ -199,7 +199,12 @@ jobs:
         run: |
           set -euo pipefail
           repo=$(jq -r --arg t "$TARGET" '.target[$t].tags[0] | split(":")[0]' bake-metadata.json)
-          first_tag=$(jq -r --arg t "$TARGET" '.target[$t].tags[0]' bake-metadata.json)
+          # tags[0] is a floating tag (e.g. "nginx") shared by the latest/lts/previous-lts
+          # variants of the same target, so inspecting it after the push is racy: a sibling
+          # merge job can overwrite it before we read it back, and we'd sign the wrong
+          # digest. The last tag always embeds the exact CRS version, which differs across
+          # variants, so it's unique to this target.
+          unique_tag=$(jq -r --arg t "$TARGET" '.target[$t].tags[-1]' bake-metadata.json)
 
           tag_args=()
           while IFS= read -r tag; do
@@ -223,7 +228,7 @@ jobs:
             sleep "${sleep_seconds}"
             attempt=$((attempt + 1))
           done
-          digest=$(docker buildx imagetools inspect "$first_tag" --format '{{json .Manifest}}' | jq -r '.digest')
+          digest=$(docker buildx imagetools inspect "$unique_tag" --format '{{json .Manifest}}' | jq -r '.digest')
           echo "digest=$digest" >> "$GITHUB_OUTPUT"
 
       - name: 'Sign the manifest for ${{ matrix.target }} with GitHub OIDC Token'
