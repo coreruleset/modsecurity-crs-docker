@@ -122,6 +122,32 @@
       "datasourceTemplate": "docker"
     },
     {
+      "description": "Docs: ModSecurity v3",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^README\\.md$/"
+      ],
+      "matchStrings": [
+        ".*ModSecurity v(?<currentValue>\\d+\\.\\d+\\.\\d+) on Nginx"
+      ],
+      "depNameTemplate": "ModSecurity3",
+      "packageNameTemplate": "owasp-modsecurity/ModSecurity",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "description": "Docs: ModSecurity v2",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^README\\.md$/"
+      ],
+      "matchStrings": [
+        ".*ModSecurity v(?<currentValue>\\d+\\.\\d+\\.\\d+) on Apache"
+      ],
+      "depNameTemplate": "ModSecurity2",
+      "packageNameTemplate": "owasp-modsecurity/ModSecurity",
+      "datasourceTemplate": "github-releases"
+    },
+    {
       "description": "Docs: CRS",
       "customType": "regex",
       "managerFilePatterns": [
