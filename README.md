@@ -227,6 +227,10 @@ These variables are common to image variants and will set defaults based on the 
 | REMOTEIP_INT_PROXY  | A string indicating the client intranet IP addresses trusted to present the RemoteIPHeader value (Default: `10.1.0.0/16`) |
 | REMOTEIP_HEADER   | A string indicating the header to use for RemoteIPHeader value (Default: `X-Forwarded-For`)  |
 | REQ_HEADER_FORWARDED_PROTO  | A string indicating the transfer protocol of the initial request (Default: `https`) |
+| REQUEST_READ_TIMEOUT_BODY  | Number of seconds allowed to receive the request body (Default: `20`). See [RequestReadTimeout](https://httpd.apache.org/docs/2.4/mod/mod_reqtimeout.html) |
+| REQUEST_READ_TIMEOUT_BODY_MIN_RATE  | Minimum data rate, in bytes per second, required while receiving the request body; the timeout is extended while this rate is maintained (Default: `500`). See [RequestReadTimeout](https://httpd.apache.org/docs/2.4/mod/mod_reqtimeout.html) |
+| REQUEST_READ_TIMEOUT_HEADER  | Number of seconds allowed to receive the request headers, as a single value or `min-max` range (Default: `20-40`). See [RequestReadTimeout](https://httpd.apache.org/docs/2.4/mod/mod_reqtimeout.html) |
+| REQUEST_READ_TIMEOUT_HEADER_MIN_RATE  | Minimum data rate, in bytes per second, required while receiving the request headers; the timeout is extended while this rate is maintained (Default: `500`). See [RequestReadTimeout](https://httpd.apache.org/docs/2.4/mod/mod_reqtimeout.html) |
 | SERVER_ADMIN  | A string value indicating the address where problems with the server should be e-mailed (Default: `root@localhost`) |
 | SERVER_SIGNATURE | A string value configuring the footer on server-generated documents (Allowed values: `On`, `Off`, `EMail`. Default: `Off`) |
 | SERVER_TOKENS | Option defining the server information presented to clients in the `Server` HTTP response header. Also see `MODSEC_SERVER_SIGNATURE`. (Allowed values: `Full`, `Prod[uctOnly]`, `Major`, `Minor`, `Min[imal]`, `OS`. Default: `Full`). |
@@ -244,6 +248,7 @@ These variables are common to image variants and will set defaults based on the 
 
 | Name     | Description|
 | -------- | ------------------------------------------------------------------- |
+| CLIENT_BODY_TIMEOUT | Number of seconds nginx waits between successive read operations of the client request body; mitigates slow-body (e.g. slow-JSON-stream) attacks (Default: `10s`). See [client_body_timeout](https://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_timeout) |
 | CORS_HEADER_403_ALLOW_ORIGIN | The value of the [Access-Control-Allow-Origin](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin) header for `403` responses. Determines which origins can access the response. (Default: `"*"`). |
 | CORS_HEADER_403_ALLOW_METHODS | The value of the [Access-Control-Request-Method](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Request-Method) header for `403` responses. Determines the allowed request methods for the resource. Default: `"GET, POST, PUT, DELETE, OPTIONS"` |
 | CORS_HEADER_403_CONTENT_TYPE | The value of the  `Content-Type` header for `403` responses. Default: (`"text/html"`) |
