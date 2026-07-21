@@ -40,7 +40,7 @@ Rolling Tags are composed of:
    * OS variant (optional)
    * writable (optional, nginx only)
 
-The stable tag format is `<web server>[-<os>][-<writable>]`.
+The rolling tag format is `<web server>[-<os>][-<writable>]`.
 Examples:
    * `nginx`
    * `apache-alpine`
