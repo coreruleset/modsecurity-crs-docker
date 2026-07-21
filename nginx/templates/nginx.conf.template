@@ -12,6 +12,7 @@ events {
 http {
     include /etc/nginx/mime.types;
     default_type application/octet-stream;
+    client_body_timeout ${CLIENT_BODY_TIMEOUT};
     keepalive_timeout ${KEEPALIVE_TIMEOUT};
     sendfile on;
     http2 ${HTTP2};

@@ -9,6 +9,22 @@
   ],
   "packageRules": [
     {
+      "matchDepNames": [
+        "coreruleset-v3-lts"
+      ],
+      "allowedVersions": ">=3.3.0 <3.4.0",
+      "minimumReleaseAge": "0 days",
+      "groupName": "CRS v3 LTS updates"
+    },
+    {
+      "matchDepNames": [
+        "coreruleset-v4-lts"
+      ],
+      "allowedVersions": ">=4.25.0 <4.26.0",
+      "minimumReleaseAge": "0 days",
+      "groupName": "CRS v4 LTS updates"
+    },
+    {
       "groupName": "all non-major dependencies",
       "groupSlug": "all-minor-patch",
       "matchUpdateTypes": [
@@ -47,13 +63,27 @@
       "matchDepNames": [
         "ModSecurity2"
       ],
-      "allowedVersions": "/^v2.*/"
+      "allowedVersions": "/^v2.*/",
+      "minimumReleaseAge": "0 days"
+    },
+    {
+      "matchDepNames": [
+        "ModSecurity3"
+      ],
+      "minimumReleaseAge": "0 days"
     },
     {
       "matchDepNames": [
         "nginxinc/nginx-unprivileged"
       ],
-      "allowedVersions": "/^[0-9]+\\.(?:[1-9]\\d*)?[02468]\\.[0-9]+$/"
+      "allowedVersions": "/^[0-9]+\\.(?:[1-9]\\d*)?[02468]\\.[0-9]+$/",
+      "minimumReleaseAge": "0 days"
+    },
+    {
+      "matchDepNames": [
+        "httpd"
+      ],
+      "minimumReleaseAge": "0 days"
     }
   ],
   "customManagers": [
@@ -90,6 +120,32 @@
       ],
       "depNameTemplate": "httpd",
       "datasourceTemplate": "docker"
+    },
+    {
+      "description": "Docs: ModSecurity v3",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^README\\.md$/"
+      ],
+      "matchStrings": [
+        ".*ModSecurity v(?<currentValue>\\d+\\.\\d+\\.\\d+) on Nginx"
+      ],
+      "depNameTemplate": "ModSecurity3",
+      "packageNameTemplate": "owasp-modsecurity/ModSecurity",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "description": "Docs: ModSecurity v2",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^README\\.md$/"
+      ],
+      "matchStrings": [
+        ".*ModSecurity v(?<currentValue>\\d+\\.\\d+\\.\\d+) on Apache"
+      ],
+      "depNameTemplate": "ModSecurity2",
+      "packageNameTemplate": "owasp-modsecurity/ModSecurity",
+      "datasourceTemplate": "github-releases"
     },
     {
       "description": "Docs: CRS",
