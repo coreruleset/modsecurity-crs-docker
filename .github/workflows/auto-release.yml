@@ -6,6 +6,10 @@ on:
     paths:
       - docker-bake.hcl
 
+concurrency:
+  group: auto-release-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions: {}
 
 jobs:
