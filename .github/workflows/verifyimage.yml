@@ -111,6 +111,7 @@ jobs:
             --name ${{ matrix.target }}-test \
             --env-file "${{ matrix.target }}.env" \
             -p 8080:8080 \
+            -p 8443:8443 \
             -e BACKEND=http://localhost:9999 \
             "${{ matrix.target }}-verification"
 
@@ -168,6 +169,14 @@ jobs:
             grep -q "Access-Control-Allow-Headers: *" headers.txt
             printf "yes\n\n\n"
 
+            printf "Check HTTP/3 is off by default (no Alt-Svc header on SSL port)..."
+            curl -s -k -D headers-ssl.txt -o /dev/null "https://localhost:8443/"
+            if grep -qi "^alt-svc:" headers-ssl.txt; then
+              echo "FAIL: Alt-Svc header present with HTTP3 unset (should default to off)"
+              exit 1
+            fi
+            printf "yes\n\n\n"
+
             echo "### nginx tests - done ###"
           fi
 
@@ -187,6 +196,43 @@ jobs:
           printf "...yes\n\n\n"
 
           echo "### generic tests - done ###"
+
+      - name: Verify HTTP/3 opt-in
+        if: ${{ matrix.target == 'nginx-debian-writable-latest' && matrix.platforms == 'linux/amd64' }}
+        run: |
+          echo "Starting container ${{ matrix.target }}-http3-test with HTTP3=on"
+          docker run \
+            --pull "never" \
+            -d \
+            --name ${{ matrix.target }}-http3-test \
+            --env-file "${{ matrix.target }}.env" \
+            -e BACKEND=http://localhost:9999 \
+            -e HTTP3=on \
+            -p 8444:8443 \
+            -p 8444:8443/udp \
+            "${{ matrix.target }}-verification"
+
+          counter=10
+          while true; do
+            if [ "$(docker inspect ${{ matrix.target }}-http3-test --format='{{.State.Running}}')" = 'true' ] && \
+               curl -s -k --connect-timeout 5 --max-time 2 -D headers-http3.txt -o /dev/null "https://localhost:8444/"; then
+              break
+            fi
+            ((counter--))
+            if [ ${counter} -le 0 ]; then
+              echo "No more retries. Here's the log output from the container"
+              docker logs ${{ matrix.target }}-http3-test
+              exit 1
+            fi
+            echo "Not ready yet, retrying in 5 seconds"
+            sleep 5
+          done
+
+          printf "Check Alt-Svc header advertises h3..."
+          grep -qi '^alt-svc:.*h3=' headers-http3.txt
+          printf "yes\n\n\n"
+
+          docker rm -f ${{ matrix.target }}-http3-test
 
       - name: Checkout CRS
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # ratchet:actions/checkout@v7.0.0
