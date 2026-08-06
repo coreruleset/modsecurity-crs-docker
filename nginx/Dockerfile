@@ -140,6 +140,7 @@ ENV \
     ERRORLOG=/var/log/nginx/error.log \
     HTTP2=on \
     HTTP3=off \
+    HTTP3_ALT_SVC_PORT= \
     KEEPALIVE_TIMEOUT=60s \
     LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib \
     LOGLEVEL=warn \

@@ -208,6 +208,7 @@ jobs:
             --env-file "${{ matrix.target }}.env" \
             -e BACKEND=http://localhost:9999 \
             -e HTTP3=on \
+            -e HTTP3_ALT_SVC_PORT=8444 \
             -p 8444:8443 \
             -p 8444:8443/udp \
             "${{ matrix.target }}-verification"
@@ -228,8 +229,8 @@ jobs:
             sleep 5
           done
 
-          printf "Check Alt-Svc header advertises h3..."
-          grep -qi '^alt-svc:.*h3=' headers-http3.txt
+          printf "Check Alt-Svc header advertises h3 on the remapped port (8444)..."
+          grep -qi '^alt-svc:.*h3=":8444"' headers-http3.txt
           printf "yes\n\n\n"
 
           docker rm -f ${{ matrix.target }}-http3-test
