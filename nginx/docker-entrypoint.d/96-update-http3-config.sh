@@ -12,4 +12,4 @@ if [ "${HTTP3}" = "on" ]; then
     HTTP3_CONFIG="listen ${SSL_PORT} quic reuseport; http3 on; quic_retry on; add_header Alt-Svc 'h3=\":${HTTP3_ALT_SVC_PORT}\"; ma=86400' always;"
 fi
 
-sed -i.bak -r 's#HTTP3_CONFIG#'"${HTTP3_CONFIG}"'#' /etc/nginx/conf.d/default.conf
+sed -ir 's#HTTP3_CONFIG#'"${HTTP3_CONFIG}"'#' /etc/nginx/conf.d/default.conf
