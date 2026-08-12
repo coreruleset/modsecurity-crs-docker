@@ -35,6 +35,7 @@ server {
 
 server {
     listen ${SSL_PORT} ssl;
+    HTTP3_CONFIG
 
     server_name ${SERVER_NAME};
 
