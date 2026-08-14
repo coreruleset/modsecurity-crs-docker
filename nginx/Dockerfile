@@ -51,8 +51,7 @@ RUN set -eux; \
     git clone https://github.com/owasp-modsecurity/ModSecurity --branch "v${MODSEC3_VERSION}" --depth 1 --recursive; \
     cd ModSecurity; \
     ARCH=$(gcc -print-multiarch); \
-    sed -ie "s/i386-linux-gnu/${ARCH}/g" build/ssdeep.m4; \
-    sed -ie "s/i386-linux-gnu/${ARCH}/g" build/pcre2.m4; \
+    sed -ie "s/i386-linux-gnu/${ARCH}/g" build/msc_find_lib.m4; \
     ./build.sh; \
     ./configure ${MODSEC3_FLAGS}; \
     make -j$(nproc) install; \
@@ -132,6 +131,7 @@ ENV NGINX_HOME="${NGINX_HOME}"
 ENV \
     ACCESSLOG=/var/log/nginx/access.log \
     BACKEND=http://localhost:80 \
+    CLIENT_BODY_TIMEOUT=10s \
     CORS_HEADER_403_ALLOW_ORIGIN="*" \
     CORS_HEADER_403_ALLOW_METHODS="GET, POST, PUT, DELETE, OPTIONS" \
     CORS_HEADER_403_CONTENT_TYPE="text/html" \
@@ -139,6 +139,8 @@ ENV \
     CORS_HEADER_ACCESS_CONTROL_ALLOW_HEADERS="*" \
     ERRORLOG=/var/log/nginx/error.log \
     HTTP2=on \
+    HTTP3=off \
+    HTTP3_ALT_SVC_PORT= \
     KEEPALIVE_TIMEOUT=60s \
     LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib \
     LOGLEVEL=warn \
@@ -183,6 +185,8 @@ ENV \
     MODSEC_UPLOAD_KEEP_FILES=Off \
     NGINX_ALWAYS_TLS_REDIRECT=off \
     NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx \
+    NGINX_PORT_IN_REDIRECT=off \
+    NGINX_WORKER_PROCESSES=auto \
     NGINX_X_FORWARDED_PORT='$server_port' \
     NGINX_X_FORWARDED_PROTO='$scheme' \
     PORT=8080 \

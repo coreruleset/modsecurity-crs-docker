@@ -40,7 +40,7 @@ Rolling Tags are composed of:
    * OS variant (optional)
    * writable (optional, nginx only)
 
-The stable tag format is `<web server>[-<os>][-<writable>]`.
+The rolling tag format is `<web server>[-<os>][-<writable>]`.
 Examples:
    * `nginx`
    * `apache-alpine`
@@ -50,7 +50,7 @@ Examples:
 LTS (Long-Term Support) tags are stable tags pointing to a designated LTS release. They are updated less frequently than stable tags and are intended for users who prioritize stability over new features.
 
 LTS Tags are composed of:
-   * CRS version, in the format `<minor>` or `<minor>.<patch>`
+   * CRS version, in the format `<major>.<minor>` or `<major>.<minor>.<patch>`
    * web server variant
    * OS variant (optional)
    * `lts` suffix
@@ -64,10 +64,10 @@ Examples:
 
 ## OS Variants
 
-* nginx – *latest stable ModSecurity v3 on Nginx 1.30.0 official stable base image, and latest stable OWASP CRS 4.26.0*
+* nginx – *ModSecurity v3.0.16 on Nginx 1.30.4 official stable base image, and latest stable OWASP CRS 4.28.0*
    * [nginx](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile)
    * [nginx-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile-alpine)
-* Apache httpd – *last stable ModSecurity v2 on Apache 2.4.67 Docker hardened base image, and latest stable OWASP CRS 4.26.0*
+* Apache httpd – *ModSecurity v2.9.14 on Apache 2.4.68 Docker hardened base image, and latest stable OWASP CRS 4.28.0*
    * [apache](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/apache/Dockerfile)
    * [apache-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/apache/Dockerfile-alpine)
 
@@ -175,11 +175,11 @@ Both nginx and httpd containers now run with an **unprivileged user**. This mean
 ### Nginx `port_in_redirect` breaking change
 
 > [!WARNING]
-> nginx now has [`port_in_redirect`](https://nginx.org/en/docs/http/ngx_http_core_module.html#port_in_redirect) set to `off` in all server blocks.
+> [`port_in_redirect`](https://nginx.org/en/docs/http/ngx_http_core_module.html#port_in_redirect) is set to `off` via `NGINX_PORT_IN_REDIRECT` in the `http` block (applies globally, including any custom server blocks you mount).
 
 Previously, nginx's default `port_in_redirect on` caused the internal listening port (e.g., `8080` or `8443`) to be included in redirect `Location` headers (e.g., when nginx adds a trailing slash: `/address` → `http://example.com:8080/address/`). This broke setups where the container is behind a reverse proxy and the external port differs from the internal port.
 
-With `port_in_redirect off`, nginx omits the port from redirect URLs, so clients follow redirects using the correct external port. **If you relied on the port being included in nginx-generated redirects, you will need to mount a custom `default.conf.template` and re-enable this directive.**
+With `port_in_redirect off` (the default), nginx omits the port from redirect URLs, so clients follow redirects using the correct external port. **If you relied on the port being included in nginx-generated redirects, set `NGINX_PORT_IN_REDIRECT=on`.**
 
 ### Common ENV Variables
 
@@ -227,6 +227,10 @@ These variables are common to image variants and will set defaults based on the 
 | REMOTEIP_INT_PROXY  | A string indicating the client intranet IP addresses trusted to present the RemoteIPHeader value (Default: `10.1.0.0/16`) |
 | REMOTEIP_HEADER   | A string indicating the header to use for RemoteIPHeader value (Default: `X-Forwarded-For`)  |
 | REQ_HEADER_FORWARDED_PROTO  | A string indicating the transfer protocol of the initial request (Default: `https`) |
+| REQUEST_READ_TIMEOUT_BODY  | Number of seconds allowed to receive the request body (Default: `20`). See [RequestReadTimeout](https://httpd.apache.org/docs/2.4/mod/mod_reqtimeout.html) |
+| REQUEST_READ_TIMEOUT_BODY_MIN_RATE  | Minimum data rate, in bytes per second, required while receiving the request body; the timeout is extended while this rate is maintained (Default: `500`). See [RequestReadTimeout](https://httpd.apache.org/docs/2.4/mod/mod_reqtimeout.html) |
+| REQUEST_READ_TIMEOUT_HEADER  | Number of seconds allowed to receive the request headers, as a single value or `min-max` range (Default: `20-40`). See [RequestReadTimeout](https://httpd.apache.org/docs/2.4/mod/mod_reqtimeout.html) |
+| REQUEST_READ_TIMEOUT_HEADER_MIN_RATE  | Minimum data rate, in bytes per second, required while receiving the request headers; the timeout is extended while this rate is maintained (Default: `500`). See [RequestReadTimeout](https://httpd.apache.org/docs/2.4/mod/mod_reqtimeout.html) |
 | SERVER_ADMIN  | A string value indicating the address where problems with the server should be e-mailed (Default: `root@localhost`) |
 | SERVER_SIGNATURE | A string value configuring the footer on server-generated documents (Allowed values: `On`, `Off`, `EMail`. Default: `Off`) |
 | SERVER_TOKENS | Option defining the server information presented to clients in the `Server` HTTP response header. Also see `MODSEC_SERVER_SIGNATURE`. (Allowed values: `Full`, `Prod[uctOnly]`, `Major`, `Minor`, `Min[imal]`, `OS`. Default: `Full`). |
@@ -244,14 +248,20 @@ These variables are common to image variants and will set defaults based on the 
 
 | Name     | Description|
 | -------- | ------------------------------------------------------------------- |
+| CLIENT_BODY_TIMEOUT | Number of seconds nginx waits between successive read operations of the client request body; mitigates slow-body (e.g. slow-JSON-stream) attacks (Default: `10s`). See [client_body_timeout](https://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_timeout) |
 | CORS_HEADER_403_ALLOW_ORIGIN | The value of the [Access-Control-Allow-Origin](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin) header for `403` responses. Determines which origins can access the response. (Default: `"*"`). |
 | CORS_HEADER_403_ALLOW_METHODS | The value of the [Access-Control-Request-Method](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Request-Method) header for `403` responses. Determines the allowed request methods for the resource. Default: `"GET, POST, PUT, DELETE, OPTIONS"` |
 | CORS_HEADER_403_CONTENT_TYPE | The value of the  `Content-Type` header for `403` responses. Default: (`"text/html"`) |
 | CORS_HEADER_403_MAX_AGE | The value of the [Access-Control-Max-Age](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Max-Age) header for `403` responses. The number of seconds that preflight requests for this resource may be cached by the browser. (Default: `3600`) |
 | DNS_SERVER  | Deprecated. Use `RESOLVERS`.
 | HTTP2 | A string value indicating whether HTTP/2 should be enabled (for all locations) (Allowed values: `on`, `off`. Default: `on`) |
+| HTTP3 | A string value indicating whether HTTP/3 (QUIC) should be enabled on `SSL_PORT` (Allowed values: `on`, `off`. Default: `off`). This is independent of HTTP/2: enabling `HTTP3` does not enable HTTP/2, and `HTTP2=off` still disables HTTP/2 over TCP regardless of this setting. See `HTTP2` to control HTTP/2. QUIC runs over UDP, so the container's `SSL_PORT` must also be published as a UDP port (e.g. `-p 8443:8443/udp`) for clients to reach it. |
+| HTTP3_ALT_SVC_PORT | The port advertised in the `Alt-Svc` response header for HTTP/3 clients, only used when `HTTP3=on` (Default: `SSL_PORT`). Set this when the externally reachable port differs from `SSL_PORT` (e.g. behind port remapping such as `-p 8444:8443/udp`), so clients are told the correct port to reach HTTP/3 on. |
 | KEEPALIVE_TIMEOUT  | Number of seconds for a keep-alive client connection to stay open on the server side (Default: `60s`) |
 | NGINX_ALWAYS_TLS_REDIRECT | A string value indicating if http should redirect to https (Allowed values: `on`, `off`. Default: `off`) |
+| NGINX_PORT_IN_REDIRECT | Controls nginx's [`port_in_redirect`](https://nginx.org/en/docs/http/ngx_http_core_module.html#port_in_redirect) directive in the `http` block. When `off`, nginx omits the internal port (e.g., `8080`) from redirect URLs — correct for most reverse-proxy deployments. Set to `on` only if you need nginx to include its listening port in redirects. (Allowed values: `on`, `off`. Default: `off`) |
+| NGINX_WORKER_PROCESSES | Controls nginx's [`worker_processes`](https://nginx.org/en/docs/ngx_core_module.html#worker_processes) directive. Set to `1` to avoid out-of-order log entries when relying on log markers for testing. (Default: `auto`) |
+| NGINX_X_FORWARDED_PORT | A string indicating the port of the initial request, sent as the `X-Forwarded-Port` header to the upstream backend. Can be set to a fixed port (e.g., `443`) when the container is behind a reverse proxy. (Default: `$server_port`) |
 | NGINX_X_FORWARDED_PROTO | A string indicating the transfer protocol of the initial request (Default: `$scheme`) |
 | PORT | An int value indicating the port where the webserver is listening to | `8080` | We run as unprivileged user. |
 | PROXY_SSL_VERIFY_DEPTH  | An integer value indicating the verification depth for the client certificate chain (Default: `1`) |

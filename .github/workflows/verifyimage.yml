@@ -20,12 +20,15 @@ jobs:
       matrix: ${{ steps.generate.outputs.matrix }}
     steps:
       - name: Checkout
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # actions/checkout@v5
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # ratchet:actions/checkout@v7.0.0
+        with:
+          persist-credentials: false
       - name: Generate matrix
         id: generate
-        uses: docker/bake-action/subaction/matrix@5be5f02ff8819ecd3092ea6b2e6261c31774f2b4 # v6
+        uses: docker/bake-action/subaction/matrix@d3418bd7d0e9324001bca92fa8ba175ea7e6dc9b # ratchet:docker/bake-action/subaction/matrix@v7.3.0
         with:
           target: default
+          fields: platforms
       - name: Check modsecurity recommended
         run: |
           curl -sSL https://raw.githubusercontent.com/owasp-modsecurity/ModSecurity/v3/master/modsecurity.conf-recommended -o modsecurity.conf-recommended
@@ -33,7 +36,7 @@ jobs:
           sha256sum -c sha256sum.txt
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ startsWith(matrix.platforms, 'linux/arm') && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     permissions:
       contents: read
       packages: write
@@ -44,19 +47,20 @@ jobs:
         include: ${{ fromJson(needs.prepare.outputs.matrix) }}
     steps:
       - name: Checkout
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # actions/checkout@v5
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # ratchet:actions/checkout@v7.0.0
         with:
           fetch-depth: 1
+          persist-credentials: false
 
       # https://github.com/docker/setup-qemu-action
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392 # docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # ratchet:docker/setup-qemu-action@v4.2.0
         with:
           image: tonistiigi/binfmt:qemu-v9.2.0
 
       # https://github.com/docker/setup-buildx-action
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # ratchet:docker/setup-buildx-action@v4.2.0
         with:
           driver-opts: image=moby/buildkit:master
 
@@ -68,29 +72,29 @@ jobs:
           password: ${{ secrets.dockerhub_token }}
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # docker/login-action@v3.5.0
+        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # ratchet:docker/login-action@v4.4.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build ${{ matrix.target }}-verification
-        uses: docker/bake-action@3acf805d94d93a86cce4ca44798a76464a75b88c # docker/bake-action@v6.9.0
+        uses: docker/bake-action@d3418bd7d0e9324001bca92fa8ba175ea7e6dc9b # ratchet:docker/bake-action@v7.3.0
         with:
           files: |
             ./docker-bake.hcl
           targets: ${{ matrix.target }}
-          # Build only linux/amd64 and tag the images as verification builds.
+          # Build only the specified platform and tag as verification build.
           # Create a tar archive and load the image into Docker.
           set: |
-            *.platform=linux/amd64
+            *.platform=${{ matrix.platforms }}
             ${{ matrix.target }}.tags=${{ matrix.target }}-verification
             *.output=type=docker,dest=${{ matrix.target }}-verification.tar
             *.output=type=docker
           push: false
 
       - name: Upload image artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # ratchet:actions/upload-artifact@v7.0.1
         with:
           name: ${{ matrix.target }}-verification.tar
           path: ${{ matrix.target }}-verification.tar
@@ -114,6 +118,7 @@ jobs:
             --name ${{ matrix.target }}-test \
             --env-file "${{ matrix.target }}.env" \
             -p 8080:8080 \
+            -p 8443:8443 \
             -e BACKEND=http://localhost:9999 \
             "${{ matrix.target }}-verification"
 
@@ -171,6 +176,14 @@ jobs:
             grep -q "Access-Control-Allow-Headers: *" headers.txt
             printf "yes\n\n\n"
 
+            printf "Check HTTP/3 is off by default (no Alt-Svc header on SSL port)..."
+            curl -s -k -D headers-ssl.txt -o /dev/null "https://localhost:8443/"
+            if grep -qi "^alt-svc:" headers-ssl.txt; then
+              echo "FAIL: Alt-Svc header present with HTTP3 unset (should default to off)"
+              exit 1
+            fi
+            printf "yes\n\n\n"
+
             echo "### nginx tests - done ###"
           fi
 
@@ -191,24 +204,68 @@ jobs:
 
           echo "### generic tests - done ###"
 
+      - name: Verify HTTP/3 opt-in
+        if: ${{ matrix.target == 'nginx-debian-writable-latest' && matrix.platforms == 'linux/amd64' }}
+        run: |
+          echo "Starting container ${{ matrix.target }}-http3-test with HTTP3=on"
+          docker run \
+            --pull "never" \
+            -d \
+            --name ${{ matrix.target }}-http3-test \
+            --env-file "${{ matrix.target }}.env" \
+            -e BACKEND=http://localhost:9999 \
+            -e HTTP3=on \
+            -e HTTP3_ALT_SVC_PORT=8444 \
+            -p 8444:8443 \
+            -p 8444:8443/udp \
+            "${{ matrix.target }}-verification"
+
+          counter=10
+          while true; do
+            if [ "$(docker inspect ${{ matrix.target }}-http3-test --format='{{.State.Running}}')" = 'true' ] && \
+               curl -s -k --connect-timeout 5 --max-time 2 -D headers-http3.txt -o /dev/null "https://localhost:8444/"; then
+              break
+            fi
+            ((counter--))
+            if [ ${counter} -le 0 ]; then
+              echo "No more retries. Here's the log output from the container"
+              docker logs ${{ matrix.target }}-http3-test
+              exit 1
+            fi
+            echo "Not ready yet, retrying in 5 seconds"
+            sleep 5
+          done
+
+          printf "Check Alt-Svc header advertises h3 on the remapped port (8444)..."
+          grep -qi '^alt-svc:.*h3=":8444"' headers-http3.txt
+          printf "yes\n\n\n"
+
+          docker rm -f ${{ matrix.target }}-http3-test
+
       - name: Checkout CRS
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # actions/checkout@v5
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # ratchet:actions/checkout@v7.0.0
         with:
           fetch-depth: 1
           repository: coreruleset/coreruleset
           path: crs
+          persist-credentials: false
       - name: "Install go-ftw"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd crs
+          ARCH="${{ startsWith(matrix.platforms, 'linux/arm') && 'arm64' || 'amd64' }}"
           gh release download -R coreruleset/go-ftw "v${{ env.GO_FTW_VERSION }}" \
-            -p "ftw_${{ env.GO_FTW_VERSION }}_linux_amd64.tar.gz" -O - | tar -xzvf - ftw
+            -p "ftw_${{ env.GO_FTW_VERSION }}_linux_${ARCH}.tar.gz" -O - | tar -xzvf - ftw
       - name: Patch CRS compose file to use verification image
         run: |
           sed -i \
             's#image: owasp/modsecurity-crs:${{ contains(matrix.target, 'apache') && 'apache' || 'nginx' }}.*#image: ${{ matrix.target }}-verification#' \
             crs/tests/docker-compose.yml
+      - name: Patch nginx overrides for nginx 1.30.0 (920100-4 now returns 405)
+        run: |
+          yq e -i '(.test_overrides[] | select(.rule_id == 920100 and .test_ids[0] == 4 and (.test_ids | length) == 1) | .output.status) = 405' \
+            crs/tests/regression/nginx-overrides.yaml
       - name: Run CRS tests for ${{ matrix.target }}
         # Log flushing isn't reliable enough for go-ftw (https://github.com/coreruleset/go-ftw/issues/473)
         if: ${{!contains(matrix.target, 'nginx-alpine')}}
@@ -233,7 +290,7 @@ jobs:
             --show-failures-only
 
       - name: Upload logs
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # ratchet:actions/upload-artifact@v7.0.1
         if: always()
         with:
           name: ${{ matrix.target }}-error.log
