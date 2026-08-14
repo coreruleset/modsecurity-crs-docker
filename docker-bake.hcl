@@ -157,7 +157,8 @@ target "apache" {
             {
                 name = "debian"
                 dockerfile="apache/Dockerfile"
-                image = "docker-image://httpd:${httpd-version}"
+                image = "docker-image://dhi.io/httpd:${httpd-version}"
+                build_image = "docker-image://httpd:${httpd-version}"
                 lua_modules = join(" ", lua-modules-debian)
                 tag_base = "apache"
             },
@@ -165,6 +166,7 @@ target "apache" {
                 name = "alpine"
                 dockerfile = "apache/Dockerfile-alpine"
                 image = "docker-image://httpd:${httpd-version}-alpine"
+                build_image = "docker-image://httpd:${httpd-version}-alpine"
                 lua_modules = join(" ", lua-modules-alpine)
                 tag_base = "apache-alpine"
             }
@@ -175,6 +177,7 @@ target "apache" {
     name = "apache-${base.name}-${crs_entry.tag}"
     contexts = {
         image = base.image
+        build_image = base.build_image
     }
     dockerfile = base.dockerfile
     args = {
