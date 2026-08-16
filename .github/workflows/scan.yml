@@ -15,7 +15,7 @@ jobs:
     permissions:
       contents: read
     outputs:
-      # [{"image":"<ghcr image>","slug":"<tag>"},...]
+      # [{"image":"<ghcr image>","platform":"<platform>","slug":"<tag>-<platform>"},...]
       matrix: ${{ steps.plan.outputs.matrix }}
     steps:
       - name: Checkout
@@ -32,10 +32,17 @@ jobs:
           set -euo pipefail
           # The first tag of a target is its floating tag (e.g. "nginx"). The CRS version
           # variants of a target share it because they also share a base image, so one
-          # scan per floating tag covers every published OS package set.
+          # scan per floating tag and platform covers every published OS package set.
+          # Registries normalise linux/i386 to linux/386, which is what Trivy expects.
           matrix="$(docker buildx bake --print default | jq -c '
-            [.target[].tags | map(select(startswith("ghcr.io/"))) | .[0]]
-            | unique | map({image: ., slug: (split(":")[1])})')"
+            [ .target[]
+              | (.tags | map(select(startswith("ghcr.io/"))) | .[0]) as $image
+              | .platforms[]
+              | sub("^linux/i386$"; "linux/386") as $platform
+              | {image: $image,
+                 platform: $platform,
+                 slug: (($image | split(":")[1]) + "-" + ($platform | sub("/"; "-")))} ]
+            | unique')"
           echo "matrix=${matrix}" >> "${GITHUB_OUTPUT}"
 
   scan:
@@ -61,8 +68,12 @@ jobs:
 
       # Reports instead of failing: a fix for a published image means cutting a release,
       # not turning this run red. The findings land in the Security tab.
-      - name: Scan ${{ matrix.image }}
+      - name: Scan ${{ matrix.image }} (${{ matrix.platform }})
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # ratchet:aquasecurity/trivy-action@v0.36.0
+        env:
+          # The action has no platform input; Trivy would otherwise pick the manifest
+          # matching the runner and leave the other published platforms unscanned.
+          TRIVY_PLATFORM: ${{ matrix.platform }}
         with:
           image-ref: ${{ matrix.image }}
           scanners: vuln
