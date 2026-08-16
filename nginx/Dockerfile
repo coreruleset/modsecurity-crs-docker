@@ -248,14 +248,14 @@ RUN set -eux; \
         ca-certificates \
         curl \
         ed \
-        libcurl4-gnutls-dev \
+        libcurl3t64-gnutls \
         libfuzzy2 \
-        liblua${LUA_VERSION} \
+        liblua${LUA_VERSION}-0 \
         ${LUA_MODULES} \
         libpcre2-8-0 \
         libxml2 \
         libyajl2 \
-        libmaxminddb-dev \
+        libmaxminddb0 \
         moreutils; \
     rm -rf /var/lib/apt/lists/*; \
     apt-get clean; \
