@@ -153,6 +153,10 @@ jobs:
             grep -q "HTTP/1.1 403 Forbidden" headers.txt
             printf "yes\n\n\n"
 
+            printf "Check 'Content-Type' header on 403..."
+            grep -qi "^content-type: text/html" headers.txt
+            printf "yes\n\n\n"
+
             printf "Check 'Access-Control-Allow-Origin' header..."
             grep -q "Access-Control-Allow-Origin: *" headers.txt
             printf "yes\n\n\n"
