@@ -290,3 +290,19 @@ jobs:
           path: "crs/tests/logs/${{ contains(matrix.target, 'apache') && 'modsec2-apache' || 'modsec3-nginx' }}/error.log"
           retention-days: 7
           overwrite: true
+
+      # Runs last so a vulnerable base image doesn't hide functional test results.
+      # Only fixed vulnerabilities fail the build: those are actionable (bump the base
+      # image), while the unfixed ones the distributions carry would block every PR.
+      # Trivy pulls its database from mirror.gcr.io and falls back to ghcr.io; the ghcr
+      # login above authenticates that pull, which is what used to hit the rate limit.
+      - name: Scan ${{ matrix.target }} for vulnerabilities
+        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # ratchet:aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ${{ matrix.target }}-verification
+          scanners: vuln
+          vuln-type: os,library
+          ignore-unfixed: true
+          severity: HIGH,CRITICAL
+          exit-code: '1'
+          format: table
