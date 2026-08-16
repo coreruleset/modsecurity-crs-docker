@@ -259,6 +259,14 @@ jobs:
         run: |
           yq e -i '(.test_overrides[] | select(.rule_id == 920100 and .test_ids[0] == 4 and (.test_ids | length) == 1) | .output.status) = 405' \
             crs/tests/regression/nginx-overrides.yaml
+      - name: Pin the CRS test container to a single nginx worker
+        # go-ftw bounds the log output of a request with markers. Several workers
+        # flush their buffers independently, so lines interleave and tests such as
+        # 956100 fail at random (https://github.com/coreruleset/go-ftw/issues/473).
+        # This applies to the test setup only; the images still default to "auto".
+        run: |
+          yq e -i '.services.modsec3-nginx.environment.NGINX_WORKER_PROCESSES = "1"' \
+            crs/tests/docker-compose.yml
       - name: Run CRS tests for ${{ matrix.target }}
         # Log flushing isn't reliable enough for go-ftw (https://github.com/coreruleset/go-ftw/issues/473)
         if: ${{!contains(matrix.target, 'nginx-alpine')}}
