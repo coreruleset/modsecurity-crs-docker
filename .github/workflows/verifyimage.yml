@@ -95,33 +95,37 @@ jobs:
           overwrite: true
 
       - name: Run ${{ matrix.target }}
+        env:
+          TARGET: ${{ matrix.target }}
         run: |
           # get the major CRS version from the matrix.target
           # Targets ending with "previous" are v3; all others are v4.
-          CRS_VERSION="$([[ "${{ matrix.target }}" == *-previous ]] && echo v3 || echo v4)"
+          CRS_VERSION="$([[ "${TARGET}" == *-previous ]] && echo v3 || echo v4)"
           . .github/workflows/configure-rules-for-test.sh \
             "src/opt/modsecurity/configure-rules.${CRS_VERSION}.conf" \
             README.md \
-            "${{ matrix.target }}.env"
-          echo "Starting container ${{ matrix.target }}-verification"
+            "${TARGET}.env"
+          echo "Starting container ${TARGET}-verification"
           # The backend is a dummy
           docker run \
             --pull "never" \
             -d \
-            --name ${{ matrix.target }}-test \
-            --env-file "${{ matrix.target }}.env" \
+            --name "${TARGET}-test" \
+            --env-file "${TARGET}.env" \
             -p 8080:8080 \
             -p 8443:8443 \
             -e BACKEND=http://localhost:9999 \
-            "${{ matrix.target }}-verification"
+            "${TARGET}-verification"
 
       - name: Verify ${{ matrix.target }}
+        env:
+          TARGET: ${{ matrix.target }}
         run: |
           HOST_AND_PORT="localhost:8080"
           counter=10
           while true; do
             printf "Checking whether container is running..."
-            if [ $(docker inspect ${{ matrix.target }}-test --format='{{.State.Running}}') = 'true' ]; then
+            if [ "$(docker inspect "${TARGET}-test" --format='{{.State.Running}}')" = 'true' ]; then
               echo "ok"
               printf "Trying to connect..."
               if curl -s --connect-timeout 5 --max-time 1 "${HOST_AND_PORT}" > /dev/null 2>&1; then
@@ -137,12 +141,12 @@ jobs:
               sleep 5
             else
               printf "No more retries. Here's the log output from the container\n\n\n"
-              docker logs ${{ matrix.target }}-test
+              docker logs "${TARGET}-test"
               exit 1
             fi
           done
 
-          if grep -q  "nginx"<<< "${{ matrix.target }}"; then
+          if grep -q "nginx" <<< "${TARGET}"; then
             printf "\n\n### nginx tests ###\n\n"
 
             printf "Storing headers for sample attack..."
@@ -151,6 +155,10 @@ jobs:
 
             printf "Check status 403..."
             grep -q "HTTP/1.1 403 Forbidden" headers.txt
+            printf "yes\n\n\n"
+
+            printf "Check 'Content-Type' header on 403..."
+            grep -qi "^content-type: text/html" headers.txt
             printf "yes\n\n\n"
 
             printf "Check 'Access-Control-Allow-Origin' header..."
@@ -247,9 +255,32 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd crs
-          ARCH="${{ startsWith(matrix.platforms, 'linux/arm') && 'arm64' || 'amd64' }}"
-          gh release download -R coreruleset/go-ftw "v${{ env.GO_FTW_VERSION }}" \
-            -p "ftw_${{ env.GO_FTW_VERSION }}_linux_${ARCH}.tar.gz" -O - | tar -xzvf - ftw
+          # ftw runs on the runner, so its architecture decides the asset. Asking the
+          # runner keeps this from drifting apart from the runs-on mapping, and an
+          # architecture with no release fails here rather than on the first exec.
+          case "$(uname -m)" in
+            x86_64) arch="amd64" ;;
+            aarch64 | arm64) arch="arm64" ;;
+            *) echo "No go-ftw release for runner architecture $(uname -m)" >&2; exit 1 ;;
+          esac
+          # The release CDN resets connections now and then. Download to a file so a
+          # truncated transfer fails here instead of reaching tar, and retry it.
+          archive="ftw_${GO_FTW_VERSION}_linux_${arch}.tar.gz"
+          for attempt in 1 2 3; do
+            if gh release download -R coreruleset/go-ftw "v${GO_FTW_VERSION}" \
+                 -p "${archive}" --clobber; then
+              break
+            fi
+            if [ "${attempt}" -eq 3 ]; then
+              echo "Giving up on ${archive} after ${attempt} attempts"
+              exit 1
+            fi
+            delay=$((attempt * 5))
+            echo "Download failed, retrying in ${delay} seconds"
+            sleep "${delay}"
+          done
+          tar -xzf "${archive}" ftw
+          rm "${archive}"
       - name: Patch CRS compose file to use verification image
         run: |
           sed -i \
