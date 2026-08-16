@@ -121,125 +121,44 @@ jobs:
         env:
           TARGET: ${{ matrix.target }}
         run: |
-          HOST_AND_PORT="localhost:8080"
-          counter=10
-          while true; do
-            printf "Checking whether container is running..."
-            if [ "$(docker inspect "${TARGET}-test" --format='{{.State.Running}}')" = 'true' ]; then
-              echo "ok"
-              printf "Trying to connect..."
-              if curl -s --connect-timeout 5 --max-time 1 "${HOST_AND_PORT}" > /dev/null 2>&1; then
-                echo "ok"
-                break
-              fi
-            fi
-
-            echo "failed"
-            ((counter--))
-            if [ ${counter} -gt 0 ]; then
-              echo "Will retry in 5 seconds"
-              sleep 5
-            else
-              printf "No more retries. Here's the log output from the container\n\n\n"
-              docker logs "${TARGET}-test"
-              exit 1
-            fi
-          done
-
+          variant="apache"
           if grep -q "nginx" <<< "${TARGET}"; then
-            printf "\n\n### nginx tests ###\n\n"
-
-            printf "Storing headers for sample attack..."
-            curl -s -D headers.txt -o /dev/null "${HOST_AND_PORT}/?test=../../etc/passwd"
-            printf "...done\n\n\n"
-
-            printf "Check status 403..."
-            grep -q "HTTP/1.1 403 Forbidden" headers.txt
-            printf "yes\n\n\n"
-
-            printf "Check 'Content-Type' header on 403..."
-            grep -qi "^content-type: text/html" headers.txt
-            printf "yes\n\n\n"
-
-            printf "Check 'Access-Control-Allow-Origin' header..."
-            grep -q "Access-Control-Allow-Origin: *" headers.txt
-            printf "yes\n\n\n"
-
-            printf "Check 'Access-Control-Max-Age' header..."
-            grep -q "Access-Control-Max-Age: 3600" headers.txt
-            printf "yes\n\n\n"
-
-            printf "Check 'Access-Control-Allow-Methods' header..."
-            grep -q "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS" headers.txt
-            printf "yes\n\n\n"
-
-            printf "Check 'Access-Control-Allow-Headers'..."
-            grep -q "Access-Control-Allow-Headers: *" headers.txt
-            printf "yes\n\n\n"
-
-            printf "Check HTTP/3 is off by default (no Alt-Svc header on SSL port)..."
-            curl -s -k -D headers-ssl.txt -o /dev/null "https://localhost:8443/"
-            if grep -qi "^alt-svc:" headers-ssl.txt; then
-              echo "FAIL: Alt-Svc header present with HTTP3 unset (should default to off)"
-              exit 1
-            fi
-            printf "yes\n\n\n"
-
-            echo "### nginx tests - done ###"
+            variant="nginx"
           fi
-
-          printf "\n\n### generic tests ###\n\n"
-
-          echo "Test HTTP/2 upgrade..."
-          curl -v --http2 --no-progress-meter -o /dev/null "${HOST_AND_PORT}" 2>&1 | tee out.txt
-          grep -iP "< 101 Switching Protocols|< HTTP/2" < out.txt | tee out2.txt
-          wc -l out2.txt | grep -qoP "\d+" | xargs -I % test % -eq 2
-          rm out*.txt
-          printf "...yes\n\n\n"
-
-          echo "Test HTTP/2 prior knowledge..."
-          curl -v --http2-prior-knowledge --no-progress-meter -o /dev/null "${HOST_AND_PORT}" 2>&1 | tee out.txt
-          grep -iq "< HTTP/2" out.txt
-          grep -iqv "< 101 Switching Protocols" out.txt
-          printf "...yes\n\n\n"
-
-          echo "### generic tests - done ###"
+          ./tests/verify-image.sh --variant "${variant}"
 
       - name: Verify HTTP/3 opt-in
         if: ${{ matrix.target == 'nginx-debian-writable-latest' && matrix.platforms == 'linux/amd64' }}
+        env:
+          TARGET: ${{ matrix.target }}
         run: |
-          echo "Starting container ${{ matrix.target }}-http3-test with HTTP3=on"
+          echo "Starting container ${TARGET}-http3-test with HTTP3=on"
           docker run \
             --pull "never" \
             -d \
-            --name ${{ matrix.target }}-http3-test \
-            --env-file "${{ matrix.target }}.env" \
+            --name "${TARGET}-http3-test" \
+            --env-file "${TARGET}.env" \
             -e BACKEND=http://localhost:9999 \
             -e HTTP3=on \
             -e HTTP3_ALT_SVC_PORT=8444 \
+            -p 8081:8080 \
             -p 8444:8443 \
             -p 8444:8443/udp \
-            "${{ matrix.target }}-verification"
+            "${TARGET}-verification"
 
-          counter=10
-          while true; do
-            if [ "$(docker inspect ${{ matrix.target }}-http3-test --format='{{.State.Running}}')" = 'true' ] && \
-               curl -s -k --connect-timeout 5 --max-time 2 -D headers-http3.txt -o /dev/null "https://localhost:8444/"; then
-              break
-            fi
-            ((counter--))
-            if [ ${counter} -le 0 ]; then
-              echo "No more retries. Here's the log output from the container"
-              docker logs ${{ matrix.target }}-http3-test
-              exit 1
-            fi
-            echo "Not ready yet, retrying in 5 seconds"
-            sleep 5
-          done
+          ./tests/verify-image.sh \
+            --variant nginx \
+            --url http://localhost:8081 \
+            --tls-url https://localhost:8444 \
+            --expect-h3-port 8444
 
-          printf "Check Alt-Svc header advertises h3 on the remapped port (8444)..."
-          grep -qi '^alt-svc:.*h3=":8444"' headers-http3.txt
-          printf "yes\n\n\n"
+      - name: Container logs
+        if: failure()
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          docker logs "${TARGET}-test" || true
+          docker logs "${TARGET}-http3-test" || true
 
           docker rm -f ${{ matrix.target }}-http3-test
 
