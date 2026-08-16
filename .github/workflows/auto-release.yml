@@ -30,30 +30,32 @@ jobs:
         id: check
         run: |
           set -euo pipefail
-          BEFORE="${{ github.event.before }}"
-          if [ -z "${BEFORE//0/}" ]; then
+          old_sha="${{ github.event.before }}"
+          if [ -z "${old_sha//0/}" ]; then
             echo "No previous commit to diff against; skipping."
-            echo "bumped=false" >> "$GITHUB_OUTPUT"
+            echo "bumped=false" >> "${GITHUB_OUTPUT}"
             exit 0
           fi
 
           version_of() {
-            git show "$1:docker-bake.hcl" | awk -v var="$2" '
-              $0 ~ "variable \"" var "\"" { found=1 }
+            sha=${1}
+            variant=${2}
+            git show "${sha}:docker-bake.hcl" | awk -v variant="${variant}" '
+              $0 ~ "variable \"" variant "\"" { found=1 }
               found && /default *=/ { print; exit }
             '
           }
 
           bumped=false
-          for var in modsec2-version modsec3-version httpd-version nginx-version; do
-            old=$(version_of "$BEFORE" "$var")
-            new=$(version_of "${{ github.sha }}" "$var")
-            if [ "$old" != "$new" ]; then
-              echo "Version bump detected for $var: $old -> $new"
+          for variant in modsec2-version modsec3-version httpd-version nginx-version; do
+            old=$(version_of "${old_sha}" "${variant}")
+            new=$(version_of "${{ github.sha }}" "${variant}")
+            if [ "${old}" != "${new}" ]; then
+              echo "Version bump detected for $“variant}: ${old} -> ${new}"
               bumped=true
             fi
           done
-          echo "bumped=$bumped" >> "$GITHUB_OUTPUT"
+          echo "bumped=${bumped}" >> "${GITHUB_OUTPUT}"
 
   tag-and-release:
     needs: check-version-bump
@@ -73,16 +75,16 @@ jobs:
         run: |
           set -euo pipefail
           base="release/$(date -u +%Y%m%d)"
-          tag="$base"
+          tag="${base}"
           suffix=1
-          while gh api "repos/${{ github.repository }}/git/ref/tags/$tag" >/dev/null 2>&1; do
+          while gh api "repos/${{ github.repository }}/git/ref/tags/${tag}" >/dev/null 2>&1; do
             tag="${base}-${suffix}"
             suffix=$((suffix + 1))
           done
 
-          gh release create "$tag" \
+          gh release create "${tag}" \
             --target "${{ github.sha }}" \
-            --title "$tag" \
+            --title "${tag}" \
             --generate-notes
 
   publish:
