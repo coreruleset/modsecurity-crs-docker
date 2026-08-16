@@ -152,6 +152,8 @@ jobs:
             --tls-url https://localhost:8444 \
             --expect-h3-port 8444
 
+          docker rm -f "${TARGET}-http3-test"
+
       - name: Container logs
         if: failure()
         env:
@@ -159,8 +161,6 @@ jobs:
         run: |
           docker logs "${TARGET}-test" || true
           docker logs "${TARGET}-http3-test" || true
-
-          docker rm -f ${{ matrix.target }}-http3-test
 
       - name: Checkout CRS
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # ratchet:actions/checkout@v7.0.0
