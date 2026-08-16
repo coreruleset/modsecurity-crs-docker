@@ -95,33 +95,37 @@ jobs:
           overwrite: true
 
       - name: Run ${{ matrix.target }}
+        env:
+          TARGET: ${{ matrix.target }}
         run: |
           # get the major CRS version from the matrix.target
           # Targets ending with "previous" are v3; all others are v4.
-          CRS_VERSION="$([[ "${{ matrix.target }}" == *-previous ]] && echo v3 || echo v4)"
+          CRS_VERSION="$([[ "${TARGET}" == *-previous ]] && echo v3 || echo v4)"
           . .github/workflows/configure-rules-for-test.sh \
             "src/opt/modsecurity/configure-rules.${CRS_VERSION}.conf" \
             README.md \
-            "${{ matrix.target }}.env"
-          echo "Starting container ${{ matrix.target }}-verification"
+            "${TARGET}.env"
+          echo "Starting container ${TARGET}-verification"
           # The backend is a dummy
           docker run \
             --pull "never" \
             -d \
-            --name ${{ matrix.target }}-test \
-            --env-file "${{ matrix.target }}.env" \
+            --name "${TARGET}-test" \
+            --env-file "${TARGET}.env" \
             -p 8080:8080 \
             -p 8443:8443 \
             -e BACKEND=http://localhost:9999 \
-            "${{ matrix.target }}-verification"
+            "${TARGET}-verification"
 
       - name: Verify ${{ matrix.target }}
+        env:
+          TARGET: ${{ matrix.target }}
         run: |
           HOST_AND_PORT="localhost:8080"
           counter=10
           while true; do
             printf "Checking whether container is running..."
-            if [ $(docker inspect ${{ matrix.target }}-test --format='{{.State.Running}}') = 'true' ]; then
+            if [ "$(docker inspect "${TARGET}-test" --format='{{.State.Running}}')" = 'true' ]; then
               echo "ok"
               printf "Trying to connect..."
               if curl -s --connect-timeout 5 --max-time 1 "${HOST_AND_PORT}" > /dev/null 2>&1; then
@@ -137,12 +141,12 @@ jobs:
               sleep 5
             else
               printf "No more retries. Here's the log output from the container\n\n\n"
-              docker logs ${{ matrix.target }}-test
+              docker logs "${TARGET}-test"
               exit 1
             fi
           done
 
-          if grep -q  "nginx"<<< "${{ matrix.target }}"; then
+          if grep -q "nginx" <<< "${TARGET}"; then
             printf "\n\n### nginx tests ###\n\n"
 
             printf "Storing headers for sample attack..."
