@@ -43,6 +43,8 @@ jobs:
     needs:
       - prepare
     strategy:
+      # One image failing its scan should not hide the state of the others.
+      fail-fast: false
       matrix:
         include: ${{ fromJson(needs.prepare.outputs.matrix) }}
     steps:
