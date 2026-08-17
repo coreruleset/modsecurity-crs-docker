@@ -179,7 +179,7 @@ RUN set -eux; \
         iproute2 \
         libcurl3-gnutls \
         libfuzzy2 \
-        liblua${LUA_VERSION} \
+        liblua${LUA_VERSION}-0 \
         ${LUA_MODULES} \
         libpcre2-8-0 \
         libxml2 \
