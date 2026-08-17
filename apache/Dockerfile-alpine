@@ -181,7 +181,10 @@ COPY apache/docker-entrypoint.sh /
 
 RUN addgroup -S httpd && adduser -SH httpd httpd
 
+# The base image carries whatever package versions it was built with, so security
+# updates released since then are only picked up by upgrading here.
 RUN set -eux; \
+    apk upgrade --no-cache; \
     apk add --no-cache \
         ca-certificates \
         curl \

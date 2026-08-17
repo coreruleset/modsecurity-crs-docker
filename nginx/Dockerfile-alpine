@@ -240,7 +240,10 @@ COPY src/bin/* /usr/local/bin/
 
 USER root
 
+# The base image carries whatever package versions it was built with, so security
+# updates released since then are only picked up by upgrading here.
 RUN set -eux; \
+    apk upgrade --no-cache; \
     apk add --no-cache \
         curl \
         ed \
