@@ -255,9 +255,32 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd crs
-          ARCH="${{ startsWith(matrix.platforms, 'linux/arm') && 'arm64' || 'amd64' }}"
-          gh release download -R coreruleset/go-ftw "v${{ env.GO_FTW_VERSION }}" \
-            -p "ftw_${{ env.GO_FTW_VERSION }}_linux_${ARCH}.tar.gz" -O - | tar -xzvf - ftw
+          # ftw runs on the runner, so its architecture decides the asset. Asking the
+          # runner keeps this from drifting apart from the runs-on mapping, and an
+          # architecture with no release fails here rather than on the first exec.
+          case "$(uname -m)" in
+            x86_64) arch="amd64" ;;
+            aarch64 | arm64) arch="arm64" ;;
+            *) echo "No go-ftw release for runner architecture $(uname -m)" >&2; exit 1 ;;
+          esac
+          # The release CDN resets connections now and then. Download to a file so a
+          # truncated transfer fails here instead of reaching tar, and retry it.
+          archive="ftw_${GO_FTW_VERSION}_linux_${arch}.tar.gz"
+          for attempt in 1 2 3; do
+            if gh release download -R coreruleset/go-ftw "v${GO_FTW_VERSION}" \
+                 -p "${archive}" --clobber; then
+              break
+            fi
+            if [ "${attempt}" -eq 3 ]; then
+              echo "Giving up on ${archive} after ${attempt} attempts"
+              exit 1
+            fi
+            delay=$((attempt * 5))
+            echo "Download failed, retrying in ${delay} seconds"
+            sleep "${delay}"
+          done
+          tar -xzf "${archive}" ftw
+          rm "${archive}"
       - name: Patch CRS compose file to use verification image
         run: |
           sed -i \
