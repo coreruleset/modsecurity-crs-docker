@@ -339,6 +339,8 @@ jobs:
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # ratchet:aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ matrix.target }}-verification
+          # renovate: datasource=github-releases depName=aquasecurity/trivy
+          version: v0.74.0
           scanners: vuln
           vuln-type: os,library
           ignore-unfixed: true

@@ -76,6 +76,8 @@ jobs:
           TRIVY_PLATFORM: ${{ matrix.platform }}
         with:
           image-ref: ${{ matrix.image }}
+          # renovate: datasource=github-releases depName=aquasecurity/trivy
+          version: v0.74.0
           scanners: vuln
           vuln-type: os,library
           ignore-unfixed: true

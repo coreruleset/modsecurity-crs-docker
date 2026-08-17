@@ -148,6 +148,16 @@
       "datasourceTemplate": "github-releases"
     },
     {
+      "description": "Tool versions pinned in workflow inputs",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^\\.github/workflows/[^/]+\\.yml$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+version: (?<currentValue>\\S+)"
+      ]
+    },
+    {
       "description": "Docs: CRS",
       "customType": "regex",
       "managerFilePatterns": [
