@@ -29,25 +29,39 @@ tls_url="https://localhost:8443"
 expect_h3_port=""
 timeout=60
 
+# need_value <option> <remaining args>: an option that takes a value has to have one
+need_value() {
+  if [ "${2}" -lt 2 ]; then
+    printf 'Missing value for %s\n\n' "${1}" >&2
+    usage >&2
+    exit 2
+  fi
+}
+
 while [ ${#} -gt 0 ]; do
   case "${1}" in
   --variant)
+    need_value "${1}" "${#}"
     variant="${2}"
     shift 2
     ;;
   --url)
+    need_value "${1}" "${#}"
     url="${2}"
     shift 2
     ;;
   --tls-url)
+    need_value "${1}" "${#}"
     tls_url="${2}"
     shift 2
     ;;
   --expect-h3-port)
+    need_value "${1}" "${#}"
     expect_h3_port="${2}"
     shift 2
     ;;
   --timeout)
+    need_value "${1}" "${#}"
     timeout="${2}"
     shift 2
     ;;
