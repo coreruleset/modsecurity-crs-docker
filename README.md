@@ -263,6 +263,7 @@ These variables are common to image variants and will set defaults based on the 
 | NGINX_X_FORWARDED_PORT | A string indicating the port of the initial request, sent as the `X-Forwarded-Port` header to the upstream backend. Can be set to a fixed port (e.g., `443`) when the container is behind a reverse proxy. (Default: `$server_port`) |
 | NGINX_X_FORWARDED_PROTO | A string indicating the transfer protocol of the initial request (Default: `$scheme`) |
 | PORT | An int value indicating the port where the webserver is listening to | `8080` | We run as unprivileged user. |
+| PROXY_HOST_HEADER | The value of the `Host` header sent to the backend. `$host` forwards the host the client asked for; `$proxy_host` sends the host from `BACKEND`, which is what httpd does with `PROXY_PRESERVE_HOST=off`; a literal name such as `example.com` sends that instead. (Default: `$host`) |
 | PROXY_SSL_VERIFY_DEPTH  | An integer value indicating the verification depth for the client certificate chain (Default: `1`) |
 | REAL_IP_HEADER | Name of the header containing the real IP value(s) (Default: `X-REAL-IP`). See [real_ip_header](http://nginx.org/en/docs/http/ngx_http_realip_module.html#real_ip_header) |
 | REAL_IP_PROXY_HEADER | Name of the header containing `$remote_addr` to be passed to proxy (Default: `X-REAL-IP`). See [proxy_set_header](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_set_header) |
