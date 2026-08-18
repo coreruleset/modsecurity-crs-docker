@@ -51,7 +51,7 @@ jobs:
             old=$(version_of "${old_sha}" "${variant}")
             new=$(version_of "${{ github.sha }}" "${variant}")
             if [ "${old}" != "${new}" ]; then
-              echo "Version bump detected for $“variant}: ${old} -> ${new}"
+              echo "Version bump detected for ${variant}: ${old} -> ${new}"
               bumped=true
             fi
           done
