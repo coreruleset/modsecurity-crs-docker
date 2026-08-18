@@ -164,7 +164,7 @@ ENV \
     SSL_PROTOCOLS="all -SSLv3 -TLSv1 -TLSv1.1" \
     SSL_SESSION_TICKETS=off \
     TIMEOUT=60 \
-    USE_EXTENDED_LOGFORMAT=false \
+    USE_FOLINIS_MODSEC_LOGFORMAT=false \
     WORKER_CONNECTIONS=400 \
     # CRS specific variables
     ANOMALY_INBOUND=5 \
@@ -211,6 +211,8 @@ RUN set -eux; \
     sed -i -E 's|^(\s*CustomLog)(\s+\S+)+|\1 ${ACCESSLOG} modsec "env=!nologging"|g' /usr/local/apache2/conf/httpd.conf; \
     sed -i -E 's|^(\s*ErrorLog)\s+\S+|\1 ${ERRORLOG}|g' /usr/local/apache2/conf/httpd.conf; \
     sed -i -E 's|^(\s*TransferLog)\s+\S+|\1 ${ACCESSLOG}|g' /usr/local/apache2/conf/httpd.conf; \
+    # mod_logio provides %I and %O, which the ModSecurity log format needs
+    sed -i -E 's|#(LoadModule logio_module modules/mod_logio.so)|\1|' /usr/local/apache2/conf/httpd.conf; \
     sed -i -E 's|#(LoadModule unique_id_module)|\1|' /usr/local/apache2/conf/httpd.conf; \
     sed -i -E 's|#(LoadModule rewrite_module modules/mod_rewrite.so)|\1|' /usr/local/apache2/conf/httpd.conf; \
     sed -i -E 's|#(LoadModule proxy_module modules/mod_proxy.so)|\1|' /usr/local/apache2/conf/httpd.conf; \
