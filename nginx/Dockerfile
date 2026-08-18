@@ -203,6 +203,7 @@ ENV \
     REAL_IP_RECURSIVE="on" \
     RESOLVERS= \
     RESOLVER_CONFIG="valid=5s"\
+    SERVER_HEADER=nginx \
     SERVER_NAME=localhost \
     SERVER_TOKENS=off \
     SET_REAL_IP_FROM="127.0.0.1" \

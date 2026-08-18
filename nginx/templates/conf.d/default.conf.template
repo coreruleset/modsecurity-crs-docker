@@ -2,6 +2,12 @@
 
 server_tokens ${SERVER_TOKENS};
 
+# server_tokens only hides the version, never the product name, so the header is set
+# here instead. An empty SERVER_HEADER removes it. The status codes have to be listed
+# one by one because headers-more rejects ranges, and without the list only a few
+# default codes would be covered.
+more_set_headers -s '200 201 204 206 301 302 303 304 307 308 400 401 403 404 405 408 411 413 414 421 429 431 500 501 502 503 504' 'Server: ${SERVER_HEADER}';
+
 map $http_upgrade $connection_upgrade {
     default upgrade;
     '' close;
