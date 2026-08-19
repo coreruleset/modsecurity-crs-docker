@@ -3,6 +3,12 @@ name: Build and publish images for container registries
 on:
   release:
     types: [published]
+  workflow_call:
+    secrets:
+      dockerhub_user:
+        required: true
+      dockerhub_token:
+        required: true
 
 permissions: {}
 
