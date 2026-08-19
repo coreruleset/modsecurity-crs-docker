@@ -9,6 +9,10 @@ on:
 
 permissions: {}
 
+env:
+  # renovate: datasource=docker depName=aquasec/trivy
+  TRIVY_IMAGE: "aquasec/trivy:0.74.0@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969"
+
 jobs:
   prepare:
     runs-on: ubuntu-latest
@@ -66,28 +70,64 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Reports instead of failing: a fix for a published image means cutting a release,
-      # not turning this run red. The findings land in the Security tab.
-      - name: Scan ${{ matrix.image }} (${{ matrix.platform }})
-        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # ratchet:aquasecurity/trivy-action@v0.36.0
+      # Docker pulls the platform we ask for, so the scanner never talks to a registry
+      # and never has to pick a manifest itself.
+      - name: Fetch ${{ matrix.image }} (${{ matrix.platform }})
         env:
-          # The action has no platform input; Trivy would otherwise pick the manifest
-          # matching the runner and leave the other published platforms unscanned.
-          TRIVY_PLATFORM: ${{ matrix.platform }}
+          IMAGE: ${{ matrix.image }}
+          PLATFORM: ${{ matrix.platform }}
+        run: |
+          docker pull --platform "${PLATFORM}" "${IMAGE}"
+          mkdir -p sarif
+          docker save -o image.tar "${IMAGE}"
+
+      # One cache entry per day: the database is refreshed below anyway, and a
+      # per-run key would fill the repository cache with copies of it.
+      - name: Trivy cache key
+        id: trivy-cache-key
+        run: echo "day=$(date -u +%F)" >> "${GITHUB_OUTPUT}"
+
+      - name: Cache the Trivy database
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # ratchet:actions/cache@v6.1.0
         with:
-          image-ref: ${{ matrix.image }}
-          # renovate: datasource=github-releases depName=aquasecurity/trivy
-          version: v0.74.0
-          scanners: vuln
-          vuln-type: os,library
-          ignore-unfixed: true
-          severity: HIGH,CRITICAL
-          limit-severities-for-sarif: true
-          format: sarif
-          output: trivy-${{ matrix.slug }}.sarif
+          path: .trivy-cache
+          key: trivy-db-${{ steps.trivy-cache-key.outputs.day }}
+          restore-keys: trivy-db-
+
+      - name: Update the Trivy database
+        run: |
+          docker run --rm -v "${PWD}/.trivy-cache:/cache" "${TRIVY_IMAGE}" \
+            image --cache-dir /cache --download-db-only
+
+      # Reports instead of failing: a fix for a published image means cutting a release,
+      # not turning this run red. The findings land in the Security tab. The scanner
+      # parses attacker-supplied image contents, so it runs as a container with the
+      # network switched off and only the database, the image and an output directory
+      # mounted.
+      - name: Scan ${{ matrix.image }} (${{ matrix.platform }})
+        env:
+          SLUG: ${{ matrix.slug }}
+        run: |
+          docker run --rm --network none \
+            -v "${PWD}/.trivy-cache:/cache" \
+            -v "${PWD}/image.tar:/scan/image.tar:ro" \
+            -v "${PWD}/sarif:/out" \
+            "${TRIVY_IMAGE}" \
+            image \
+              --cache-dir /cache \
+              --skip-db-update \
+              --input /scan/image.tar \
+              --scanners vuln \
+              --pkg-types os,library \
+              --ignore-unfixed \
+              --severity HIGH,CRITICAL \
+              --format sarif \
+              --output "/out/trivy-${SLUG}.sarif" \
+              --skip-dirs /usr/share/java \
+              --skip-dirs /usr/share/maven-repo
 
       - name: Upload results to code scanning
         uses: github/codeql-action/upload-sarif@988661ebb5e81487b3fb31b2185d2856c0a10679 # ratchet:github/codeql-action/upload-sarif@v4
         with:
-          sarif_file: trivy-${{ matrix.slug }}.sarif
+          sarif_file: sarif/trivy-${{ matrix.slug }}.sarif
           category: trivy-${{ matrix.slug }}
