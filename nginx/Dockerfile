@@ -243,9 +243,12 @@ COPY src/bin/* /usr/local/bin/
 
 USER root
 
+# The base image carries whatever package versions it was built with, so security
+# updates released since then are only picked up by upgrading here.
 RUN set -eux; \
     echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections; \
     apt-get update -qq; \
+    LD_LIBRARY_PATH="" apt-get upgrade -y -qq --no-install-recommends --no-install-suggests; \
     LD_LIBRARY_PATH="" apt-get install -y -qq --no-install-recommends --no-install-suggests \
         ca-certificates \
         curl \
