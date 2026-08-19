@@ -169,9 +169,12 @@ COPY src/etc/modsecurity.d/*.conf /etc/modsecurity.d/
 COPY src/opt/modsecurity/* /opt/modsecurity/
 COPY apache/docker-entrypoint.sh /
 
+# The base image carries whatever package versions it was built with, so security
+# updates released since then are only picked up by upgrading here.
 RUN set -eux; \
     echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections; \
     apt-get update -qq; \
+    apt-get upgrade -qq -y --no-install-recommends --no-install-suggests; \
     apt-get install -qq -y --no-install-recommends --no-install-suggests \
         ca-certificates \
         curl \
