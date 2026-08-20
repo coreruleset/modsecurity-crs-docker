@@ -148,13 +148,13 @@
       "datasourceTemplate": "github-releases"
     },
     {
-      "description": "Tool versions pinned in workflow inputs",
+      "description": "Tool images pinned in workflow environment variables",
       "customType": "regex",
       "managerFilePatterns": [
         "/^\\.github/workflows/[^/]+\\.yml$/"
       ],
       "matchStrings": [
-        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+version: (?<currentValue>\\S+)"
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+[A-Z_]+: \"[^\":]+:(?<currentValue>[^\"@]+)(?:@(?<currentDigest>sha256:[a-f0-9]+))?\""
       ]
     },
     {
