@@ -18,10 +18,9 @@ Stable Tags are composed of:
    * CRS version, in the format `<major>[.<minor>[.<patch]]`
    * web server variant
    * OS variant (optional, nginx only)
-   * writable (optional)
    * date, in the format `YYYYMMDDHHMM`
 
-The stable tag format is `<CRS version>-<web server>[-<os>][-<writable>]-<date>`.
+The stable tag format is `<CRS version>-<web server>[-<os>]-<date>`.
 Examples (do not blindly copy these labels):
    * `4-nginx-202509051009`
    * `4.18-nginx-202509051009`
@@ -38,9 +37,8 @@ Rolling tags are updated whenever a new stable tag release occurs. Rolling tags 
 Rolling Tags are composed of:
    * web server variant
    * OS variant (optional)
-   * writable (optional, nginx only)
 
-The rolling tag format is `<web server>[-<os>][-<writable>]`.
+The rolling tag format is `<web server>[-<os>]`.
 Examples:
    * `nginx`
    * `apache-alpine`
@@ -74,13 +72,14 @@ Examples:
 ## Read-only Root Filesystem
 
 > [!IMPORTANT]
-> Read-only filesystem variants are currently only available for images based on nginx.
+> Read-only filesystem variants are not currently published. The `nginx-read-only` and
+> `nginx-alpine-read-only` tags do not exist on Docker Hub or ghcr.io.
 
-By default, the root filesystem of our containers are writable. We also provide images that are set up to run on a read-only filesystem for enhanced security.
-
-Examples:
-   * `nginx-read-only`
-   * `nginx-alpine-read-only`
+The root filesystem of our containers is writable. Support for running on a read-only
+filesystem is still in the nginx images — the `READ_ONLY_FS` build argument and the
+`0-move-writables.sh` entrypoint script — but the build targets that would produce those
+images are disabled in `docker-bake.hcl`, so no such tags are pushed. See
+[#172](https://github.com/coreruleset/modsecurity-crs-docker/issues/172).
 
 ### Notes regarding Openresty version of this image
 
