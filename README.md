@@ -78,8 +78,7 @@ Examples:
 The root filesystem of our containers is writable. Support for running on a read-only
 filesystem is still in the nginx images — the `READ_ONLY_FS` build argument and the
 `0-move-writables.sh` entrypoint script — but the build targets that would produce those
-images are disabled in `docker-bake.hcl`, so no such tags are pushed. See
-[#172](https://github.com/coreruleset/modsecurity-crs-docker/issues/172).
+images are disabled in `docker-bake.hcl`, so no such tags are pushed.
 
 ### Notes regarding Openresty version of this image
 
