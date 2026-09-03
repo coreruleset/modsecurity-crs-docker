@@ -7,7 +7,8 @@ on:
       - docker-bake.hcl
 
 concurrency:
-  group: auto-release-${{ github.workflow }}-${{ github.ref }}
+  # Shared with release.yml so a manual dispatch can't allocate the same tag.
+  group: release-tag-creation
   cancel-in-progress: false
 
 permissions: {}
@@ -60,32 +61,9 @@ jobs:
   tag-and-release:
     needs: check-version-bump
     if: needs.check-version-bump.outputs.bumped == 'true'
-    runs-on: ubuntu-latest
     permissions:
       contents: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # actions/checkout@v5
-        with:
-          persist-credentials: false
-
-      - name: Create release tag and GitHub release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          base="release/$(date -u +%Y%m%d)"
-          tag="${base}"
-          suffix=1
-          while gh api "repos/${{ github.repository }}/git/ref/tags/${tag}" >/dev/null 2>&1; do
-            tag="${base}-${suffix}"
-            suffix=$((suffix + 1))
-          done
-
-          gh release create "${tag}" \
-            --target "${{ github.sha }}" \
-            --title "${tag}" \
-            --generate-notes
+    uses: ./.github/workflows/cut-release.yml
 
   publish:
     needs: tag-and-release
