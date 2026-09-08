@@ -218,6 +218,7 @@ These variables are common to image variants and will set defaults based on the 
 | BACKEND_WS | A string indicating the IP/URL of the WebSocket service (Default: `ws://localhost:8081`) |
 | H2_DIRECT | A string indicating whether unencrypted HTTP/2 connections are allowed without upgrading from HTTP/1.1. This mode is also called "prior knowledge. (Allowed values: `on`, `off`. Default: `on`) |
 | H2_PROTOCOLS  | A string value indicating the protocols supported by the HTTP/2 module (Default: `h2 h2c http/1.1`) |
+| HSTS_MAX_AGE | The `max-age` value, in seconds, of the [Strict-Transport-Security](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security) response header sent on HTTPS responses. Set to a number (e.g. `63072000` for 2 years) to opt in; the header is not sent at all while this is `off`. Only enable this once you are sure the site should never be served over plain HTTP again for the given duration. (Default: `off`) |
 | MUTEX | Configure mutex and lock file directory for all specified mutexes (see [Mutex](https://httpd.apache.org/docs/2.4/mod/core.html#mutex)) (Default: `default`) |
 | PORT | An int value indicating the port where the webserver is listening to | `8080` | - |
 | PROXY_ERROR_OVERRIDE  | A string indicating that errors from the backend services should be overridden by this proxy server (see [ProxyErrorOverride](https://httpd.apache.org/docs/2.4/mod/mod_proxy.html#proxyerroroverride) directive). (Allowed values: `on`, `off`. Default: `on`) |
@@ -233,13 +234,14 @@ These variables are common to image variants and will set defaults based on the 
 | REQUEST_READ_TIMEOUT_HEADER_MIN_RATE  | Minimum data rate, in bytes per second, required while receiving the request headers; the timeout is extended while this rate is maintained (Default: `500`). See [RequestReadTimeout](https://httpd.apache.org/docs/2.4/mod/mod_reqtimeout.html) |
 | SERVER_ADMIN  | A string value indicating the address where problems with the server should be e-mailed (Default: `root@localhost`) |
 | SERVER_SIGNATURE | A string value configuring the footer on server-generated documents (Allowed values: `On`, `Off`, `EMail`. Default: `Off`) |
-| SERVER_TOKENS | Option defining the server information presented to clients in the `Server` HTTP response header. Also see `MODSEC_SERVER_SIGNATURE`. (Allowed values: `Full`, `Prod[uctOnly]`, `Major`, `Minor`, `Min[imal]`, `OS`. Default: `Full`). |
+| SERVER_TOKENS | Option defining the server information presented to clients in the `Server` HTTP response header. Also see `MODSEC_SERVER_SIGNATURE`. (Allowed values: `Full`, `Prod[uctOnly]`, `Major`, `Minor`, `Min[imal]`, `OS`. Default: `Prod`). |
 | SSL_ENGINE  | A string indicating the SSL Engine Operation Switch (Default: `on`) |
-| SSL_HONOR_CIPHER_ORDER | A string indicating if the server should [honor the cipher list provided by the client](https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslhonorcipherorder) (Allowed values: `on`, `off`. Default: `off`) |
+| SSL_HONOR_CIPHER_ORDER | A string indicating if, when enabled, the server should honor its own cipher order defined by `SSLCipherSuite` [rather than the client's](https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslhonorcipherorder) (Allowed values: `on`, `off`. Default: `on`) |
 | SSL_PORT | Port number where the SSL enabled webserver is listening | `8443` | - |
 | SSL_SESSION_TICKETS | A string to enable or disable the use of [TLS session tickets](https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslsessiontickets) (RFC 5077). (Default: `off`) |
 | TIMEOUT  | Number of seconds before receiving and sending timeout (Default: `60`) |
 | WORKER_CONNECTIONS  | Maximum number of MPM request worker processes (Default: `400`) |
+| X_FRAME_OPTIONS | The value of the [X-Frame-Options](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options) response header, sent on every response to mitigate clickjacking (Allowed values: `SAMEORIGIN`, `DENY`. Default: `SAMEORIGIN`) |
 
 > [!NOTE]
 > Apache access and metric logs can be disabled by exporting the `nologging=1` environment variable, or using `ACCESSLOG=/dev/null` and `METRICSLOG=/dev/null`.
