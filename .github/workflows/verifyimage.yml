@@ -12,6 +12,8 @@ env:
   # sha256sum format: <hash><space><format (space for text)><file name>
   MODSECURITY_RECOMMENDED: "ccff8ba1f12428b34ff41960d8bf773dd9f62b9a7c77755247a027cb01896d4f  modsecurity.conf-recommended"
   GO_FTW_VERSION: '2.4.0'
+  # renovate: datasource=docker depName=aquasec/trivy
+  TRIVY_IMAGE: "aquasec/trivy:0.74.0@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969"
 
 jobs:
   prepare:
@@ -43,6 +45,8 @@ jobs:
     needs:
       - prepare
     strategy:
+      # One image failing its scan should not hide the state of the others.
+      fail-fast: false
       matrix:
         include: ${{ fromJson(needs.prepare.outputs.matrix) }}
     steps:
@@ -248,3 +252,50 @@ jobs:
           path: "crs/tests/logs/${{ contains(matrix.target, 'apache') && 'modsec2-apache' || 'modsec3-nginx' }}/error.log"
           retention-days: 7
           overwrite: true
+
+      # The scanner runs as a container rather than through the action: it parses
+      # attacker-supplied image contents, so it gets the database and the image and
+      # nothing else. Downloading the database is the only step that needs a network.
+      # One cache entry per day: the database is refreshed below anyway, and a
+      # per-run key would fill the repository cache with copies of it.
+      - name: Trivy cache key
+        id: trivy-cache-key
+        run: echo "day=$(date -u +%F)" >> "${GITHUB_OUTPUT}"
+
+      - name: Cache the Trivy database
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # ratchet:actions/cache@v6.1.0
+        with:
+          path: .trivy-cache
+          key: trivy-db-${{ steps.trivy-cache-key.outputs.day }}
+          restore-keys: trivy-db-
+
+      - name: Update the Trivy database
+        run: |
+          docker run --rm -v "${PWD}/.trivy-cache:/cache" "${TRIVY_IMAGE}" \
+            image --cache-dir /cache --download-db-only
+
+      # Runs last so a vulnerable base image doesn't hide functional test results.
+      # Only fixed vulnerabilities fail the build: those are actionable (bump the base
+      # image), while the unfixed ones the distributions carry would block every PR.
+      # The image comes from the tar the build already wrote, so the scan needs no
+      # registry access and runs with the network switched off.
+      - name: Scan ${{ matrix.target }} for vulnerabilities
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          docker run --rm --network none \
+            -v "${PWD}/.trivy-cache:/cache" \
+            -v "${PWD}/${TARGET}-verification.tar:/scan/image.tar:ro" \
+            "${TRIVY_IMAGE}" \
+            image \
+              --cache-dir /cache \
+              --skip-db-update \
+              --input /scan/image.tar \
+              --scanners vuln \
+              --pkg-types os,library \
+              --ignore-unfixed \
+              --severity HIGH,CRITICAL \
+              --exit-code 1 \
+              --format table \
+              --skip-dirs /usr/share/java \
+              --skip-dirs /usr/share/maven-repo
