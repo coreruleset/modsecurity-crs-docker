@@ -17,7 +17,7 @@ variable "modsec2-flags" {
     default = "--with-yajl --with-ssdeep --with-pcre2"
 }
 
-variable "previous-lts-crs-version" {
+variable "v3-lts-crs-version" {
     # renovate: depName=coreruleset-v3-lts packageName=coreruleset/coreruleset datasource=github-releases
     default = "3.3.10"
 }
@@ -34,9 +34,9 @@ variable "v4-lts-crs-version" {
 
 variable "crs-versions" {
   default = [
-    { tag = "previous-lts", version = previous-lts-crs-version },
-    { tag = "lts",      version = v4-lts-crs-version },
-    { tag = "latest",   version = major-crs-version }
+    { tag = "v3-lts", version = v3-lts-crs-version },
+    { tag = "v4-lts", version = v4-lts-crs-version },
+    { tag = "latest", version = major-crs-version }
   ]
 }
 
@@ -123,7 +123,9 @@ function "lts-tag" {
     params = [semver, variant]
     result = concat(
         tag("${minor(semver)}-${variant}-lts"),
-        tag("${patch(semver)}-${variant}-lts")
+        tag("${patch(semver)}-${variant}-lts"),
+        tag("${minor(semver)}-${variant}-${formatdate("YYYYMMDDHHMM", timestamp())}-lts"),
+        tag("${patch(semver)}-${variant}-${formatdate("YYYYMMDDHHMM", timestamp())}-lts")
     )
 }
 
@@ -182,9 +184,9 @@ target "apache" {
         LUA_MODULES = base.lua_modules
     }
     tags = concat(
-        tag(base.tag_base),
-        vtag("${crs_entry.version}", base.tag_base),
-        equal(crs_entry.tag, "lts") ? lts-tag("${crs_entry.version}", base.tag_base) : []
+        equal(crs_entry.tag, "latest") ? tag(base.tag_base) : [],
+        equal(crs_entry.tag, "latest") ? vtag("${crs_entry.version}", base.tag_base) : [],
+        contains(["v3-lts", "v4-lts"], crs_entry.tag) ? lts-tag("${crs_entry.version}", base.tag_base) : []
     )
 }
 
@@ -234,8 +236,8 @@ target "nginx" {
         READ_ONLY_FS = read-only-fs.read-only
     }
     tags = concat(
-        tag("${base.tag_base}${equal(read-only-fs.read-only, "true") ? "-read-only" : ""}"),
-        vtag("${crs_entry.version}", "${base.tag_base}${equal(read-only-fs.read-only, "true") ? "-read-only" : ""}"),
-        equal(crs_entry.tag, "lts") ? lts-tag("${crs_entry.version}", "${base.tag_base}${equal(read-only-fs.read-only, "true") ? "-read-only" : ""}") : []
+        equal(crs_entry.tag, "latest") ? tag("${base.tag_base}${equal(read-only-fs.read-only, "true") ? "-read-only" : ""}") : [],
+        equal(crs_entry.tag, "latest") ? vtag("${crs_entry.version}", "${base.tag_base}${equal(read-only-fs.read-only, "true") ? "-read-only" : ""}") : [],
+        contains(["v3-lts", "v4-lts"], crs_entry.tag) ? lts-tag("${crs_entry.version}", "${base.tag_base}${equal(read-only-fs.read-only, "true") ? "-read-only" : ""}") : []
     )
 }

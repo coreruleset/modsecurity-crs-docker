@@ -54,13 +54,16 @@ LTS Tags are composed of:
    * web server variant
    * OS variant (optional)
    * `lts` suffix
+   * optional date, in the format `YYYYMMDDHHMM`, appended before `-lts` for uniquely dated snapshots
 
-The LTS tag format is `<CRS version>-<web server>[-<os>]-lts`.
+The LTS tag format is `<CRS version>-<web server>[-<os>]-lts` and `<CRS version>-<web server>[-<os>]-<date>-lts`.
 Examples:
    * `4.25-nginx-lts`
    * `4.25.0-nginx-lts`
    * `4.25-apache-lts`
    * `4.25.0-apache-alpine-lts`
+   * `4.25-nginx-202509051009-lts`
+   * `4.25.0-nginx-202509051009-lts`
 
 ## OS Variants
 
