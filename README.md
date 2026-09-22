@@ -64,7 +64,7 @@ Examples:
 
 ## OS Variants
 
-* nginx – *ModSecurity v3.0.16 on Nginx 1.30.4 official stable base image, and latest stable OWASP CRS 4.29.0*
+* nginx – *ModSecurity v3.0.16 on Nginx 1.30.5 official stable base image, and latest stable OWASP CRS 4.29.0*
    * [nginx](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile)
    * [nginx-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile-alpine)
 * Apache httpd – *ModSecurity v2.9.14 on Apache 2.4.68 official stable base image, and latest stable OWASP CRS 4.29.0*
@@ -358,6 +358,7 @@ All these variables impact in configuration directives in the modsecurity engine
 | RESTRICTED_EXTENSIONS | A string indicating the restricted_extensions (Default: `.asa/ .asax/ .ascx/ .axd/ .backup/ .bak/ .bat/ .cdx/ .cer/ .cfg/ .cmd/ .com/ .config/ .conf/ .cs/ .csproj/ .csr/ .dat/ .db/ .dbf/ .dll/ .dos/ .htr/ .htw/ .ida/ .idc/ .idq/ .inc/ .ini/ .key/ .licx/ .lnk/ .log/ .mdb/ .old/ .pass/ .pdb/ .pol/ .printer/ .pwd/ .rdb/ .resources/ .resx/ .sql/ .swp/ .sys/ .vb/ .vbs/ .vbproj/ .vsdisco/ .webinfo/ .xsd/ .xsx/`) |
 | RESTRICTED_HEADERS_BASIC | A string indicating the restricted_headers_basic (Default: `/content-encoding/ /proxy/ /lock-token/ /content-range/ /if/ /x-http-method-override/ /x-http-method/ /x-method-override/`) |
 | RESTRICTED_HEADERS_EXTENDED | A string indicating the restricted_headers_extended (Default: `/accept-charset/`) |
+| SKIP_RESPONSE_ANALYSIS | A boolean indicating the crs_skip_response_analysis (Only from v4 and up. Default: `0`). Setting this to `1` skips all `RESPONSE-95x` rules (data leakage, web shells), which avoids the [Request Filter Denial of Service (RFDoS)](https://blog.sicuranext.com/response-filter-denial-of-service-a-new-way-to-shutdown-a-website/) risk on response bodies but disables that protection. See [rule 900500](https://github.com/coreruleset/coreruleset/blob/756f663e43c3e2454652b1c28921ae7f1ca0685e/crs-setup.conf.example#L899) for details. |
 | STATIC_EXTENSIONS | A string indicating the static_extensions (Default: `/.jpg/ /.jpeg/ /.png/ /.gif/ /.js/ /.css/ /.ico/ /.svg/ /.webp/`) |
 | TOTAL_ARG_LENGTH | An integer indicating the total_arg_length (Default: `unlimited`) |
 | VALIDATE_UTF8_ENCODING | A boolean indicating the crs_validate_utf8_encoding (Default: `0`) |
