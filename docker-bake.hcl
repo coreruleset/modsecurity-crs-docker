@@ -17,7 +17,7 @@ variable "modsec2-flags" {
     default = "--with-yajl --with-ssdeep --with-pcre2"
 }
 
-variable "v3-lts-crs-version" {
+variable "previous-lts-crs-version" {
     # renovate: depName=coreruleset-v3-lts packageName=coreruleset/coreruleset datasource=github-releases
     default = "3.3.10"
 }
@@ -34,7 +34,7 @@ variable "v4-lts-crs-version" {
 
 variable "crs-versions" {
   default = [
-    { tag = "v3-lts", version = v3-lts-crs-version },
+    { tag = "v3-lts", version = previous-lts-crs-version },
     { tag = "v4-lts", version = v4-lts-crs-version },
     { tag = "latest", version = major-crs-version }
   ]
