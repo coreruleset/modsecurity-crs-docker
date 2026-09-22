@@ -27,7 +27,7 @@ variable "major-crs-version" {
     default = "4.29.0"
 }
 
-variable "v4-lts-crs-version" {
+variable "current-lts-crs-version" {
     # renovate: depName=coreruleset-v4-lts packageName=coreruleset/coreruleset datasource=github-releases
     default = "4.25.1"
 }
@@ -35,7 +35,7 @@ variable "v4-lts-crs-version" {
 variable "crs-versions" {
   default = [
     { tag = "v3-lts", version = previous-lts-crs-version },
-    { tag = "v4-lts", version = v4-lts-crs-version },
+    { tag = "v4-lts", version = current-lts-crs-version },
     { tag = "latest", version = major-crs-version }
   ]
 }
