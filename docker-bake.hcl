@@ -24,7 +24,7 @@ variable "previous-lts-crs-version" {
 
 variable "major-crs-version" {
     # renovate: depName=coreruleset/coreruleset datasource=github-releases
-    default = "4.28.0"
+    default = "4.29.0"
 }
 
 variable "v4-lts-crs-version" {
@@ -42,7 +42,7 @@ variable "crs-versions" {
 
 variable "nginx-version" {
     # renovate: depName=nginxinc/nginx-unprivileged datasource=docker
-    default = "1.30.4"
+    default = "1.30.5"
 }
 
 variable "httpd-version" {
