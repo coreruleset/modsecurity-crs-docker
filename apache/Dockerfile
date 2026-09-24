@@ -212,7 +212,7 @@ RUN set -eux; \
     sed -i -E 's|^(\s*CustomLog)(\s+\S+)+|\1 ${ACCESSLOG} modsec "env=!nologging"|g' /usr/local/apache2/conf/httpd.conf; \
 	sed -i -E 's|^(\s*ErrorLog)\s+\S+|\1 ${ERRORLOG}|g' /usr/local/apache2/conf/httpd.conf; \
 	sed -i -E 's|^(\s*TransferLog)\s+\S+|\1 ${ACCESSLOG}|g' /usr/local/apache2/conf/httpd.conf; \
-    # mod_logio provides %I and %O, which the ModSecurity log format needs
+    # mod_logio provides %I and %O, used by Folini's log format
     sed -i -E 's|#(LoadModule logio_module modules/mod_logio.so)|\1|' /usr/local/apache2/conf/httpd.conf; \
     sed -i -E 's|#(LoadModule unique_id_module)|\1|' /usr/local/apache2/conf/httpd.conf; \
     sed -i -E 's|#(LoadModule rewrite_module modules/mod_rewrite.so)|\1|' /usr/local/apache2/conf/httpd.conf; \

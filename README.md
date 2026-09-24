@@ -213,7 +213,7 @@ These variables are common to image variants and will set defaults based on the 
 | -------- | ------------------------------------------------------------------- |
 | APACHE_ALWAYS_TLS_REDIRECT | A string value indicating if http should redirect to https (Allowed values: `on`, `off`. Default: `off`) |
 | APACHE_ERRORLOG_FORMAT | A string value indicating the `ErrorLogFormat` that Apache should use. (Default: `'"[%{u}t] [%-m:%l] [pid %P:tid %T] %7F: %E: [client\ %a] %M% ,\ referer\ %{Referer}i"'` |
-| APACHE_LOGFORMAT | A string value indicating the LogFormat that apache should use. (Default: `'"%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""'` (combined). Tip: use single quotes outside your double quoted format string.) ⚠️ Do not add a `|` as part of the log format. It is used internally.  |
+| APACHE_LOGFORMAT | A string value indicating the LogFormat that apache should use. (Default: `'"%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""'` (combined). Tip: use single quotes outside your double quoted format string.) ⚠️ Do not add a `|` as part of the log format. It is used internally. ℹ️ See also `USE_FOLINIS_MODSEC_LOGFORMAT`. |
 | APACHE_METRICS_LOGFORMAT | A string value indicating the LogFormat that the additional log apache metrics should use. (Default:'"%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""' (combined). Tip: use single quotes outside your double quoted format string.) ⚠️ Do not add a `|` as part of the log format. It is used internally.  |
 | BACKEND_WS | A string indicating the IP/URL of the WebSocket service (Default: `ws://localhost:8081`) |
 | H2_DIRECT | A string indicating whether unencrypted HTTP/2 connections are allowed without upgrading from HTTP/1.1. This mode is also called "prior knowledge. (Allowed values: `on`, `off`. Default: `on`) |
@@ -240,7 +240,7 @@ These variables are common to image variants and will set defaults based on the 
 | SSL_PORT | Port number where the SSL enabled webserver is listening | `8443` | - |
 | SSL_SESSION_TICKETS | A string to enable or disable the use of [TLS session tickets](https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslsessiontickets) (RFC 5077). (Default: `off`) |
 | TIMEOUT  | Number of seconds before receiving and sending timeout (Default: `60`) |
-| USE_FOLINIS_MODSEC_LOGFORMAT | A boolean value to enable the [extended log format](https://www.netnea.com/cms/apache-tutorial-5_extending-access-log/#step_4_configuring_the_new,_extended_log_format). When `true`, `APACHE_LOGFORMAT` is overridden with the extended format that includes ModSecurity anomaly scores and other extended fields. (Allowed values: `true`, `false`. Default: `false`) |
+| USE_FOLINIS_MODSEC_LOGFORMAT | A boolean value to enable [Folini's log format](https://www.netnea.com/cms/apache-tutorial-5_extending-access-log/#step_4_configuring_the_new,_extended_log_format). When `true`, `APACHE_LOGFORMAT` is overridden with Folini's format that includes ModSecurity anomaly scores and other extended fields. (Allowed values: `true`, `false`. Default: `false`) |
 | WORKER_CONNECTIONS  | Maximum number of MPM request worker processes (Default: `400`) |
 | X_FRAME_OPTIONS | The value of the [X-Frame-Options](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options) response header, sent on every response to mitigate clickjacking (Allowed values: `SAMEORIGIN`, `DENY`. Default: `SAMEORIGIN`) |
 
