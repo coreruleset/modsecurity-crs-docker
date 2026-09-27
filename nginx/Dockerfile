@@ -190,6 +190,7 @@ ENV \
     NGINX_X_FORWARDED_PORT='$server_port' \
     NGINX_X_FORWARDED_PROTO='$scheme' \
     PORT=8080 \
+    PROXY_HOST_HEADER='$host' \
     PROXY_SSL_CERT_FILE=/etc/nginx/conf/proxy.crt \
     PROXY_SSL_CERT_KEY_FILE=/etc/nginx/conf/proxy.key \
     PROXY_SSL_CIPHERS="ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384" \
@@ -203,6 +204,7 @@ ENV \
     REAL_IP_RECURSIVE="on" \
     RESOLVERS= \
     RESOLVER_CONFIG="valid=5s"\
+    SERVER_HEADER=nginx \
     SERVER_NAME=localhost \
     SERVER_TOKENS=off \
     SET_REAL_IP_FROM="127.0.0.1" \
@@ -241,9 +243,12 @@ COPY src/bin/* /usr/local/bin/
 
 USER root
 
+# The base image carries whatever package versions it was built with, so security
+# updates released since then are only picked up by upgrading here.
 RUN set -eux; \
     echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections; \
     apt-get update -qq; \
+    LD_LIBRARY_PATH="" apt-get upgrade -y -qq --no-install-recommends --no-install-suggests; \
     LD_LIBRARY_PATH="" apt-get install -y -qq --no-install-recommends --no-install-suggests \
         ca-certificates \
         curl \

@@ -18,10 +18,9 @@ Stable Tags are composed of:
    * CRS version, in the format `<major>[.<minor>[.<patch]]`
    * web server variant
    * OS variant (optional, nginx only)
-   * writable (optional)
    * date, in the format `YYYYMMDDHHMM`
 
-The stable tag format is `<CRS version>-<web server>[-<os>][-<writable>]-<date>`.
+The stable tag format is `<CRS version>-<web server>[-<os>]-<date>`.
 Examples (do not blindly copy these labels):
    * `4-nginx-202509051009`
    * `4.18-nginx-202509051009`
@@ -38,9 +37,8 @@ Rolling tags are updated whenever a new stable tag release occurs. Rolling tags 
 Rolling Tags are composed of:
    * web server variant
    * OS variant (optional)
-   * writable (optional, nginx only)
 
-The rolling tag format is `<web server>[-<os>][-<writable>]`.
+The rolling tag format is `<web server>[-<os>]`.
 Examples:
    * `nginx`
    * `apache-alpine`
@@ -54,33 +52,36 @@ LTS Tags are composed of:
    * web server variant
    * OS variant (optional)
    * `lts` suffix
+   * optional date, in the format `YYYYMMDDHHMM`, appended before `-lts` for uniquely dated snapshots
 
-The LTS tag format is `<CRS version>-<web server>[-<os>]-lts`.
+The LTS tag format is `<CRS version>-<web server>[-<os>]-lts` and `<CRS version>-<web server>[-<os>]-<date>-lts`.
 Examples:
    * `4.25-nginx-lts`
    * `4.25.0-nginx-lts`
    * `4.25-apache-lts`
    * `4.25.0-apache-alpine-lts`
+   * `4.25-nginx-202509051009-lts`
+   * `4.25.0-nginx-202509051009-lts`
 
 ## OS Variants
 
-* nginx – *ModSecurity v3.0.16 on Nginx 1.30.4 official stable base image, and latest stable OWASP CRS 4.28.0*
+* nginx – *ModSecurity v3.0.16 on Nginx 1.30.5 official stable base image, and latest stable OWASP CRS 4.29.0*
    * [nginx](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile)
    * [nginx-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/nginx/Dockerfile-alpine)
-* Apache httpd – *ModSecurity v2.9.14 on Apache 2.4.68 official stable base image, and latest stable OWASP CRS 4.28.0*
+* Apache httpd – *ModSecurity v2.9.14 on Apache 2.4.68 official stable base image, and latest stable OWASP CRS 4.29.0*
    * [apache](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/apache/Dockerfile)
    * [apache-alpine](https://github.com/coreruleset/modsecurity-crs-docker/blob/master/apache/Dockerfile-alpine)
 
 ## Read-only Root Filesystem
 
 > [!IMPORTANT]
-> Read-only filesystem variants are currently only available for images based on nginx.
+> Read-only filesystem variants are not currently published. The `nginx-read-only` and
+> `nginx-alpine-read-only` tags do not exist on Docker Hub or ghcr.io.
 
-By default, the root filesystem of our containers are writable. We also provide images that are set up to run on a read-only filesystem for enhanced security.
-
-Examples:
-   * `nginx-read-only`
-   * `nginx-alpine-read-only`
+The root filesystem of our containers is writable. Support for running on a read-only
+filesystem is still in the nginx images — the `READ_ONLY_FS` build argument and the
+`0-move-writables.sh` entrypoint script — but the build targets that would produce those
+images are disabled in `docker-bake.hcl`, so no such tags are pushed.
 
 ### Notes regarding Openresty version of this image
 
@@ -218,6 +219,7 @@ These variables are common to image variants and will set defaults based on the 
 | BACKEND_WS | A string indicating the IP/URL of the WebSocket service (Default: `ws://localhost:8081`) |
 | H2_DIRECT | A string indicating whether unencrypted HTTP/2 connections are allowed without upgrading from HTTP/1.1. This mode is also called "prior knowledge. (Allowed values: `on`, `off`. Default: `on`) |
 | H2_PROTOCOLS  | A string value indicating the protocols supported by the HTTP/2 module (Default: `h2 h2c http/1.1`) |
+| HSTS_MAX_AGE | The `max-age` value, in seconds, of the [Strict-Transport-Security](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security) response header sent on HTTPS responses. Set to a number (e.g. `63072000` for 2 years) to opt in; the header is not sent at all while this is `off`. Only enable this once you are sure the site should never be served over plain HTTP again for the given duration. (Default: `off`) |
 | MUTEX | Configure mutex and lock file directory for all specified mutexes (see [Mutex](https://httpd.apache.org/docs/2.4/mod/core.html#mutex)) (Default: `default`) |
 | PORT | An int value indicating the port where the webserver is listening to | `8080` | - |
 | PROXY_ERROR_OVERRIDE  | A string indicating that errors from the backend services should be overridden by this proxy server (see [ProxyErrorOverride](https://httpd.apache.org/docs/2.4/mod/mod_proxy.html#proxyerroroverride) directive). (Allowed values: `on`, `off`. Default: `on`) |
@@ -233,13 +235,14 @@ These variables are common to image variants and will set defaults based on the 
 | REQUEST_READ_TIMEOUT_HEADER_MIN_RATE  | Minimum data rate, in bytes per second, required while receiving the request headers; the timeout is extended while this rate is maintained (Default: `500`). See [RequestReadTimeout](https://httpd.apache.org/docs/2.4/mod/mod_reqtimeout.html) |
 | SERVER_ADMIN  | A string value indicating the address where problems with the server should be e-mailed (Default: `root@localhost`) |
 | SERVER_SIGNATURE | A string value configuring the footer on server-generated documents (Allowed values: `On`, `Off`, `EMail`. Default: `Off`) |
-| SERVER_TOKENS | Option defining the server information presented to clients in the `Server` HTTP response header. Also see `MODSEC_SERVER_SIGNATURE`. (Allowed values: `Full`, `Prod[uctOnly]`, `Major`, `Minor`, `Min[imal]`, `OS`. Default: `Full`). |
+| SERVER_TOKENS | Option defining the server information presented to clients in the `Server` HTTP response header. Also see `MODSEC_SERVER_SIGNATURE`. (Allowed values: `Full`, `Prod[uctOnly]`, `Major`, `Minor`, `Min[imal]`, `OS`. Default: `Prod`). |
 | SSL_ENGINE  | A string indicating the SSL Engine Operation Switch (Default: `on`) |
-| SSL_HONOR_CIPHER_ORDER | A string indicating if the server should [honor the cipher list provided by the client](https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslhonorcipherorder) (Allowed values: `on`, `off`. Default: `off`) |
+| SSL_HONOR_CIPHER_ORDER | A string indicating if, when enabled, the server should honor its own cipher order defined by `SSLCipherSuite` [rather than the client's](https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslhonorcipherorder) (Allowed values: `on`, `off`. Default: `on`) |
 | SSL_PORT | Port number where the SSL enabled webserver is listening | `8443` | - |
 | SSL_SESSION_TICKETS | A string to enable or disable the use of [TLS session tickets](https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslsessiontickets) (RFC 5077). (Default: `off`) |
 | TIMEOUT  | Number of seconds before receiving and sending timeout (Default: `60`) |
 | WORKER_CONNECTIONS  | Maximum number of MPM request worker processes (Default: `400`) |
+| X_FRAME_OPTIONS | The value of the [X-Frame-Options](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options) response header, sent on every response to mitigate clickjacking (Allowed values: `SAMEORIGIN`, `DENY`. Default: `SAMEORIGIN`) |
 
 > [!NOTE]
 > Apache access and metric logs can be disabled by exporting the `nologging=1` environment variable, or using `ACCESSLOG=/dev/null` and `METRICSLOG=/dev/null`.
@@ -264,13 +267,15 @@ These variables are common to image variants and will set defaults based on the 
 | NGINX_X_FORWARDED_PORT | A string indicating the port of the initial request, sent as the `X-Forwarded-Port` header to the upstream backend. Can be set to a fixed port (e.g., `443`) when the container is behind a reverse proxy. (Default: `$server_port`) |
 | NGINX_X_FORWARDED_PROTO | A string indicating the transfer protocol of the initial request (Default: `$scheme`) |
 | PORT | An int value indicating the port where the webserver is listening to | `8080` | We run as unprivileged user. |
+| PROXY_HOST_HEADER | The value of the `Host` header sent to the backend. `$host` forwards the host the client asked for; `$proxy_host` sends the host from `BACKEND`, which is what httpd does with `PROXY_PRESERVE_HOST=off`; a literal name such as `example.com` sends that instead. (Default: `$host`) |
 | PROXY_SSL_VERIFY_DEPTH  | An integer value indicating the verification depth for the client certificate chain (Default: `1`) |
 | REAL_IP_HEADER | Name of the header containing the real IP value(s) (Default: `X-REAL-IP`). See [real_ip_header](http://nginx.org/en/docs/http/ngx_http_realip_module.html#real_ip_header) |
 | REAL_IP_PROXY_HEADER | Name of the header containing `$remote_addr` to be passed to proxy (Default: `X-REAL-IP`). See [proxy_set_header](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_set_header) |
 | REAL_IP_RECURSIVE | A string value indicating whether to use recursive replacement on addresses in `REAL_IP_HEADER` (Allowed values: `on`, `off`. Default: `on`). See [real_ip_recursive](http://nginx.org/en/docs/http/ngx_http_realip_module.html#real_ip_recursive) |
 | RESOLVERS  | A string of one or more DNS server IP addresses (IPv4 or IPv6, space separated, with optional port number. See [nginx docs](https://nginx.org/en/docs/http/ngx_http_core_module.html#resolver)). The name servers are used to resolve names of upstream servers into addresses. If this variable is not set, the `nameserver` entry from `/etc/resolv.conf` will be used. For localhost backend the variable should not be set (Default: _not defined_) |
 | RESOLVER_CONFIG  | A string of options for the `resolver` directive (see [nginx docs](https://nginx.org/en/docs/http/ngx_http_core_module.html#resolver)) (Default: `valid=5s`)
-| SERVER_TOKENS | A boolean value for enabling / disabling emission of server identifying information in the `Server` HTTP response header and on error pages. (Allowed values: `on`, `off`, `build`. Default: `off`). |
+| SERVER_HEADER | The value of the `Server` response header, on every response. Set it to your own name to replace it, or to an empty value to drop the header entirely. `SERVER_TOKENS` only hides the nginx version, never the name. The value goes into an nginx directive, so `$name` is read as an nginx variable (`$hostname` yields the container hostname) and a value containing a quote makes nginx refuse to start. Note that nginx still writes `nginx` in the body of its own error pages; serve your own with `error_page` to change that. (Default: `nginx`) |
+| SERVER_TOKENS | Controls how much server-identifying information is emitted in the `Server` HTTP response header and on error pages. It controls the level of detail, not whether nginx identifies itself: `off` still yields `Server: nginx`. `SERVER_HEADER` overrides the header, while this setting keeps governing the error page body. (Allowed values: `on`, `off`, `build`. Default: `off`). |
 | SET_REAL_IP_FROM | A string of comma separated IP, CIDR, or UNIX domain socket addresses that are trusted to replace addresses in `REAL_IP_HEADER` (Default: `127.0.0.1`). See [set_real_ip_from](http://nginx.org/en/docs/http/ngx_http_realip_module.html#set_real_ip_from) |
 | SSL_DH_BITS | A numeric value indicating the size (in bits) to use for the generated DH-params file (Default 2048) |
 | SSL_PORT | Port number where the SSL enabled webserver is listening | `8443` | We run as unprivileged user. |
@@ -354,6 +359,7 @@ All these variables impact in configuration directives in the modsecurity engine
 | RESTRICTED_EXTENSIONS | A string indicating the restricted_extensions (Default: `.asa/ .asax/ .ascx/ .axd/ .backup/ .bak/ .bat/ .cdx/ .cer/ .cfg/ .cmd/ .com/ .config/ .conf/ .cs/ .csproj/ .csr/ .dat/ .db/ .dbf/ .dll/ .dos/ .htr/ .htw/ .ida/ .idc/ .idq/ .inc/ .ini/ .key/ .licx/ .lnk/ .log/ .mdb/ .old/ .pass/ .pdb/ .pol/ .printer/ .pwd/ .rdb/ .resources/ .resx/ .sql/ .swp/ .sys/ .vb/ .vbs/ .vbproj/ .vsdisco/ .webinfo/ .xsd/ .xsx/`) |
 | RESTRICTED_HEADERS_BASIC | A string indicating the restricted_headers_basic (Default: `/content-encoding/ /proxy/ /lock-token/ /content-range/ /if/ /x-http-method-override/ /x-http-method/ /x-method-override/`) |
 | RESTRICTED_HEADERS_EXTENDED | A string indicating the restricted_headers_extended (Default: `/accept-charset/`) |
+| SKIP_RESPONSE_ANALYSIS | A boolean indicating the crs_skip_response_analysis (Only from v4 and up. Default: `0`). Setting this to `1` skips all `RESPONSE-95x` rules (data leakage, web shells), which avoids the [Request Filter Denial of Service (RFDoS)](https://blog.sicuranext.com/response-filter-denial-of-service-a-new-way-to-shutdown-a-website/) risk on response bodies but disables that protection. See [rule 900500](https://github.com/coreruleset/coreruleset/blob/756f663e43c3e2454652b1c28921ae7f1ca0685e/crs-setup.conf.example#L899) for details. |
 | STATIC_EXTENSIONS | A string indicating the static_extensions (Default: `/.jpg/ /.jpeg/ /.png/ /.gif/ /.js/ /.css/ /.ico/ /.svg/ /.webp/`) |
 | TOTAL_ARG_LENGTH | An integer indicating the total_arg_length (Default: `unlimited`) |
 | VALIDATE_UTF8_ENCODING | A boolean indicating the crs_validate_utf8_encoding (Default: `0`) |

@@ -1,0 +1,69 @@
+# Shared by auto-release.yml (version-bump trigger) and release.yml (manual
+# dispatch): create a date-based (release/YYYYMMDD) GitHub release tag, with a
+# numeric suffix on a same-day re-release, or an explicit override tag.
+name: cut-release
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        description: "Override tag; empty uses release/YYYYMMDD with a numeric suffix on collision."
+        required: false
+        type: string
+        default: ""
+
+permissions: {}
+
+jobs:
+  cut:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Create release tag and GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          OVERRIDE: ${{ inputs.tag }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          # 0 = the tag exists; 1 = confirmed absent (HTTP 404). Any other
+          # failure (network, rate limit, auth) aborts the job -- a lookup we
+          # can't complete must never be mistaken for "tag is free".
+          tag_taken() {
+            local out
+            if out="$(gh api "repos/${GH_REPO}/git/ref/tags/$1" 2>&1)"; then
+              return 0
+            fi
+            if printf '%s\n' "$out" | grep -qiE 'HTTP 404|Not Found'; then
+              return 1
+            fi
+            echo "::error::tag lookup for '$1' failed: ${out}"
+            exit 1
+          }
+
+          if [ -n "${OVERRIDE}" ]; then
+            tag="${OVERRIDE}"
+            if tag_taken "${tag}"; then
+              echo "::error::tag ${tag} already exists"; exit 1
+            fi
+          else
+            base="release/$(date -u +%Y%m%d)"
+            tag="${base}"; n=1
+            while tag_taken "${tag}"; do
+              tag="${base}-${n}"; n=$((n + 1))
+            done
+          fi
+
+          echo "Cutting release ${tag} at ${SHA}"
+          gh release create "${tag}" \
+            --target "${SHA}" \
+            --title "${tag}" \
+            --generate-notes

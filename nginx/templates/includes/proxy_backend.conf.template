@@ -1,4 +1,4 @@
-proxy_set_header Host $host;    
+proxy_set_header Host ${PROXY_HOST_HEADER};
 proxy_set_header Proxy "";
 proxy_set_header Upgrade $http_upgrade;
 proxy_set_header Connection $connection_upgrade;
