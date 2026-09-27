@@ -1,0 +1,20 @@
+# Runs the CRS nginx image standalone: serving static files directly, with no
+# backend to proxy to. Useful for a quick demo/CTF-style WAF, or protecting a
+# plain static site without a second container.
+#
+# By default this image is a reverse proxy and requires BACKEND to point at a
+# real web server (see README.md#proxy-configuration). This override drops
+# the `proxy_backend.conf` include from `default.conf.template` so nginx
+# serves ./html directly instead.
+#
+# Usage:
+#   docker compose up
+#   curl http://localhost:8080/
+services:
+  standalone:
+    image: owasp/modsecurity-crs:nginx-alpine
+    volumes:
+      - ./templates/conf.d/default.conf.template:/etc/nginx/templates/conf.d/default.conf.template:ro
+      - ./html:/usr/share/nginx/html:ro
+    ports:
+      - "8080:8080"
