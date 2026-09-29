@@ -1,7 +1,7 @@
 # docker-bake.hcl
 variable "modsec3-version" {
     # renovate: depName=ModSecurity3 packageName=owasp-modsecurity/ModSecurity datasource=github-releases
-    default = "3.0.16"
+    default = "3.0.17"
 }
 
 variable "modsec3-flags" {
@@ -10,7 +10,7 @@ variable "modsec3-flags" {
 
 variable "modsec2-version" {
     # renovate: depName=ModSecurity2 packageName=owasp-modsecurity/ModSecurity datasource=github-releases
-    default = "2.9.14"
+    default = "2.9.15"
 }
 
 variable "modsec2-flags" {
