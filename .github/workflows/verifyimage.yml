@@ -10,7 +10,7 @@ permissions:
 
 env:
   # sha256sum format: <hash><space><format (space for text)><file name>
-  MODSECURITY_RECOMMENDED: "ccff8ba1f12428b34ff41960d8bf773dd9f62b9a7c77755247a027cb01896d4f  modsecurity.conf-recommended"
+  MODSECURITY_RECOMMENDED: "3c48278f2746593bb98ba342cc0c9eeb0ee447829c1f74bad8756770afd8533a  modsecurity.conf-recommended"
   GO_FTW_VERSION: '2.4.0'
 
 jobs:
