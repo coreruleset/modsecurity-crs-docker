@@ -118,6 +118,12 @@ To build a specific target for a single platform only (replace target and platfo
 docker buildx bake -f docker-bake.hcl --set "*.platform=linux/amd64" nginx-alpine-writable
 ```
 
+Apache images enable PCRE2 JIT by default. To build the non-JIT Apache variants for regex interpreter testing, use:
+
+```bash
+docker buildx bake -f docker-bake.hcl apache-no-jit
+```
+
 ### Notes regarding Openresty version of the image
 
 Openresty image builds currently support only these architectures:

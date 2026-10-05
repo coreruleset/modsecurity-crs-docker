@@ -14,7 +14,11 @@ variable "modsec2-version" {
 }
 
 variable "modsec2-flags" {
-    default = "--with-yajl --with-ssdeep --with-pcre2"
+    default = "--with-yajl --with-ssdeep --enable-pcre-jit"
+}
+
+variable "modsec2-no-jit-flags" {
+    default = "--with-yajl --with-ssdeep"
 }
 
 variable "previous-lts-crs-version" {
@@ -180,6 +184,45 @@ target "apache" {
     }
     dockerfile = base.dockerfile
     args = {
+        CRS_RELEASE = crs_entry.version
+        LUA_MODULES = base.lua_modules
+    }
+    tags = concat(
+        equal(crs_entry.tag, "latest") ? tag(base.tag_base) : [],
+        equal(crs_entry.tag, "latest") ? vtag("${crs_entry.version}", base.tag_base) : [],
+        contains(["v3-lts", "v4-lts"], crs_entry.tag) ? lts-tag("${crs_entry.version}", base.tag_base) : []
+    )
+}
+
+target "apache-no-jit" {
+    matrix = {
+        crs_entry = crs-versions
+        base = [
+            {
+                name = "debian"
+                dockerfile = "apache/Dockerfile"
+                image = "docker-image://httpd:${httpd-version}"
+                lua_modules = join(" ", lua-modules-debian)
+                tag_base = "apache-no-jit"
+            },
+            {
+                name = "alpine"
+                dockerfile = "apache/Dockerfile-alpine"
+                image = "docker-image://httpd:${httpd-version}-alpine"
+                lua_modules = join(" ", lua-modules-alpine)
+                tag_base = "apache-alpine-no-jit"
+            }
+        ]
+    }
+
+    inherits = ["platforms-base"]
+    name = "apache-no-jit-${base.name}-${crs_entry.tag}"
+    contexts = {
+        image = base.image
+    }
+    dockerfile = base.dockerfile
+    args = {
+        MODSEC2_FLAGS = modsec2-no-jit-flags
         CRS_RELEASE = crs_entry.version
         LUA_MODULES = base.lua_modules
     }
