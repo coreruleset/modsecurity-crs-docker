@@ -14,11 +14,11 @@ variable "modsec2-version" {
 }
 
 variable "modsec2-flags" {
-    default = "--with-yajl --with-ssdeep --with-pcre2 --enable-pcre-jit"
+    default = "--with-yajl --with-ssdeep --enable-pcre-jit"
 }
 
 variable "modsec2-no-jit-flags" {
-    default = "--with-yajl --with-ssdeep --with-pcre2"
+    default = "--with-yajl --with-ssdeep"
 }
 
 variable "previous-lts-crs-version" {
