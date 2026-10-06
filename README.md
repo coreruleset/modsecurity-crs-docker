@@ -409,6 +409,10 @@ docker build -t my-modsec . -f
 docker run -p 8080:8080 -e BACKEND=http://example.com my-modsec
 ```
 
+### Standalone mode (no backend)
+
+If you don't have a backend to proxy to (e.g. a quick demo, or protecting a plain static site), override `default.conf.template` to drop the `proxy_backend.conf` include and serve files directly instead. See [`examples/standalone-static`](examples/standalone-static) for a working `docker compose` setup.
+
 ## ServerName
 
 It is often convenient to set your server name (set to `localhost` by default). To do this simply use the `SERVER_NAME` environment variable.

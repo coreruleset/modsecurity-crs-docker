@@ -1,0 +1,21 @@
+# Standalone override of the default template: serves static files from
+# /usr/share/nginx/html instead of proxying to BACKEND. HTTP only, for a
+# quick demo - copy the SSL server block from nginx/templates/conf.d in the
+# repo root if you need TLS too.
+
+server_tokens ${SERVER_TOKENS};
+more_set_headers 'Server: ${SERVER_HEADER}';
+
+server {
+    listen ${PORT} default_server;
+    server_name ${SERVER_NAME};
+
+    location / {
+        include includes/cors.conf;
+
+        index index.html index.htm;
+        root /usr/share/nginx/html;
+    }
+
+    include includes/location_common.conf;
+}
