@@ -154,6 +154,110 @@ jobs:
 
           docker rm -f "${TARGET}-http3-test"
 
+      - name: Verify proxy mTLS
+        if: ${{ (matrix.target == 'apache-debian-latest' || matrix.target == 'nginx-debian-writable-latest') && matrix.platforms == 'linux/amd64' }}
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          variant="apache"
+          cert_dir="/usr/local/apache2/conf"
+          if grep -q "nginx" <<< "${TARGET}"; then
+            variant="nginx"
+            cert_dir="/etc/nginx/conf"
+          fi
+
+          # Client certificate signed by the test CA. Apache expects only the
+          # leaf certificate in PROXY_SSL_CERT_FILE (see the README), so the
+          # same files work for both variants.
+          openssl req -x509 -newkey rsa:2048 -nodes \
+            -keyout ca.key -out ca.crt -days 1 -subj "/CN=test-ca" \
+            -addext "basicConstraints=critical,CA:TRUE" \
+            -addext "keyUsage=critical,keyCertSign,cRLSign"
+          openssl req -newkey rsa:2048 -nodes \
+            -keyout proxy.key -out proxy.csr -subj "/CN=proxy"
+          openssl x509 -req -in proxy.csr -CA ca.crt -CAkey ca.key -CAcreateserial \
+            -days 1 -out proxy.crt
+          # Strip the trailing newline from the certificate to verify PEM concatenation
+          head -c -1 proxy.crt > proxy-no-nl.crt
+          mv proxy-no-nl.crt proxy.crt
+          chmod 644 proxy.crt proxy.key
+
+          # Self-signed server certificate for the backend; the WAF does not
+          # verify the backend certificate (PROXY_SSL_VERIFY stays at its default).
+          openssl req -x509 -newkey rsa:2048 -nodes \
+            -keyout backend.key -out backend.crt -days 1 -subj "/CN=backend"
+          chmod 644 backend.crt backend.key
+
+          # Backend that aborts the TLS handshake unless the client presents a
+          # certificate chaining up to ca.crt. An allowed request returning the
+          # s_server page below therefore proves that the client certificate
+          # was presented and accepted.
+          docker network create mtls-net
+          docker run \
+            --pull "never" \
+            -d \
+            --name mtls-backend \
+            --network mtls-net \
+            -v "${PWD}/backend.crt:/tls/backend.crt:ro" \
+            -v "${PWD}/backend.key:/tls/backend.key:ro" \
+            -v "${PWD}/ca.crt:/tls/ca.crt:ro" \
+            -p 9443:9443 \
+            --entrypoint openssl \
+            "${TARGET}-verification" \
+            s_server -accept 9443 -cert /tls/backend.crt -key /tls/backend.key \
+              -Verify 1 -CAfile /tls/ca.crt -www
+
+          echo "Starting container ${TARGET}-mtls-test with PROXY_SSL=on"
+          docker run \
+            --pull "never" \
+            -d \
+            --name "${TARGET}-mtls-test" \
+            --network mtls-net \
+            --env-file "${TARGET}.env" \
+            -e BACKEND=https://mtls-backend:9443 \
+            -e PROXY_SSL=on \
+            -v "${PWD}/proxy.crt:${cert_dir}/proxy.crt:ro" \
+            -v "${PWD}/proxy.key:${cert_dir}/proxy.key:ro" \
+            -p 8081:8080 \
+            -p 8444:8443 \
+            "${TARGET}-verification"
+
+          ./tests/verify-image.sh \
+            --variant "${variant}" \
+            --url http://localhost:8081 \
+            --tls-url https://localhost:8444
+
+          docker logs "${TARGET}-mtls-test" 2>&1 | grep -q "using proxy client certificate"
+
+          # An allowed request has to reach the mTLS backend and come back with its page
+          curl -sS --fail --retry 8 --retry-delay 2 --retry-all-errors \
+            http://localhost:8081/ | grep -q "s_server"
+
+          # Negative control: the backend rejects connections without a client certificate
+          if curl -sk --max-time 5 https://localhost:9443/ > /dev/null 2>&1; then
+            echo "the mTLS backend accepted a connection without a client certificate"
+            exit 1
+          fi
+
+          # A configured path that does not hold both files has to stop the container
+          docker run \
+            --pull "never" \
+            -d \
+            --name "${TARGET}-mtls-missing-test" \
+            --env-file "${TARGET}.env" \
+            -e PROXY_SSL=on \
+            -e PROXY_SSL_CERT_FILE=/nonexistent/proxy.crt \
+            -e PROXY_SSL_CERT_KEY_FILE=/nonexistent/proxy.key \
+            "${TARGET}-verification"
+          sleep 5
+          test "$(docker inspect -f '{{.State.Running}}' "${TARGET}-mtls-missing-test")" = "false"
+          test "$(docker inspect -f '{{.State.ExitCode}}' "${TARGET}-mtls-missing-test")" != "0"
+          docker logs "${TARGET}-mtls-missing-test" 2>&1 | grep -q "does not point to both existing files"
+
+          docker rm -f "${TARGET}-mtls-test" "${TARGET}-mtls-missing-test" mtls-backend
+          docker network rm mtls-net
+          rm -f proxy.crt proxy.key proxy.csr backend.crt backend.key ca.crt ca.key ca.srl
+
       - name: Container logs
         if: failure()
         env:
@@ -161,6 +265,9 @@ jobs:
         run: |
           docker logs "${TARGET}-test" || true
           docker logs "${TARGET}-http3-test" || true
+          docker logs "${TARGET}-mtls-test" || true
+          docker logs "${TARGET}-mtls-missing-test" || true
+          docker logs mtls-backend || true
 
       - name: Checkout CRS
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # ratchet:actions/checkout@v7.0.0

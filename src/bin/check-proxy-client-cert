@@ -1,0 +1,61 @@
+#!/bin/sh
+# vim:sw=2:ts=2:sts=2:et
+
+# Decide whether the proxy presents a client certificate to the backend
+# (mutual TLS). This is shared by the Apache and the nginx startup scripts so
+# both variants behave the same.
+#
+# Usage: check-proxy-client-cert <default-cert-path> <default-key-path>
+#
+# Prints the decision on stdout and logs to stderr:
+#   cert    both files are in place: present the client certificate
+#   no-cert PROXY_SSL is on but no client certificate is configured
+#   off     PROXY_SSL is not on: no proxy SSL configuration at all
+#
+# Exits non-zero when the configuration looks broken: the variables point at
+# paths that do not both hold existing files although they differ from the
+# defaults (e.g. a typo in a mount path), or only one of the pair exists.
+# Missing files at the default paths are not an error: nothing is mounted
+# there unless a client certificate is wanted.
+
+set -eu
+
+LC_ALL=C
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+DEFAULT_CERT="${1}"
+DEFAULT_KEY="${2}"
+
+CERT_FILE="${PROXY_SSL_CERT_FILE:-${DEFAULT_CERT}}"
+KEY_FILE="${PROXY_SSL_CERT_KEY_FILE:-${DEFAULT_KEY}}"
+
+case "${PROXY_SSL:-off}" in
+    [Oo][Nn]) ;;
+    *)
+        if [ -f "${CERT_FILE}" ] || [ -f "${KEY_FILE}" ]; then
+            echo "${0}: PROXY_SSL is not 'on', not using the proxy client certificate" >&2
+        fi
+        echo "off"
+        exit 0
+        ;;
+esac
+
+if [ -f "${CERT_FILE}" ] && [ -f "${KEY_FILE}" ]; then
+    echo "${0}: using proxy client certificate ${CERT_FILE} and key ${KEY_FILE}" >&2
+    echo "cert"
+    exit 0
+fi
+
+if [ "${CERT_FILE}" != "${DEFAULT_CERT}" ] || [ "${KEY_FILE}" != "${DEFAULT_KEY}" ]; then
+    echo "${0}: PROXY_SSL_CERT_FILE or PROXY_SSL_CERT_KEY_FILE does not point to both existing files" >&2
+    exit 1
+fi
+
+if [ -f "${CERT_FILE}" ] || [ -f "${KEY_FILE}" ]; then
+    echo "${0}: only one of ${CERT_FILE} and ${KEY_FILE} exists" >&2
+    exit 1
+fi
+
+echo "${0}: proxy client certificate or key not found, starting without client certificate" >&2
+echo "no-cert"
+exit 0
