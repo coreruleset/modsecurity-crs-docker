@@ -236,8 +236,16 @@ jobs:
             docker logs "${TARGET}-mtls-noca-test" >&2
             exit 1
           fi
-          docker logs "${TARGET}-mtls-noca-test" | grep -q "requires SSL_CLIENT_CA_CERT_FILE"
+          # the message goes to the container's stderr
+          docker logs "${TARGET}-mtls-noca-test" 2>&1 | grep -q "requires SSL_CLIENT_CA_CERT_FILE"
           docker rm -f "${TARGET}-mtls-noca-test"
+
+          # client-supplied identity headers must not reach the backend
+          if curl -s -H "X-SSL-Client-DN: CN=forged" -H "X-SSL-Client-Verify: SUCCESS" \
+            http://localhost:8081/ | grep -qiF "cn=forged"; then
+            echo "forged identity headers reached the backend" >&2
+            exit 1
+          fi
 
           if grep -q "apache" <<< "${TARGET}"; then
             # nginx has no client certificate revocation support
@@ -271,7 +279,8 @@ jobs:
               -d \
               --name "${TARGET}-mtls-revoked-test" \
               --env-file "${TARGET}.env" \
-              -e BACKEND=http://localhost:9999 \
+              --add-host host.docker.internal:host-gateway \
+              -e BACKEND=http://host.docker.internal:9999 \
               -e SSL_VERIFY=require \
               -e SSL_CLIENT_CA_CERT_FILE="${cert_dir}/ca.crt" \
               -e SSL_CLIENT_CA_REVOCATION_FILE="${cert_dir}/ca.crl" \

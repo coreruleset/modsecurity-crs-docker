@@ -422,17 +422,19 @@ docker run -p 8443:8443 \
    -v ./ca.crt:/etc/nginx/ssl/ca.crt:ro \
    owasp/modsecurity-crs:nginx
 
-curl --cert client.crt --key client.key https://localhost:8443/
+curl --insecure --cert client.crt --key client.key https://localhost:8443/
 ```
 
 > [!NOTE]
 > With any `SSL_VERIFY` value other than `none` / `off`, `SSL_CLIENT_CA_CERT_FILE` has to name a readable file: the container refuses to start otherwise, because falling back silently would accept unauthenticated clients. The exception is `optional_no_ca`, which accepts client certificates without verifying them and does not need a CA. The mounted files have to be readable by the unprivileged user the container runs as.
 >
+> `--insecure` is only needed for this example because the image generated a self-signed server certificate on first run; real clients must validate the server certificate instead (e.g. `curl --cacert ...`).
+>
 > Do not mount the CA bundle into `${NGINX_HOME}/conf` on nginx images: that directory is where the server certificate is generated at startup, and when Docker creates it for the mount it does so as root, which the unprivileged user cannot write to. The default `/etc/nginx/ssl/ca.crt` is safe.
 >
 > Both the client ↔ WAF connection and the connection to the backend are configured independently: `SSL_VERIFY` and `SSL_CLIENT_CA_CERT_FILE` cover the client ↔ WAF connection, the `PROXY_SSL*` variables the WAF ↔ backend connection.
 
-**Forwarding the client identity**: when a client presents a certificate, the proxy sends its subject DN and the verification result to the backend in the `X-SSL-Client-DN` and `X-SSL-Client-Verify` request headers. Without a client certificate the headers are not sent.
+**Forwarding the client identity**: when a client presents a certificate, the proxy sends its subject DN and the verification result to the backend in the `X-SSL-Client-DN` and `X-SSL-Client-Verify` request headers. Without a client certificate the headers are not sent, and client-supplied `X-SSL-Client-*` headers are removed before forwarding, so the identity cannot be forged.
 
 **Revocation (httpd only)**: nginx has no client certificate revocation support. On httpd, set `SSL_CLIENT_CA_REVOCATION_FILE` to a PEM-encoded CRL bundle and `SSL_CLIENT_CA_REVOCATION_CHECK` to `leaf` or `chain` to reject revoked certificates, and/or set `SSL_CLIENT_OCSP=on` to validate the client certificate chain through OCSP.
 

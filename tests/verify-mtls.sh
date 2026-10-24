@@ -9,6 +9,7 @@
 # this script only talks to it over HTTPS.
 set -euo pipefail
 
+# usage: print the available options
 usage() {
   cat <<'EOF'
 Usage: tests/verify-mtls.sh [options]
@@ -141,6 +142,7 @@ openssl req -x509 -newkey rsa:2048 -nodes -days 1 \
   -keyout "${workdir}/untrusted.key" -out "${workdir}/untrusted.crt" \
   -subj "/CN=untrusted" 2>/dev/null
 
+# wait_for_container: wait until the container accepts the client certificate
 wait_for_container() {
   local deadline=$((SECONDS + timeout))
   while [ "${SECONDS}" -lt "${deadline}" ]; do
@@ -149,8 +151,8 @@ wait_for_container() {
     fi
     sleep 2
   done
-  printf 'Container did not accept the client certificate on %s within %s seconds\n' \
-    "${url}" "${timeout}" >&2
+  printf 'Container did not accept the client certificate within %s seconds\n' \
+    "${timeout}" >&2
   return 1
 }
 
@@ -184,6 +186,17 @@ if [ -n "${expect_dn}" ]; then
     "$(grep -qiF "x-ssl-client-dn: ${expect_dn}" "${body}" && echo yes || echo no)"
   check "backend receives X-SSL-Client-Verify" "yes" \
     "$(grep -qiF "x-ssl-client-verify: success" "${body}" && echo yes || echo no)"
+
+  # the identity headers must not be forgeable by the client
+  curl -sk -o "${body}" --cert "${client_cert}" --key "${client_key}" \
+    -H "X-SSL-Client-DN: CN=forged" -H "X-SSL-Client-Verify: SUCCESS" "${url}/"
+  check "forged identity headers are replaced" "yes" \
+    "$(grep -qiF "x-ssl-client-dn: ${expect_dn}" "${body}" && ! grep -qiF "cn=forged" "${body}" && echo yes || echo no)"
+  if [ "$(request -H "X-SSL-Client-DN: CN=forged" -H "X-SSL-Client-Verify: SUCCESS")" != "rejected" ]; then
+    curl -sk -o "${body}" -H "X-SSL-Client-DN: CN=forged" -H "X-SSL-Client-Verify: SUCCESS" "${url}/"
+    check "forged identity headers are not forwarded without a certificate" "no" \
+      "$(grep -qiF "cn=forged" "${body}" && echo yes || echo no)"
+  fi
 fi
 
 printf '\n'

@@ -24,6 +24,22 @@ CONFIG="${PREFIX}/conf/extra/httpd-client-ca.conf"
 
 rm -f "${CONFIG}"
 
+# These values end up in webserver configuration files; reject the characters
+# that could break out of the directive they are written to.
+check_config_value() {
+    if printf '%s' "${2}" | LC_ALL=C grep -q -e '[";{}\\`$]' -e '[^ -~]'; then
+        echo "${0}: ${1} contains unsupported characters, refusing to start" >&2
+        exit 1
+    fi
+}
+
+case "${SSL_VERIFY_DEPTH:-1}" in
+    '' | *[!0-9]*)
+        echo "${0}: invalid SSL_VERIFY_DEPTH value, expected a number" >&2
+        exit 1
+        ;;
+esac
+
 VERIFY="${SSL_VERIFY:-none}"
 
 case "${VERIFY}" in
@@ -43,6 +59,9 @@ CA_FILE="${SSL_CLIENT_CA_CERT_FILE:-}"
 REVOCATION_FILE="${SSL_CLIENT_CA_REVOCATION_FILE:-}"
 REVOCATION_CHECK="${SSL_CLIENT_CA_REVOCATION_CHECK:-none}"
 OCSP="${SSL_CLIENT_OCSP:-off}"
+
+check_config_value SSL_CLIENT_CA_CERT_FILE "${CA_FILE}"
+check_config_value SSL_CLIENT_CA_REVOCATION_FILE "${REVOCATION_FILE}"
 
 if [ -z "${CA_FILE}" ] || [ ! -r "${CA_FILE}" ]; then
     if [ "${VERIFY}" = "optional_no_ca" ]; then
