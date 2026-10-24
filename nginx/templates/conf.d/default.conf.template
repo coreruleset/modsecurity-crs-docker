@@ -12,6 +12,14 @@ map $http_upgrade $connection_upgrade {
     '' close;
 }
 
+# X-SSL-Client-Verify is only forwarded when the client presented a
+# certificate: proxy_set_header drops headers with an empty value, which also
+# keeps X-SSL-Client-DN out of requests without a client certificate.
+map $ssl_client_s_dn $ssl_client_verify_header {
+    ""      "";
+    default $ssl_client_verify;
+}
+
 server {
     listen ${PORT} default_server;
 
@@ -61,6 +69,8 @@ server {
 
     ssl_verify_client ${SSL_VERIFY};
     ssl_verify_depth ${SSL_VERIFY_DEPTH};
+
+    CLIENT_VERIFY_CONFIG
 
     PROXY_SSL_CONFIG
 

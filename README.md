@@ -211,8 +211,11 @@ These variables are common to image variants and will set defaults based on the 
 | SSL_CERT_FILE | A string indicating the path to the PEM-encoded X.509 certificate data file or token identifier of the proxied server | `/usr/local/apache2/conf/server.crt` | `/etc/nginx/conf/server.crt` |
 | SSL_CERT_KEY_FILE | A string indicating the path to the PEM-encoded private key file of the proxied server | `/usr/local/apache2/conf/server.key` | `/etc/nginx/conf/server.key` |
 | SSL_CIPHERS| A string indicating the cipher suite for incoming TLS connections | `"ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384"` | - |
+| SSL_CLIENT_CA_CERT_FILE | A string indicating the path to the PEM-encoded list of accepted CA certificates used to verify TLS client certificates ([mutual TLS](https://en.wikipedia.org/wiki/Mutual_authentication)). Required when `SSL_VERIFY` is set to anything other than `none` / `off`, except for `optional_no_ca` | `/usr/local/apache2/conf/ca.crt` | `/etc/nginx/ssl/ca.crt` |
 | SSL_OCSP_STAPLING | Enable / disable OCSP stapling | `On` | `on` |
 | SSL_PROTOCOLS | TLS protocols to enable for the connection to the backend | `"all -SSLv3 -TLSv1 -TLSv1.1"` | `TLSv1.2 TLSv1.3` |
+| SSL_VERIFY | A string value indicating if the client certificates have to be verified. Maps to `SSLVerifyClient` (httpd) and `ssl_verify_client` (nginx), so the allowed values differ: `none`, `optional`, `require`, `optional_no_ca` on httpd and `off`, `optional`, `optional_no_ca`, `on` on nginx. Unless the value is `none` / `off` or `optional_no_ca`, `SSL_CLIENT_CA_CERT_FILE` has to name a readable file, otherwise the container refuses to start | `none` | `off` |
+| SSL_VERIFY_DEPTH | An integer value indicating the verification depth for the client certificate chain | `1` | - |
 
 ### Apache ENV Variables
 
@@ -242,6 +245,9 @@ These variables are common to image variants and will set defaults based on the 
 | SERVER_ADMIN  | A string value indicating the address where problems with the server should be e-mailed (Default: `root@localhost`) |
 | SERVER_SIGNATURE | A string value configuring the footer on server-generated documents (Allowed values: `On`, `Off`, `EMail`. Default: `Off`) |
 | SERVER_TOKENS | Option defining the server information presented to clients in the `Server` HTTP response header. Also see `MODSEC_SERVER_SIGNATURE`. (Allowed values: `Full`, `Prod[uctOnly]`, `Major`, `Minor`, `Min[imal]`, `OS`. Default: `Prod`). |
+| SSL_CLIENT_CA_REVOCATION_CHECK | A string indicating if and how TLS client certificates are checked against CRLs (see [SSLCARevocationCheck](https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslcarevocationcheck)). Requires `SSL_CLIENT_CA_REVOCATION_FILE`. nginx has no equivalent. (Allowed values: `none`, `leaf`, `chain`. Default: `none`) |
+| SSL_CLIENT_CA_REVOCATION_FILE | A string indicating the path to the PEM-encoded list of CRLs used to check TLS client certificates for revocation (see [SSLCARevocationFile](https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslcarevocationfile)). nginx has no equivalent. (Default: _not set_) |
+| SSL_CLIENT_OCSP | A string enabling OCSP validation of the TLS client certificate chain (see [SSLOCSPEnable](https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslocspenable)). nginx has no equivalent. (Allowed values: `off`, `on`, `leaf`. Default: `off`) |
 | SSL_ENGINE  | A string indicating the SSL Engine Operation Switch (Default: `on`) |
 | SSL_HONOR_CIPHER_ORDER | A string indicating if, when enabled, the server should honor its own cipher order defined by `SSLCipherSuite` [rather than the client's](https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslhonorcipherorder) (Allowed values: `on`, `off`. Default: `on`) |
 | SSL_PORT | Port number where the SSL enabled webserver is listening | `8443` | - |
@@ -286,8 +292,6 @@ These variables are common to image variants and will set defaults based on the 
 | SSL_DH_BITS | A numeric value indicating the size (in bits) to use for the generated DH-params file (Default 2048) |
 | SSL_PORT | Port number where the SSL enabled webserver is listening | `8443` | We run as unprivileged user. |
 | SSL_PREFER_CIPHERS | A string value indicating if the server ciphers should be preferred over client ciphers when using the SSLv3 and TLS protocols (Allowed values: `on`, `off`. Default: `off`)|
-| SSL_VERIFY  | A string value indicating if the client certificates should be verified (Allowed values: `on`, `off`. Default: `off`) |
-| SSL_VERIFY_DEPTH  | An integer value indicating the verification depth for the client certificate chain (Default: `1`) |
 | WORKER_CONNECTIONS  | Maximum number of simultaneous connections that can be opened by a worker process (Default: `1024`) |
 
 ### Openresty ENV Variables
@@ -385,6 +389,52 @@ TLS is configured on port `8443` and enabled by default.
 We use sane intermediate defaults taken from the [Mozilla SSL config tool](https://ssl-config.mozilla.org/). Please review the defaults and choose the ones that best match your needs.
 
 You can set the `*_ALWAYS_TLS_REDIRECT` environment variables to always redirect from `http` to `https`.
+
+## Mutual TLS with clients
+
+TLS client certificate verification (mutual TLS) makes clients authenticate against a CA you control before their request is inspected and proxied. It is configured through `SSL_VERIFY` and `SSL_CLIENT_CA_CERT_FILE`; `SSL_VERIFY` maps directly to `SSLVerifyClient` (httpd) and `ssl_verify_client` (nginx), so the allowed values differ per variant:
+
+| Setting | httpd | nginx |
+| -- | -- | -- |
+| `SSL_VERIFY` | `none`, `optional`, `require`, `optional_no_ca` | `off`, `optional`, `optional_no_ca`, `on` |
+| require a valid client certificate | `SSL_VERIFY=require` | `SSL_VERIFY=on` |
+| accept a certificate without verifying it | `SSL_VERIFY=optional_no_ca` | `SSL_VERIFY=optional_no_ca` |
+
+Generate a CA and a client certificate, mount the CA bundle into the container, and require the certificate (the mount paths below are the defaults of `SSL_CLIENT_CA_CERT_FILE`):
+
+```bash
+openssl req -x509 -newkey rsa:2048 -nodes -days 365 \
+   -keyout ca.key -out ca.crt -subj "/CN=my-ca"
+openssl req -newkey rsa:2048 -nodes \
+   -keyout client.key -out client.csr -subj "/CN=my-client"
+openssl x509 -req -days 365 -in client.csr -CA ca.crt -CAkey ca.key \
+   -CAcreateserial -out client.crt
+
+# Apache
+docker run -p 8443:8443 \
+   -e SSL_VERIFY=require \
+   -v ./ca.crt:/usr/local/apache2/conf/ca.crt:ro \
+   owasp/modsecurity-crs:apache
+
+# nginx
+docker run -p 8443:8443 \
+   -e SSL_VERIFY=on \
+   -v ./ca.crt:/etc/nginx/ssl/ca.crt:ro \
+   owasp/modsecurity-crs:nginx
+
+curl --cert client.crt --key client.key https://localhost:8443/
+```
+
+> [!NOTE]
+> With any `SSL_VERIFY` value other than `none` / `off`, `SSL_CLIENT_CA_CERT_FILE` has to name a readable file: the container refuses to start otherwise, because falling back silently would accept unauthenticated clients. The exception is `optional_no_ca`, which accepts client certificates without verifying them and does not need a CA. The mounted files have to be readable by the unprivileged user the container runs as.
+>
+> Do not mount the CA bundle into `${NGINX_HOME}/conf` on nginx images: that directory is where the server certificate is generated at startup, and when Docker creates it for the mount it does so as root, which the unprivileged user cannot write to. The default `/etc/nginx/ssl/ca.crt` is safe.
+>
+> Both the client ↔ WAF connection and the connection to the backend are configured independently: `SSL_VERIFY` and `SSL_CLIENT_CA_CERT_FILE` cover the client ↔ WAF connection, the `PROXY_SSL*` variables the WAF ↔ backend connection.
+
+**Forwarding the client identity**: when a client presents a certificate, the proxy sends its subject DN and the verification result to the backend in the `X-SSL-Client-DN` and `X-SSL-Client-Verify` request headers. Without a client certificate the headers are not sent.
+
+**Revocation (httpd only)**: nginx has no client certificate revocation support. On httpd, set `SSL_CLIENT_CA_REVOCATION_FILE` to a PEM-encoded CRL bundle and `SSL_CLIENT_CA_REVOCATION_CHECK` to `leaf` or `chain` to reject revoked certificates, and/or set `SSL_CLIENT_OCSP=on` to validate the client certificate chain through OCSP.
 
 ## Proxy Configuration
 
