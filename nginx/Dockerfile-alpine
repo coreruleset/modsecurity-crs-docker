@@ -191,6 +191,7 @@ ENV \
     NGINX_X_FORWARDED_PROTO='$scheme' \
     PORT=8080 \
     PROXY_HOST_HEADER='$host' \
+    PROXY_SSL_CA_CERT_FILE=/etc/ssl/certs/ca-certificates.crt \
     PROXY_SSL_CERT_FILE=/etc/nginx/conf/proxy.crt \
     PROXY_SSL_CERT_KEY_FILE=/etc/nginx/conf/proxy.key \
     PROXY_SSL_CIPHERS="ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384" \
@@ -265,6 +266,10 @@ RUN set -eux; \
         sed \
         yajl; \
     mkdir /etc/nginx/ssl; \
+    # The proxy and server certificates are mounted here at runtime; create
+    # the directory in advance so Docker's bind mounts do not create it as root.
+    mkdir -p "${NGINX_HOME}/conf"; \
+    chown nginx:nginx "${NGINX_HOME}/conf"; \
     # Comment out the SecDisableBackendCompression option since it is not supported in V3
     sed -i 's/^\(SecDisableBackendCompression .*\)/# \1/' /etc/nginx/templates/modsecurity.d/modsecurity-override.conf.template; \
     ln -s /usr/local/modsecurity/lib/libmodsecurity.so.${MODSEC3_VERSION} /usr/local/modsecurity/lib/libmodsecurity.so.3.0; \

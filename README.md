@@ -200,12 +200,14 @@ These variables are common to image variants and will set defaults based on the 
 | METRICS_ALLOW_FROM | A single range of IP addresses that can access the metrics | `127.0.0.0/255.0.0.0 ::1/128` | `127.0.0.0/24` |
 | METRICS_DENY_FROM | A range of IP addresses that cannot access the metrics | `All` | `all` |
 | METRICSLOG | Location of metrics log file | `/dev/null` | - |
-| PROXY_SSL_CERT_FILE | A string indicating the path to the PEM-encoded X.509 certificate data file or token identifier of the proxied server | `/usr/local/apache2/conf/proxy.crt` | `/etc/nginx/conf/proxy.crt` |
-| PROXY_SSL_CERT_KEY_FILE | A string indicating the path to the PEM-encoded private key file of the proxied server | `/usr/local/apache2/conf/proxy.key` | `/etc/nginx/conf/proxy.key` |
+| PROXY_SSL_CA_CERT_FILE | A string indicating the path to the PEM-encoded list of accepted CA certificates for the proxied server | `/etc/ssl/certs/ca-certificates.crt` | `/etc/ssl/certs/ca-certificates.crt` |
+| PROXY_SSL_CERT_FILE | A string indicating the path to the PEM-encoded client certificate the proxy presents to the backend when the backend requests client authentication ([mutual TLS](https://en.wikipedia.org/wiki/Mutual_authentication)). Only used when both this file and `PROXY_SSL_CERT_KEY_FILE` exist and `PROXY_SSL=on` | `/usr/local/apache2/conf/proxy.crt` | `/etc/nginx/conf/proxy.crt` |
+| PROXY_SSL_CERT_KEY_FILE | A string indicating the path to the PEM-encoded private key of the client certificate the proxy presents to the backend (used only together with `PROXY_SSL_CERT_FILE`) | `/usr/local/apache2/conf/proxy.key` | `/etc/nginx/conf/proxy.key` |
 | PROXY_SSL_CIPHERS| A string indicating the cipher suite to connect to the backend via TLS | `"ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384"` | - |
 | PROXY_SSL_PROTOCOLS | TLS protocols to enable for the connection to the backend | `"all -SSLv3 -TLSv1 -TLSv1.1"` | `TLSv1.2 TLSv1.3` |
 | PROXY_SSL  | SSL Proxy Engine Operation Switch | `off` | - |
 | PROXY_SSL_VERIFY | A string value indicating the type of proxy server Certificate verification | `none` | `off` |
+| PROXY_SSL_VERIFY_DEPTH | An integer value indicating the verification depth for the proxied server certificate chain | `1` | - |
 | PROXY_TIMEOUT  | Number of seconds for proxied requests to time out | `60` | `60s` |
 | SERVER_NAME | The server name | `localhost` | - |
 | SSL_CERT_FILE | A string indicating the path to the PEM-encoded X.509 certificate data file or token identifier of the proxied server | `/usr/local/apache2/conf/server.crt` | `/etc/nginx/conf/server.crt` |
@@ -230,7 +232,6 @@ These variables are common to image variants and will set defaults based on the 
 | PORT | An int value indicating the port where the webserver is listening to | `8080` | - |
 | PROXY_ERROR_OVERRIDE  | A string indicating that errors from the backend services should be overridden by this proxy server (see [ProxyErrorOverride](https://httpd.apache.org/docs/2.4/mod/mod_proxy.html#proxyerroroverride) directive). (Allowed values: `on`, `off`. Default: `on`) |
 | PROXY_PRESERVE_HOST  | A string indicating the use of incoming Host HTTP request header for proxy request (Default: `on`) |
-| PROXY_SSL_CA_CERT_FILE  | A string indicating the path to the PEM-encoded list of accepted CA certificates for the proxied server (Default: `/etc/ssl/certs/ca-certificates.crt`) |
 | PROXY_SSL_CHECK_PEER_NAME  | A string indicating if the host name checking for remote server certificates is to be enabled (Default: `on`) |
 | REMOTEIP_INT_PROXY  | A string indicating the client intranet IP addresses trusted to present the RemoteIPHeader value (Default: `10.1.0.0/16`) |
 | REMOTEIP_HEADER   | A string indicating the header to use for RemoteIPHeader value (Default: `X-Forwarded-For`)  |
@@ -274,7 +275,6 @@ These variables are common to image variants and will set defaults based on the 
 | NGINX_X_FORWARDED_PROTO | A string indicating the transfer protocol of the initial request (Default: `$scheme`) |
 | PORT | An int value indicating the port where the webserver is listening to | `8080` | We run as unprivileged user. |
 | PROXY_HOST_HEADER | The value of the `Host` header sent to the backend. `$host` forwards the host the client asked for; `$proxy_host` sends the host from `BACKEND`, which is what httpd does with `PROXY_PRESERVE_HOST=off`; a literal name such as `example.com` sends that instead. (Default: `$host`) |
-| PROXY_SSL_VERIFY_DEPTH  | An integer value indicating the verification depth for the client certificate chain (Default: `1`) |
 | REAL_IP_HEADER | Name of the header containing the real IP value(s) (Default: `X-REAL-IP`). See [real_ip_header](http://nginx.org/en/docs/http/ngx_http_realip_module.html#real_ip_header) |
 | REAL_IP_PROXY_HEADER | Name of the header containing `$remote_addr` to be passed to proxy (Default: `X-REAL-IP`). See [proxy_set_header](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_set_header) |
 | REAL_IP_RECURSIVE | A string value indicating whether to use recursive replacement on addresses in `REAL_IP_HEADER` (Allowed values: `on`, `off`. Default: `on`). See [real_ip_recursive](http://nginx.org/en/docs/http/ngx_http_realip_module.html#real_ip_recursive) |
@@ -408,6 +408,37 @@ Tips:
 docker build -t my-modsec . -f
 docker run -p 8080:8080 -e BACKEND=http://example.com my-modsec
 ```
+
+### Mutual TLS between the proxy and the backend
+
+When `PROXY_SSL=on`, the connection to the backend is encrypted and the backend certificate is verified against the CAs in `PROXY_SSL_CA_CERT_FILE`: set `PROXY_SSL_VERIFY=require` on Apache or `PROXY_SSL_VERIFY=on` on nginx (the values differ per variant, because the settings map directly to `SSLProxyVerify` and `proxy_ssl_verify`). If the backend in turn wants to authenticate the proxy, set `PROXY_SSL_CERT_FILE` and `PROXY_SSL_CERT_KEY_FILE` to a PEM-encoded client certificate and its private key that the backend accepts. Mount both files into the container (they do not exist by default):
+
+```bash
+# Apache
+docker run -p 8080:8080 \
+   -e BACKEND=https://backend:8443 \
+   -e PROXY_SSL=on \
+   -v ./proxy.crt:/usr/local/apache2/conf/proxy.crt:ro \
+   -v ./proxy.key:/usr/local/apache2/conf/proxy.key:ro \
+   owasp/modsecurity-crs:apache
+
+# nginx
+docker run -p 8080:8080 \
+   -e BACKEND=https://backend:8443 \
+   -e PROXY_SSL=on \
+   -v ./proxy.crt:/etc/nginx/conf/proxy.crt:ro \
+   -v ./proxy.key:/etc/nginx/conf/proxy.key:ro \
+   owasp/modsecurity-crs:nginx
+```
+
+Both files have to exist, otherwise the proxy starts without presenting a client certificate (both variants log a message at startup indicating whether a client certificate was configured).
+
+> [!NOTE]
+> On Apache the certificate and the key are served from a single file (`SSLProxyMachineCertificateFile`). The image concatenates `PROXY_SSL_CERT_FILE` and `PROXY_SSL_CERT_KEY_FILE` into one readable file at startup. On nginx both are configured separately through `proxy_ssl_certificate` and `proxy_ssl_certificate_key`.
+>
+> Encrypted (passphrase-protected) private keys are not supported.
+>
+> On nginx images built for a read-only root filesystem (experimental, unpublished; see [Read-only Root Filesystem](#read-only-root-filesystem)), do not mount the certificates into `${NGINX_HOME}/conf`: that directory is populated from the bootstrap copy at startup. Mount them somewhere else and point `PROXY_SSL_CERT_FILE` and `PROXY_SSL_CERT_KEY_FILE` at the mounted paths instead.
 
 ## ServerName
 
