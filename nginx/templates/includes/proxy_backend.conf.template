@@ -6,6 +6,8 @@ proxy_set_header ${REAL_IP_PROXY_HEADER} $remote_addr;
 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 proxy_set_header X-Forwarded-Port ${NGINX_X_FORWARDED_PORT};
 proxy_set_header X-Forwarded-Proto ${NGINX_X_FORWARDED_PROTO};
+proxy_set_header X-SSL-Client-DN $ssl_client_s_dn;
+proxy_set_header X-SSL-Client-Verify $ssl_client_verify_header;
 
 proxy_http_version 1.1;
 proxy_buffering off;
