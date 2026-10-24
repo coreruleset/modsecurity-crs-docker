@@ -189,13 +189,14 @@ if [ -n "${expect_dn}" ]; then
 
   # the identity headers must not be forgeable by the client
   curl -sk -o "${body}" --cert "${client_cert}" --key "${client_key}" \
-    -H "X-SSL-Client-DN: CN=forged" -H "X-SSL-Client-Verify: SUCCESS" "${url}/"
+    -H "X-SSL-Client-DN: CN=forged-dn" -H "X-SSL-Client-Verify: forged-verify" "${url}/"
   check "forged identity headers are replaced" "yes" \
-    "$(grep -qiF "x-ssl-client-dn: ${expect_dn}" "${body}" && ! grep -qiF "cn=forged" "${body}" && echo yes || echo no)"
-  if [ "$(request -H "X-SSL-Client-DN: CN=forged" -H "X-SSL-Client-Verify: SUCCESS")" != "rejected" ]; then
-    curl -sk -o "${body}" -H "X-SSL-Client-DN: CN=forged" -H "X-SSL-Client-Verify: SUCCESS" "${url}/"
+    "$(grep -qiF "x-ssl-client-dn: ${expect_dn}" "${body}" && ! grep -qiF "forged" "${body}" && echo yes || echo no)"
+  if [ "$(request -H "X-SSL-Client-DN: CN=forged-dn" -H "X-SSL-Client-Verify: forged-verify")" = "200" ]; then
+    curl -sk -o "${body}" \
+      -H "X-SSL-Client-DN: CN=forged-dn" -H "X-SSL-Client-Verify: forged-verify" "${url}/"
     check "forged identity headers are not forwarded without a certificate" "no" \
-      "$(grep -qiF "cn=forged" "${body}" && echo yes || echo no)"
+      "$(grep -qiF "forged" "${body}" && echo yes || echo no)"
   fi
 fi
 

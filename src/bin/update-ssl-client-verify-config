@@ -33,7 +33,7 @@ check_config_value() {
     fi
 }
 
-case "${SSL_VERIFY_DEPTH:-1}" in
+case "${SSL_VERIFY_DEPTH-1}" in
     '' | *[!0-9]*)
         echo "${0}: invalid SSL_VERIFY_DEPTH value, expected a number" >&2
         exit 1

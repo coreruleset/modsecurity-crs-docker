@@ -217,6 +217,18 @@ jobs:
             --client-key client.key \
             --expect-dn "CN=mtls-client"
 
+          # client-supplied identity headers must not reach the backend
+          if ! body="$(curl -sf \
+            -H "X-SSL-Client-DN: CN=forged-dn" -H "X-SSL-Client-Verify: forged-verify" \
+            http://localhost:8081/)"; then
+            echo "plain HTTP request to the mTLS container failed" >&2
+            exit 1
+          fi
+          if grep -qiF "forged" <<< "${body}"; then
+            echo "forged identity headers reached the backend" >&2
+            exit 1
+          fi
+
           docker rm -f "${TARGET}-mtls-test"
 
           echo "Starting container ${TARGET}-mtls-noca-test without CA certificates"
@@ -239,13 +251,6 @@ jobs:
           # the message goes to the container's stderr
           docker logs "${TARGET}-mtls-noca-test" 2>&1 | grep -q "requires SSL_CLIENT_CA_CERT_FILE"
           docker rm -f "${TARGET}-mtls-noca-test"
-
-          # client-supplied identity headers must not reach the backend
-          if curl -s -H "X-SSL-Client-DN: CN=forged" -H "X-SSL-Client-Verify: SUCCESS" \
-            http://localhost:8081/ | grep -qiF "cn=forged"; then
-            echo "forged identity headers reached the backend" >&2
-            exit 1
-          fi
 
           if grep -q "apache" <<< "${TARGET}"; then
             # nginx has no client certificate revocation support
