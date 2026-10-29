@@ -10,7 +10,7 @@ permissions:
 
 env:
   # sha256sum format: <hash><space><format (space for text)><file name>
-  MODSECURITY_RECOMMENDED: "3c48278f2746593bb98ba342cc0c9eeb0ee447829c1f74bad8756770afd8533a  modsecurity.conf-recommended"
+  MODSECURITY_RECOMMENDED: "a4b9bed9b27e9be225b76d3965b4237416aba62432c9824aca431dbac4e72f43  modsecurity.conf-recommended"
   GO_FTW_VERSION: '2.4.0'
 
 jobs:
@@ -257,6 +257,196 @@ jobs:
           docker rm -f "${TARGET}-mtls-test" "${TARGET}-mtls-missing-test" mtls-backend
           docker network rm mtls-net
           rm -f proxy.crt proxy.key proxy.csr backend.crt backend.key ca.crt ca.key ca.srl
+
+      - name: Verify server-side mTLS opt-in
+        if: ${{ (matrix.target == 'apache-debian-latest' || matrix.target == 'nginx-debian-writable-latest') && matrix.platforms == 'linux/amd64' }}
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          verify="on"
+          cert_dir="/etc/nginx/ssl"
+          if grep -q "apache" <<< "${TARGET}"; then
+            verify="require"
+            cert_dir="/usr/local/apache2/conf"
+          fi
+
+          # A CA, a client certificate it accepts and one it can reject
+          openssl req -x509 -newkey rsa:2048 -nodes -days 1 \
+            -keyout ca.key -out ca.crt -subj "/CN=mtls-ca"
+          for name in client rejected; do
+            openssl req -newkey rsa:2048 -nodes \
+              -keyout "${name}.key" -out "${name}.csr" -subj "/CN=mtls-${name}"
+            openssl x509 -req -days 1 -in "${name}.csr" -CA ca.crt -CAkey ca.key \
+              -CAcreateserial -out "${name}.crt"
+          done
+
+          # The backend echoes its request headers so the forwarded client
+          # identity can be asserted.
+          python3 - <<'PY' &
+          from http.server import BaseHTTPRequestHandler, HTTPServer
+
+          class Handler(BaseHTTPRequestHandler):
+              def do_GET(self):
+                  body = "\n".join(f"{k}: {v}" for k, v in self.headers.items()).encode()
+                  self.send_response(200)
+                  self.send_header("Content-Length", str(len(body)))
+                  self.end_headers()
+                  self.wfile.write(body)
+
+              def log_message(self, *args):
+                  pass
+
+          HTTPServer(("0.0.0.0", 9999), Handler).serve_forever()
+          PY
+          echo_pid="${!}"
+
+          echo "Starting container ${TARGET}-mtls-test with SSL_VERIFY=${verify}"
+          docker run \
+            --pull "never" \
+            -d \
+            --name "${TARGET}-mtls-test" \
+            --env-file "${TARGET}.env" \
+            --add-host host.docker.internal:host-gateway \
+            -e BACKEND=http://host.docker.internal:9999 \
+            -e SSL_VERIFY="${verify}" \
+            -e SSL_CLIENT_CA_CERT_FILE="${cert_dir}/ca.crt" \
+            -v "${PWD}/ca.crt:${cert_dir}/ca.crt:ro" \
+            -p 8081:8080 \
+            -p 8444:8443 \
+            "${TARGET}-verification"
+
+          ./tests/verify-mtls.sh \
+            --url https://localhost:8444 \
+            --client-cert client.crt \
+            --client-key client.key \
+            --expect-dn "CN=mtls-client"
+
+          # client-supplied identity headers must not reach the backend
+          if ! body="$(curl -sf \
+            -H "X-SSL-Client-DN: CN=forged-dn" -H "X-SSL-Client-Verify: forged-verify" \
+            http://localhost:8081/)"; then
+            echo "plain HTTP request to the mTLS container failed" >&2
+            exit 1
+          fi
+          if grep -qiF "forged" <<< "${body}"; then
+            echo "forged identity headers reached the backend" >&2
+            exit 1
+          fi
+
+          docker rm -f "${TARGET}-mtls-test"
+
+          echo "Starting container ${TARGET}-mtls-noca-test without CA certificates"
+          docker run \
+            --pull "never" \
+            -d \
+            --name "${TARGET}-mtls-noca-test" \
+            --env-file "${TARGET}.env" \
+            -e BACKEND=http://localhost:9999 \
+            -e SSL_VERIFY="${verify}" \
+            "${TARGET}-verification"
+
+          timeout 60 docker wait "${TARGET}-mtls-noca-test" >/dev/null || true
+          if [ "$(docker inspect -f '{{.State.Running}}' "${TARGET}-mtls-noca-test")" != "false" ] \
+            || [ "$(docker inspect -f '{{.State.ExitCode}}' "${TARGET}-mtls-noca-test")" = "0" ]; then
+            echo "expected the container to refuse to start without CA certificates" >&2
+            docker logs "${TARGET}-mtls-noca-test" >&2
+            exit 1
+          fi
+          # the message goes to the container's stderr
+          docker logs "${TARGET}-mtls-noca-test" 2>&1 | grep -q "requires SSL_CLIENT_CA_CERT_FILE"
+          docker rm -f "${TARGET}-mtls-noca-test"
+
+          # optional_no_ca accepts any client certificate: its claimed
+          # identity must not reach the backend, only the verification result
+          openssl req -x509 -newkey rsa:2048 -nodes -days 1 \
+            -keyout selfsigned.key -out selfsigned.crt -subj "/CN=mtls-selfsigned"
+
+          echo "Starting container ${TARGET}-mtls-unverified-test with SSL_VERIFY=optional_no_ca"
+          docker run \
+            --pull "never" \
+            -d \
+            --name "${TARGET}-mtls-unverified-test" \
+            --env-file "${TARGET}.env" \
+            --add-host host.docker.internal:host-gateway \
+            -e BACKEND=http://host.docker.internal:9999 \
+            -e SSL_VERIFY=optional_no_ca \
+            -p 8081:8080 \
+            -p 8444:8443 \
+            "${TARGET}-verification"
+
+          for _ in $(seq 1 30); do
+            if curl -sk --max-time 5 --cert selfsigned.crt --key selfsigned.key \
+              https://localhost:8444/ >/dev/null 2>&1; then
+              break
+            fi
+            sleep 2
+          done
+          if ! body="$(curl -sfk --cert selfsigned.crt --key selfsigned.key \
+            https://localhost:8444/)"; then
+            echo "optional_no_ca did not answer a self-signed client certificate" >&2
+            exit 1
+          fi
+          if grep -qiF "x-ssl-client-dn:" <<< "${body}"; then
+            echo "the claimed identity of an unverified client certificate reached the backend" >&2
+            exit 1
+          fi
+          grep -qiF "x-ssl-client-verify:" <<< "${body}"
+          docker rm -f "${TARGET}-mtls-unverified-test"
+
+          # CRL revocation (both variants): SSL_CLIENT_CA_REVOCATION_CHECK is
+          # deliberately left unset to cover its default to chain when a
+          # revocation file is configured
+          mkdir -p ca-db/newcerts
+          touch ca-db/index.txt
+          echo 1000 > ca-db/serial
+          echo 1000 > ca-db/crlnumber
+          cat > ca.cnf <<'EOF'
+          [ca]
+          default_ca = CA_default
+          [CA_default]
+          database = ./ca-db/index.txt
+          new_certs_dir = ./ca-db/newcerts
+          serial = ./ca-db/serial
+          crlnumber = ./ca-db/crlnumber
+          default_md = sha256
+          default_days = 1
+          default_crl_days = 1
+          policy = policy_anything
+          [policy_anything]
+          commonName = supplied
+          EOF
+          openssl ca -batch -config ca.cnf -cert ca.crt -keyfile ca.key \
+            -revoke rejected.crt
+          openssl ca -batch -config ca.cnf -cert ca.crt -keyfile ca.key \
+            -gencrl -out ca.crl
+
+          echo "Starting container ${TARGET}-mtls-revoked-test with SSL_CLIENT_CA_REVOCATION_FILE"
+          docker run \
+            --pull "never" \
+            -d \
+            --name "${TARGET}-mtls-revoked-test" \
+            --env-file "${TARGET}.env" \
+            --add-host host.docker.internal:host-gateway \
+            -e BACKEND=http://host.docker.internal:9999 \
+            -e SSL_VERIFY="${verify}" \
+            -e SSL_CLIENT_CA_CERT_FILE="${cert_dir}/ca.crt" \
+            -e SSL_CLIENT_CA_REVOCATION_FILE="${cert_dir}/ca.crl" \
+            -v "${PWD}/ca.crt:${cert_dir}/ca.crt:ro" \
+            -v "${PWD}/ca.crl:${cert_dir}/ca.crl:ro" \
+            -p 8081:8080 \
+            -p 8444:8443 \
+            "${TARGET}-verification"
+
+          ./tests/verify-mtls.sh \
+            --url https://localhost:8444 \
+            --client-cert client.crt \
+            --client-key client.key \
+            --rejected-cert rejected.crt \
+            --rejected-key rejected.key
+
+          docker rm -f "${TARGET}-mtls-revoked-test"
+
+          kill "${echo_pid}"
 
       - name: Container logs
         if: failure()
