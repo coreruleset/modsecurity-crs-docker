@@ -1,0 +1,133 @@
+---
+name: Scan published images
+on:
+  schedule:
+    # Daily. Vulnerabilities are disclosed against images that were already
+    # published, so this catches what a pull request scan never can.
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+env:
+  # renovate: datasource=docker depName=aquasec/trivy
+  TRIVY_IMAGE: "aquasec/trivy:0.74.0@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969"
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      # [{"image":"<ghcr image>","platform":"<platform>","slug":"<tag>-<platform>"},...]
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # ratchet:actions/checkout@v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # ratchet:docker/setup-buildx-action@v4.2.0
+
+      - name: Resolve published images
+        id: plan
+        run: |
+          set -euo pipefail
+          # The first tag of a target is its floating tag (e.g. "nginx"). The CRS version
+          # variants of a target share it because they also share a base image, so one
+          # scan per floating tag and platform covers every published OS package set.
+          # Registries normalise linux/i386 to linux/386, which is what Trivy expects.
+          matrix="$(docker buildx bake --print default | jq -c '
+            [ .target[]
+              | (.tags | map(select(startswith("ghcr.io/"))) | .[0]) as $image
+              | .platforms[]
+              | sub("^linux/i386$"; "linux/386") as $platform
+              | {image: $image,
+                 platform: $platform,
+                 slug: (($image | split(":")[1]) + "-" + ($platform | sub("/"; "-")))} ]
+            | unique')"
+          echo "matrix=${matrix}" >> "${GITHUB_OUTPUT}"
+
+  scan:
+    name: Scan ${{ matrix.slug }}
+    runs-on: ubuntu-latest
+    needs:
+      - prepare
+    permissions:
+      contents: read
+      packages: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.prepare.outputs.matrix) }}
+    steps:
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # ratchet:docker/login-action@v4.4.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Docker pulls the platform we ask for, so the scanner never talks to a registry
+      # and never has to pick a manifest itself.
+      - name: Fetch ${{ matrix.image }} (${{ matrix.platform }})
+        env:
+          IMAGE: ${{ matrix.image }}
+          PLATFORM: ${{ matrix.platform }}
+        run: |
+          docker pull --platform "${PLATFORM}" "${IMAGE}"
+          mkdir -p sarif
+          docker save -o image.tar "${IMAGE}"
+
+      # One cache entry per day: the database is refreshed below anyway, and a
+      # per-run key would fill the repository cache with copies of it.
+      - name: Trivy cache key
+        id: trivy-cache-key
+        run: echo "day=$(date -u +%F)" >> "${GITHUB_OUTPUT}"
+
+      - name: Cache the Trivy database
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # ratchet:actions/cache@v6.1.0
+        with:
+          path: .trivy-cache
+          key: trivy-db-${{ steps.trivy-cache-key.outputs.day }}
+          restore-keys: trivy-db-
+
+      - name: Update the Trivy database
+        run: |
+          docker run --rm -v "${PWD}/.trivy-cache:/cache" "${TRIVY_IMAGE}" \
+            image --cache-dir /cache --download-db-only
+
+      # Reports instead of failing: a fix for a published image means cutting a release,
+      # not turning this run red. The findings land in the Security tab. The scanner
+      # parses attacker-supplied image contents, so it runs as a container with the
+      # network switched off and only the database, the image and an output directory
+      # mounted.
+      - name: Scan ${{ matrix.image }} (${{ matrix.platform }})
+        env:
+          SLUG: ${{ matrix.slug }}
+        run: |
+          docker run --rm --network none \
+            -v "${PWD}/.trivy-cache:/cache" \
+            -v "${PWD}/image.tar:/scan/image.tar:ro" \
+            -v "${PWD}/sarif:/out" \
+            "${TRIVY_IMAGE}" \
+            image \
+              --cache-dir /cache \
+              --skip-db-update \
+              --input /scan/image.tar \
+              --scanners vuln \
+              --pkg-types os,library \
+              --ignore-unfixed \
+              --severity HIGH,CRITICAL \
+              --format sarif \
+              --output "/out/trivy-${SLUG}.sarif" \
+              --skip-dirs /usr/share/java \
+              --skip-dirs /usr/share/maven-repo
+
+      - name: Upload results to code scanning
+        uses: github/codeql-action/upload-sarif@988661ebb5e81487b3fb31b2185d2856c0a10679 # ratchet:github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: sarif/trivy-${{ matrix.slug }}.sarif
+          category: trivy-${{ matrix.slug }}
