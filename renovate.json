@@ -74,7 +74,7 @@
     },
     {
       "matchDepNames": [
-        "nginxinc/nginx-unprivileged"
+        "nginx/nginx-unprivileged"
       ],
       "allowedVersions": "/^[0-9]+\\.(?:[1-9]\\d*)?[02468]\\.[0-9]+$/",
       "minimumReleaseAge": "0 days"
@@ -106,7 +106,7 @@
       "matchStrings": [
         ".*on [Nn]ginx (?<currentValue>\\d+\\.\\d+\\.\\d+)"
       ],
-      "depNameTemplate": "nginxinc/nginx-unprivileged",
+      "depNameTemplate": "nginx/nginx-unprivileged",
       "datasourceTemplate": "docker"
     },
     {

@@ -45,7 +45,7 @@ variable "crs-versions" {
 }
 
 variable "nginx-version" {
-    # renovate: depName=nginxinc/nginx-unprivileged datasource=docker
+    # renovate: depName=nginx/nginx-unprivileged datasource=docker
     default = "1.30.6"
 }
 
@@ -240,14 +240,14 @@ target "nginx" {
             {
                 name = "debian"
                 dockerfile = "nginx/Dockerfile"
-                image = "docker-image://nginxinc/nginx-unprivileged:${nginx-version}"
+                image = "docker-image://nginx/nginx-unprivileged:${nginx-version}"
                 lua_modules = join(" ", lua-modules-debian)
                 tag_base = "nginx"
             },
             {
                 name = "alpine"
                 dockerfile = "nginx/Dockerfile-alpine"
-                image = "docker-image://nginxinc/nginx-unprivileged:${nginx-version}-alpine"
+                image = "docker-image://nginx/nginx-unprivileged:${nginx-version}-alpine"
                 lua_modules = join(" ", lua-modules-alpine)
                 tag_base = "nginx-alpine"
                 crs_release = crs-versions
