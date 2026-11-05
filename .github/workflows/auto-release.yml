@@ -48,7 +48,7 @@ jobs:
           }
 
           bumped=false
-          for variant in modsec2-version modsec3-version httpd-version nginx-version; do
+          for variant in modsec2-version modsec3-version httpd-debian-image httpd-alpine-image nginx-debian-image nginx-alpine-image; do
             old=$(version_of "${old_sha}" "${variant}")
             new=$(version_of "${{ github.sha }}" "${variant}")
             if [ "${old}" != "${new}" ]; then
