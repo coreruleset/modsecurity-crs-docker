@@ -96,6 +96,15 @@ We currently provide images for the following architectures:
 * linux/amd64
 * linux/arm64
 
+> [!WARNING]
+> **Breaking change: `linux/i386` is no longer published.** Tags published from this change on (including the rolling tags such as `apache` and `nginx`) have no 32-bit x86 manifest, so a 32-bit x86 host cannot pull them.
+>
+> If you run on a 32-bit x86 host:
+> * move to a 64-bit host (recommended), or
+> * keep using an image published before this change, preferably pinned by digest, e.g. `docker pull owasp/modsecurity-crs@sha256:<digest>`. Find the digest of an older stable tag with `docker buildx imagetools inspect owasp/modsecurity-crs:<older stable tag>` and check that `linux/386` is listed.
+>
+> Pinned images do **not** receive updates, so they will not get security fixes for CRS, ModSecurity or the base image.
+
 ### Building
 
 If you want to see the targets of the build, use:
