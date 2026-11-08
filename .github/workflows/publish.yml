@@ -14,7 +14,7 @@ permissions: {}
 
 jobs:
   prepare:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
     outputs:
@@ -55,7 +55,7 @@ jobs:
 
   build:
     name: Build ${{ matrix.target }} (${{ matrix.platform }})
-    runs-on: ${{ startsWith(matrix.platform, 'linux/arm') && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
+    runs-on: ${{ startsWith(matrix.platform, 'linux/arm') && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     needs:
       - prepare
     permissions:
@@ -151,7 +151,7 @@ jobs:
 
   merge:
     name: Merge ${{ matrix.target }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs:
       - prepare
       - build
