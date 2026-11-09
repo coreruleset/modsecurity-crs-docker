@@ -44,14 +44,28 @@ variable "crs-versions" {
   ]
 }
 
-variable "nginx-version" {
+# Base images are pinned by digest as well as by tag, so that a base image that
+# is re-pushed under the same tag (e.g. with security fixes) results in a
+# Renovate PR, and thus a new release. Each variant has its own digest, so each
+# variant has its own variable. The value is "<tag>@<digest>".
+variable "nginx-debian-image" {
     # renovate: depName=nginx/nginx-unprivileged datasource=docker
-    default = "1.30.6"
+    default = "1.30.6@sha256:847080049e23239e86144f01a4b79252db60494cebea58e827ae4e7d66c96c58"
 }
 
-variable "httpd-version" {
+variable "nginx-alpine-image" {
+    # renovate: depName=nginx/nginx-unprivileged datasource=docker
+    default = "1.30.6-alpine@sha256:44e74ca483234093081138b6d7b6f561d55557756a2deefc3a5056148defeb99"
+}
+
+variable "httpd-debian-image" {
     # renovate: depName=httpd datasource=docker
-    default = "2.4.69"
+    default = "2.4.69@sha256:f6a86043744215e4be90cf8804375d90022a711d892c9aa2d7085c089ee2cb54"
+}
+
+variable "httpd-alpine-image" {
+    # renovate: depName=httpd datasource=docker
+    default = "2.4.69-alpine@sha256:27336a0e73b420664ea3de684d575c9c5cb09b328dc4449c4c4e47c6d101810c"
 }
 
 variable "modsecurity-nginx-version" {
@@ -109,6 +123,13 @@ function "patch" {
     result = join(".", slice(split(".", version),0,3))
 }
 
+# Extracts the upstream version from an image reference of the form
+# "<version>[-<suffix>]@<digest>", e.g. "1.30.6-alpine@sha256:..." -> "1.30.6".
+function "image-version" {
+    params = [image]
+    result = split("-", split("@", image)[0])[0]
+}
+
 function "tag" {
     params = [tag]
     result = [for repo in split(",", REPOS) : "${trimspace(repo)}:${tag}"]
@@ -163,14 +184,14 @@ target "apache" {
             {
                 name = "debian"
                 dockerfile="apache/Dockerfile"
-                image = "docker-image://httpd:${httpd-version}"
+                image = "docker-image://httpd:${httpd-debian-image}"
                 lua_modules = join(" ", lua-modules-debian)
                 tag_base = "apache"
             },
             {
                 name = "alpine"
                 dockerfile = "apache/Dockerfile-alpine"
-                image = "docker-image://httpd:${httpd-version}-alpine"
+                image = "docker-image://httpd:${httpd-alpine-image}"
                 lua_modules = join(" ", lua-modules-alpine)
                 tag_base = "apache-alpine"
             }
@@ -201,14 +222,14 @@ target "apache-no-jit" {
             {
                 name = "debian"
                 dockerfile = "apache/Dockerfile"
-                image = "docker-image://httpd:${httpd-version}"
+                image = "docker-image://httpd:${httpd-debian-image}"
                 lua_modules = join(" ", lua-modules-debian)
                 tag_base = "apache-no-jit"
             },
             {
                 name = "alpine"
                 dockerfile = "apache/Dockerfile-alpine"
-                image = "docker-image://httpd:${httpd-version}-alpine"
+                image = "docker-image://httpd:${httpd-alpine-image}"
                 lua_modules = join(" ", lua-modules-alpine)
                 tag_base = "apache-alpine-no-jit"
             }
@@ -240,14 +261,16 @@ target "nginx" {
             {
                 name = "debian"
                 dockerfile = "nginx/Dockerfile"
-                image = "docker-image://nginx/nginx-unprivileged:${nginx-version}"
+                image = "docker-image://nginx/nginx-unprivileged:${nginx-debian-image}"
+                version = image-version(nginx-debian-image)
                 lua_modules = join(" ", lua-modules-debian)
                 tag_base = "nginx"
             },
             {
                 name = "alpine"
                 dockerfile = "nginx/Dockerfile-alpine"
-                image = "docker-image://nginx/nginx-unprivileged:${nginx-version}-alpine"
+                image = "docker-image://nginx/nginx-unprivileged:${nginx-alpine-image}"
+                version = image-version(nginx-alpine-image)
                 lua_modules = join(" ", lua-modules-alpine)
                 tag_base = "nginx-alpine"
                 crs_release = crs-versions
@@ -272,7 +295,7 @@ target "nginx" {
     dockerfile = base.dockerfile
     args = {
         CRS_RELEASE = crs_entry.version
-        NGINX_VERSION = nginx-version
+        NGINX_VERSION = base.version
         LUA_MODULES = base.lua_modules
         NGINX_DYNAMIC_MODULES = join(" ", [for mod in nginx-dynamic-modules : join(" ", [mod.owner, mod.name, mod.version])])
         NGINX_HOME = "/etc/nginx"
