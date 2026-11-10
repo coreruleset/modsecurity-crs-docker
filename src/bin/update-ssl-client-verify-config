@@ -42,6 +42,13 @@ case "${SSL_VERIFY_DEPTH-1}" in
         ;;
 esac
 
+case "${SSL_CLIENT_HEADER_PREFIX-X-SSL-}" in
+    '' | *[!A-Za-z0-9_-]*)
+        echo "${0}: invalid SSL_CLIENT_HEADER_PREFIX value, expected HTTP header name characters (A-Z, a-z, 0-9, -, _)" >&2
+        exit 1
+        ;;
+esac
+
 VERIFY="${SSL_VERIFY:-none}"
 
 case "${VERIFY}" in
@@ -50,6 +57,10 @@ case "${VERIFY}" in
         exit 0
         ;;
     optional|require|optional_no_ca)
+        if [ "${SSL_ENGINE:-on}" = "off" ]; then
+            echo "${0}: SSL_VERIFY=${VERIFY} requires SSL_ENGINE=on, refusing to start" >&2
+            exit 1
+        fi
         ;;
     *)
         echo "${0}: invalid SSL_VERIFY value, expected one of: none, optional, require, optional_no_ca" >&2

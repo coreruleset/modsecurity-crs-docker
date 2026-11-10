@@ -37,6 +37,13 @@ case "${SSL_VERIFY_DEPTH-1}" in
         ;;
 esac
 
+case "${SSL_CLIENT_HEADER_PREFIX-X-SSL-}" in
+    '' | *[!A-Za-z0-9_-]*)
+        echo "${0}: invalid SSL_CLIENT_HEADER_PREFIX value, expected HTTP header name characters (A-Z, a-z, 0-9, -, _)" >&2
+        exit 1
+        ;;
+esac
+
 check_config_value SSL_CLIENT_CA_CERT_FILE "${SSL_CLIENT_CA_CERT_FILE:-}"
 
 case "${VERIFY}" in
@@ -111,4 +118,4 @@ if [ -z "${CLIENT_VERIFY_CONFIG}" ]; then
     rm -f /etc/nginx/includes/client_ca.conf
 fi
 
-sed -i.bak -r 's#CLIENT_VERIFY_CONFIG#'"${CLIENT_VERIFY_CONFIG}"'#' /etc/nginx/conf.d/default.conf
+sed -i -r 's#CLIENT_VERIFY_CONFIG#'"${CLIENT_VERIFY_CONFIG}"'#' /etc/nginx/conf.d/default.conf

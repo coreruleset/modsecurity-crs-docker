@@ -1,12 +1,18 @@
 #!/usr/bin/env bash
-# Verifies server-side mutual TLS of a running container: a client certificate
-# signed by the configured CA is accepted and the request is still filtered by
-# the CRS, while requests without a certificate, with an untrusted one or with
-# a rejected one do not reach the backend.
+# Verifies server-side mutual TLS of running containers:
+# - client certificate acceptance, missing/untrusted/revoked certificate
+#   rejection, HTTP -> HTTPS 301 redirect, and CRS request filtering
+# - client identity header forwarding (${SSL_CLIENT_HEADER_PREFIX}Client-DN and
+#   ${SSL_CLIENT_HEADER_PREFIX}Client-Verify), custom header prefixes, and
+#   protection against client-supplied forged headers
+# - fail-loud startup refusal when SSL_CLIENT_CA_CERT_FILE is missing
+# - optional_no_ca mode accepting unverified client certificates without
+#   forwarding their claimed subject DN
 #
-# The container has to be running with SSL_VERIFY set and the CA certificates
-# in SSL_CLIENT_CA_CERT_FILE, and with a backend that answers benign requests;
-# this script only talks to it over HTTPS.
+# When invoked without arguments after `./tests/setup-mtls.sh <target>` and
+# `docker compose -f tests/docker-compose.mtls.yml up -d`, it runs all checks
+# against the compose services. Individual options can also be passed to test a
+# single container.
 set -euo pipefail
 
 # usage: print the available options
@@ -15,26 +21,50 @@ usage() {
 Usage: tests/verify-mtls.sh [options]
 
 Options:
-  --url URL              HTTPS base URL (default https://localhost:8443).
-  --client-cert FILE     Client certificate signed by the configured CA.
-  --client-key FILE      Private key of the client certificate.
-  --rejected-cert FILE   Client certificate that has to be rejected (e.g. one
-                         revoked through SSL_CLIENT_CA_REVOCATION_FILE).
-  --rejected-key FILE    Private key of the rejected certificate.
-  --expect-dn TEXT       Assert that the backend receives X-SSL-Client-DN
-                         containing TEXT. Requires a backend that echoes its
-                         request headers (see the workflow).
-  --timeout SECONDS      How long to wait for the container to answer
-                         (default 60).
+  --url URL                HTTPS base URL (default https://localhost:8444 in
+                           compose mode, https://localhost:8443 otherwise).
+  --http-url URL           Plain HTTP base URL used to verify the 301 HTTPS
+                           redirect when mTLS is enabled.
+  --client-cert FILE       Client certificate signed by the configured CA.
+  --client-key FILE        Private key of the client certificate.
+  --rejected-cert FILE     Client certificate that has to be rejected (e.g. one
+                           revoked through SSL_CLIENT_CA_REVOCATION_FILE).
+  --rejected-key FILE      Private key of the rejected certificate.
+  --selfsigned-cert FILE   Self-signed client certificate not trusted by the CA.
+  --selfsigned-key FILE    Private key of the self-signed certificate.
+  --expect-dn TEXT         Assert that the backend receives Client-DN
+                           containing TEXT. Requires a backend that echoes its
+                           request headers.
+  --header-prefix PREFIX   Header prefix expected on the primary container
+                           (default X-SSL-).
+  --noca-container NAME    Container started without CA certificates that must
+                           refuse to start.
+  --unverified-url URL     HTTPS base URL of an optional_no_ca container.
+  --revoked-url URL        HTTPS base URL of a CRL-enabled container.
+  --revoked-prefix PREFIX  Header prefix expected on the CRL container
+                           (default X-TLS-).
+  --timeout SECONDS        How long to wait for a container to answer
+                           (default 60).
 EOF
 }
 
-url="https://localhost:8443"
+script_dir="$(cd "$(dirname "${0}")" && pwd)"
+certs_dir="${script_dir}/mtls-certs"
+
+url=""
+http_url=""
 client_cert=""
 client_key=""
 rejected_cert=""
 rejected_key=""
+selfsigned_cert=""
+selfsigned_key=""
 expect_dn=""
+header_prefix="X-SSL-"
+noca_container=""
+unverified_url=""
+revoked_url=""
+revoked_prefix="X-TLS-"
 timeout=60
 
 # need_value <option> <remaining args>: the option takes a value if there is one
@@ -51,6 +81,11 @@ while [ ${#} -gt 0 ]; do
   --url)
     need_value "${1}" "${#}"
     url="${2}"
+    shift 2
+    ;;
+  --http-url)
+    need_value "${1}" "${#}"
+    http_url="${2}"
     shift 2
     ;;
   --client-cert)
@@ -73,9 +108,44 @@ while [ ${#} -gt 0 ]; do
     rejected_key="${2}"
     shift 2
     ;;
+  --selfsigned-cert)
+    need_value "${1}" "${#}"
+    selfsigned_cert="${2}"
+    shift 2
+    ;;
+  --selfsigned-key)
+    need_value "${1}" "${#}"
+    selfsigned_key="${2}"
+    shift 2
+    ;;
   --expect-dn)
     need_value "${1}" "${#}"
     expect_dn="${2}"
+    shift 2
+    ;;
+  --header-prefix)
+    need_value "${1}" "${#}"
+    header_prefix="${2}"
+    shift 2
+    ;;
+  --noca-container)
+    need_value "${1}" "${#}"
+    noca_container="${2}"
+    shift 2
+    ;;
+  --unverified-url)
+    need_value "${1}" "${#}"
+    unverified_url="${2}"
+    shift 2
+    ;;
+  --revoked-url)
+    need_value "${1}" "${#}"
+    revoked_url="${2}"
+    shift 2
+    ;;
+  --revoked-prefix)
+    need_value "${1}" "${#}"
+    revoked_prefix="${2}"
     shift 2
     ;;
   --timeout)
@@ -95,8 +165,27 @@ while [ ${#} -gt 0 ]; do
   esac
 done
 
+# Default to the compose setup produced by tests/setup-mtls.sh and
+# tests/docker-compose.mtls.yml when no certificate flags were given.
+if [ -z "${client_cert}" ] && [ -z "${client_key}" ] && [ -f "${certs_dir}/client.crt" ]; then
+  url="${url:-https://localhost:8444}"
+  http_url="${http_url:-http://localhost:8091}"
+  client_cert="${certs_dir}/client.crt"
+  client_key="${certs_dir}/client.key"
+  rejected_cert="${rejected_cert:-${certs_dir}/rejected.crt}"
+  rejected_key="${rejected_key:-${certs_dir}/rejected.key}"
+  selfsigned_cert="${selfsigned_cert:-${certs_dir}/selfsigned.crt}"
+  selfsigned_key="${selfsigned_key:-${certs_dir}/selfsigned.key}"
+  expect_dn="${expect_dn:-CN=mtls-client}"
+  noca_container="${noca_container:-mtls-noca-test}"
+  unverified_url="${unverified_url:-https://localhost:8445}"
+  revoked_url="${revoked_url:-https://localhost:8446}"
+fi
+
+url="${url:-https://localhost:8443}"
+
 if [ -z "${client_cert}" ] || [ -z "${client_key}" ]; then
-  printf -- '--client-cert and --client-key are required\n\n' >&2
+  printf -- '--client-cert and --client-key are required (or run tests/setup-mtls.sh first)\n\n' >&2
   usage >&2
   exit 2
 fi
@@ -118,14 +207,17 @@ status() {
   awk 'NR == 1 { print $2 }' "${1}"
 }
 
-# request <curl args...>: outcome of a benign request. The HTTP status code of
-# the response, or "rejected" when the TLS handshake or the request was turned
-# away: httpd fails the handshake outright, while nginx completes the TLS 1.3
-# handshake and answers the request with 400.
-request() {
+# request_url <target_url> <curl args...>: outcome of a benign request against
+# target_url. Returns the HTTP status code of the response, or "rejected" when
+# the TLS handshake or the request was turned away: httpd fails the handshake
+# outright, while nginx completes the TLS 1.3 handshake and answers the request
+# with 400.
+request_url() {
+  local target_url="${1}"
+  shift
   local code
   if ! code="$(curl -sk --connect-timeout 5 --max-time 10 -o /dev/null \
-    -w '%{http_code}' "$@" "${url}/" 2>/dev/null)"; then
+    -w '%{http_code}' "$@" "${target_url}/" 2>/dev/null)"; then
     echo "rejected"
   elif [ "${code}" = "400" ]; then
     echo "rejected"
@@ -134,19 +226,33 @@ request() {
   fi
 }
 
+# request <curl args...>: outcome of a benign request against the primary URL
+request() {
+  request_url "${url}" "$@"
+}
+
 workdir="$(mktemp -d)"
 trap 'rm -rf "${workdir}"' EXIT
 
-# a certificate the configured CA does not know
-openssl req -x509 -newkey rsa:2048 -nodes -days 1 \
-  -keyout "${workdir}/untrusted.key" -out "${workdir}/untrusted.crt" \
-  -subj "/CN=untrusted" 2>/dev/null
+if [ -z "${selfsigned_cert}" ] || [ -z "${selfsigned_key}" ]; then
+  selfsigned_cert="${workdir}/untrusted.crt"
+  selfsigned_key="${workdir}/untrusted.key"
+  openssl req -x509 -newkey rsa:2048 -nodes -days 1 \
+    -keyout "${selfsigned_key}" -out "${selfsigned_cert}" \
+    -subj "/CN=untrusted" 2>/dev/null
+fi
 
-# wait_for_container: wait until the container accepts the client certificate
+# wait_for_container <target_url> <cert> <key>: wait until the container at
+# target_url accepts the given client certificate
 wait_for_container() {
+  local target_url="${1}"
+  local cert="${2}"
+  local key="${3}"
+  # SECONDS is a bash built-in variable that automatically increments by 1 each
+  # second since the shell started.
   local deadline=$((SECONDS + timeout))
   while [ "${SECONDS}" -lt "${deadline}" ]; do
-    if [ "$(request --cert "${client_cert}" --key "${client_key}")" != "rejected" ]; then
+    if [ "$(request_url "${target_url}" --cert "${cert}" --key "${key}")" != "rejected" ]; then
       return 0
     fi
     sleep 2
@@ -156,7 +262,7 @@ wait_for_container() {
   return 1
 }
 
-wait_for_container
+wait_for_container "${url}" "${client_cert}" "${client_key}"
 
 printf '\n### mutual TLS: client certificates ###\n'
 
@@ -164,10 +270,22 @@ check "client certificate is accepted" "200" \
   "$(request --cert "${client_cert}" --key "${client_key}")"
 check "missing client certificate is rejected" "rejected" "$(request)"
 check "untrusted client certificate is rejected" "rejected" \
-  "$(request --cert "${workdir}/untrusted.crt" --key "${workdir}/untrusted.key")"
-if [ -n "${rejected_cert}" ]; then
+  "$(request --cert "${selfsigned_cert}" --key "${selfsigned_key}")"
+if [ -n "${rejected_cert}" ] && [ -z "${revoked_url}" ]; then
   check "rejected client certificate is refused" "rejected" \
     "$(request --cert "${rejected_cert}" --key "${rejected_key}")"
+fi
+
+if [ -n "${http_url}" ]; then
+  http_headers="${workdir}/http-redirect.txt"
+  curl -sS -D "${http_headers}" -o /dev/null \
+    -H "${header_prefix}Client-DN: CN=forged-dn" \
+    -H "${header_prefix}Client-Verify: forged-verify" \
+    "${http_url}/"
+  check "plain HTTP request redirects to HTTPS with 301" "301" \
+    "$(status "${http_headers}")"
+  check "plain HTTP redirect points to https://" "yes" \
+    "$(grep -qi '^location: https://' "${http_headers}" && echo yes || echo no)"
 fi
 
 printf '\n### mutual TLS: request filtering ###\n'
@@ -177,26 +295,84 @@ curl -sk -D "${attack_headers}" -o /dev/null \
   --cert "${client_cert}" --key "${client_key}" "${url}/?test=../../etc/passwd"
 check "attack request is blocked" "403" "$(status "${attack_headers}")"
 
+# check_identity <target_url> <prefix>: verify that the backend receives the
+# expected client DN and verification status under <prefix>, and that
+# client-supplied forged headers with that prefix are replaced.
+check_identity() {
+  local target_url="${1}"
+  local prefix="${2}"
+  local dn_header="${prefix}Client-DN"
+  local verify_header="${prefix}Client-Verify"
+  local body="${workdir}/body.txt"
+
+  curl -sk -o "${body}" --cert "${client_cert}" --key "${client_key}" "${target_url}/"
+  check "backend receives ${dn_header}" "yes" \
+    "$(grep -qiF "${dn_header}: ${expect_dn}" "${body}" && echo yes || echo no)"
+  check "backend receives ${verify_header}" "yes" \
+    "$(grep -qiF "${verify_header}: success" "${body}" && echo yes || echo no)"
+
+  curl -sk -o "${body}" --cert "${client_cert}" --key "${client_key}" \
+    -H "${dn_header}: CN=forged-dn" -H "${verify_header}: forged-verify" "${target_url}/"
+  check "forged ${prefix}Client-* headers are replaced" "yes" \
+    "$(grep -qiF "${dn_header}: ${expect_dn}" "${body}" && ! grep -qiF "forged" "${body}" && echo yes || echo no)"
+}
+
 if [ -n "${expect_dn}" ]; then
   printf '\n### mutual TLS: client identity ###\n'
+  check_identity "${url}" "${header_prefix}"
+fi
 
-  body="${workdir}/body.txt"
-  curl -sk -o "${body}" --cert "${client_cert}" --key "${client_key}" "${url}/"
-  check "backend receives X-SSL-Client-DN" "yes" \
-    "$(grep -qiF "x-ssl-client-dn: ${expect_dn}" "${body}" && echo yes || echo no)"
-  check "backend receives X-SSL-Client-Verify" "yes" \
-    "$(grep -qiF "x-ssl-client-verify: success" "${body}" && echo yes || echo no)"
+if [ -n "${noca_container}" ]; then
+  printf '\n### mutual TLS: missing CA refusal ###\n'
 
-  # the identity headers must not be forgeable by the client
-  curl -sk -o "${body}" --cert "${client_cert}" --key "${client_key}" \
-    -H "X-SSL-Client-DN: CN=forged-dn" -H "X-SSL-Client-Verify: forged-verify" "${url}/"
-  check "forged identity headers are replaced" "yes" \
-    "$(grep -qiF "x-ssl-client-dn: ${expect_dn}" "${body}" && ! grep -qiF "forged" "${body}" && echo yes || echo no)"
-  if [ "$(request -H "X-SSL-Client-DN: CN=forged-dn" -H "X-SSL-Client-Verify: forged-verify")" = "200" ]; then
-    curl -sk -o "${body}" \
-      -H "X-SSL-Client-DN: CN=forged-dn" -H "X-SSL-Client-Verify: forged-verify" "${url}/"
-    check "forged identity headers are not forwarded without a certificate" "no" \
-      "$(grep -qiF "forged" "${body}" && echo yes || echo no)"
+  timeout "${timeout}" docker wait "${noca_container}" >/dev/null 2>&1 || true
+  check "container without CA certificates stops" "false" \
+    "$(docker inspect -f '{{.State.Running}}' "${noca_container}")"
+  check "container without CA certificates exits non-zero" "yes" \
+    "$([ "$(docker inspect -f '{{.State.ExitCode}}' "${noca_container}")" != "0" ] && echo yes || echo no)"
+  check "container logs missing CA error" "yes" \
+    "$(docker logs "${noca_container}" 2>&1 | grep -q "requires SSL_CLIENT_CA_CERT_FILE" && echo yes || echo no)"
+fi
+
+if [ -n "${unverified_url}" ]; then
+  printf '\n### mutual TLS: unverified client certificates (optional_no_ca) ###\n'
+
+  wait_for_container "${unverified_url}" "${selfsigned_cert}" "${selfsigned_key}"
+
+  unverified_body="${workdir}/unverified.txt"
+  curl -sk -o "${unverified_body}" \
+    --cert "${selfsigned_cert}" --key "${selfsigned_key}" "${unverified_url}/"
+  check "self-signed client certificate is accepted under optional_no_ca" "200" \
+    "$(request_url "${unverified_url}" --cert "${selfsigned_cert}" --key "${selfsigned_key}")"
+  check "claimed DN of unverified certificate is not forwarded" "no" \
+    "$(grep -qiF "${header_prefix}Client-DN:" "${unverified_body}" && echo yes || echo no)"
+  check "verification result of unverified certificate is forwarded" "yes" \
+    "$(grep -qiF "${header_prefix}Client-Verify:" "${unverified_body}" && echo yes || echo no)"
+
+  # Under permissive modes (optional / optional_no_ca), a TLS request without a
+  # client certificate is allowed and proxied to the backend. Verify that
+  # client-supplied identity headers are stripped when no certificate was
+  # presented, so an unauthenticated client cannot forge an identity.
+  nocert_body="${workdir}/nocert.txt"
+  curl -sk -o "${nocert_body}" \
+    -H "${header_prefix}Client-DN: CN=forged-dn" \
+    -H "${header_prefix}Client-Verify: forged-verify" \
+    "${unverified_url}/"
+  check "forged identity headers are not forwarded without a certificate" "no" \
+    "$(grep -qiF "forged" "${nocert_body}" && echo yes || echo no)"
+fi
+
+if [ -n "${revoked_url}" ] && [ -n "${rejected_cert}" ]; then
+  printf '\n### mutual TLS: CRL revocation and custom header prefix ###\n'
+
+  wait_for_container "${revoked_url}" "${client_cert}" "${client_key}"
+
+  check "non-revoked client certificate is accepted" "200" \
+    "$(request_url "${revoked_url}" --cert "${client_cert}" --key "${client_key}")"
+  check "revoked client certificate is refused" "rejected" \
+    "$(request_url "${revoked_url}" --cert "${rejected_cert}" --key "${rejected_key}")"
+  if [ -n "${expect_dn}" ]; then
+    check_identity "${revoked_url}" "${revoked_prefix}"
   fi
 fi
 
