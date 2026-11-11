@@ -292,6 +292,50 @@ jobs:
           docker network rm mtls-net 2>/dev/null || true
           rm -f proxy.crt proxy.key proxy.csr backend.crt backend.key ca.crt ca.key ca.srl
 
+      - name: Verify ACME challenge exemption for ${{ matrix.target }}
+        run: |
+          if grep -q "nginx" <<< "${{ matrix.target }}"; then
+            REDIRECT_VAR="NGINX_ALWAYS_TLS_REDIRECT"
+          else
+            REDIRECT_VAR="APACHE_ALWAYS_TLS_REDIRECT"
+          fi
+          HOST_AND_PORT="localhost:8081"
+          # The backend is a dummy
+          docker run \
+            --pull "never" \
+            -d \
+            --name ${{ matrix.target }}-redirect-test \
+            -p 8081:8080 \
+            -e "${REDIRECT_VAR}=on" \
+            -e BACKEND=http://localhost:9999 \
+            "${{ matrix.target }}-verification"
+
+          counter=10
+          until curl -s --connect-timeout 5 --max-time 5 -o /dev/null "${HOST_AND_PORT}"; do
+            ((counter--))
+            if [ ${counter} -le 0 ]; then
+              docker logs ${{ matrix.target }}-redirect-test
+              exit 1
+            fi
+            sleep 5
+          done
+
+          printf "Check that a regular request is redirected to https..."
+          curl -s -o /dev/null -D headers.txt "${HOST_AND_PORT}/"
+          head -n1 headers.txt | grep -q " 301"
+          grep -iq "^location: https://" headers.txt
+          printf "yes\n"
+
+          printf "Check that an ACME challenge request is not redirected..."
+          curl -s -o /dev/null -D headers.txt "${HOST_AND_PORT}/.well-known/acme-challenge/test-token"
+          if head -n1 headers.txt | grep -q " 30[1278]" || grep -iq "^location: https://" headers.txt; then
+            cat headers.txt
+            exit 1
+          fi
+          printf "yes\n"
+
+          docker rm -f ${{ matrix.target }}-redirect-test
+
       - name: Checkout CRS
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # ratchet:actions/checkout@v7.0.0
         with:

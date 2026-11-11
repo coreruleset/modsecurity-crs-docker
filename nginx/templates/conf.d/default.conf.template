@@ -31,6 +31,12 @@ map $ssl_client_verify $ssl_client_dn_header {
     default "";
 }
 
+# Never redirect Let's Encrypt HTTP-01 challenges to TLS
+map $request_uri $redirect_to_tls {
+    default ${NGINX_ALWAYS_TLS_REDIRECT};
+    ~^/\.well-known/acme-challenge/ off;
+}
+
 server {
     listen ${PORT} default_server;
 
@@ -43,7 +49,7 @@ server {
     location / {
         client_max_body_size 0;
 
-        if ($always_redirect = on) {
+        if ($redirect_to_tls = on) {
             return 301 https://$host:${SSL_REDIRECT_PORT}$request_uri;
         }
         if ($ssl_verify != off) {
