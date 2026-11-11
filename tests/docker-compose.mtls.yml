@@ -2,46 +2,23 @@
 # verification) tests. Run `./tests/setup-mtls.sh <target>` first to generate
 # `tests/mtls-certs/` and `tests/.env`.
 services:
-  mtls-echo:
-    image: ${MTLS_IMAGE}
-    container_name: mtls-echo
-    pull_policy: never
-    entrypoint: ["perl", "-MIO::Socket::INET", "-e"]
-    command:
-      - |
-        $$| = 1;
-        my $$server = IO::Socket::INET->new(
-            LocalAddr => "0.0.0.0",
-            LocalPort => 8080,
-            Proto     => "tcp",
-            Listen    => 16,
-            ReuseAddr => 1,
-        ) or die $$!;
-        while (my $$client = $$server->accept()) {
-            my $$body = "";
-            while (my $$line = <$$client>) {
-                $$line =~ s/\r?\n$$//;
-                last if $$line eq "";
-                $$body .= "$$line\n" if $$line =~ /:/;
-            }
-            print $$client "HTTP/1.1 200 OK\r\n"
-                . "Content-Type: text/plain\r\n"
-                . "Content-Length: " . length($$body) . "\r\n"
-                . "Connection: close\r\n\r\n"
-                . $$body;
-            close $$client;
-        }
+  # Albedo is the CRS test backend. It logs the request headers it receives on
+  # /inspect (used by tests/verify-mtls.sh to verify the forwarded client
+  # identity) and returns configurable responses.
+  mtls-backend:
+    image: ghcr.io/coreruleset/albedo:0.3.0@sha256:843ed01d28f48b594dcc0278ea9403175a0bf40ec065432040b796f589e89507
+    container_name: mtls-backend
 
   mtls-test:
     image: ${MTLS_IMAGE}
     container_name: mtls-test
     pull_policy: never
     depends_on:
-      - mtls-echo
+      - mtls-backend
     env_file:
       - ${MTLS_ENV_FILE}
     environment:
-      BACKEND: http://mtls-echo:8080
+      BACKEND: http://mtls-backend:8080
       SSL_VERIFY: ${SSL_VERIFY}
       SSL_CLIENT_CA_CERT_FILE: ${MTLS_CERT_DIR}/ca.crt
     volumes:
@@ -57,7 +34,7 @@ services:
     env_file:
       - ${MTLS_ENV_FILE}
     environment:
-      BACKEND: http://mtls-echo:8080
+      BACKEND: http://mtls-backend:8080
       SSL_VERIFY: ${SSL_VERIFY}
 
   mtls-unverified-test:
@@ -65,11 +42,11 @@ services:
     container_name: mtls-unverified-test
     pull_policy: never
     depends_on:
-      - mtls-echo
+      - mtls-backend
     env_file:
       - ${MTLS_ENV_FILE}
     environment:
-      BACKEND: http://mtls-echo:8080
+      BACKEND: http://mtls-backend:8080
       SSL_VERIFY: optional_no_ca
     ports:
       - "8092:8080"
@@ -80,11 +57,11 @@ services:
     container_name: mtls-revoked-test
     pull_policy: never
     depends_on:
-      - mtls-echo
+      - mtls-backend
     env_file:
       - ${MTLS_ENV_FILE}
     environment:
-      BACKEND: http://mtls-echo:8080
+      BACKEND: http://mtls-backend:8080
       SSL_VERIFY: ${SSL_VERIFY}
       SSL_CLIENT_CA_CERT_FILE: ${MTLS_CERT_DIR}/ca.crt
       # SSL_CLIENT_CA_REVOCATION_CHECK is deliberately left unset to verify

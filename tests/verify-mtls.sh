@@ -33,8 +33,10 @@ Options:
   --selfsigned-cert FILE   Self-signed client certificate not trusted by the CA.
   --selfsigned-key FILE    Private key of the self-signed certificate.
   --expect-dn TEXT         Assert that the backend receives Client-DN
-                           containing TEXT. Requires a backend that echoes its
-                           request headers.
+                           containing TEXT. Requires the albedo test backend,
+                           which logs the request headers it receives.
+  --backend-container NAME Container running the albedo test backend used to
+                           verify the forwarded headers (default: mtls-backend).
   --header-prefix PREFIX   Header prefix expected on the primary container
                            (default X-SSL-).
   --noca-container NAME    Container started without CA certificates that must
@@ -61,6 +63,7 @@ selfsigned_cert=""
 selfsigned_key=""
 expect_dn=""
 header_prefix="X-SSL-"
+backend_container="mtls-backend"
 noca_container=""
 unverified_url=""
 revoked_url=""
@@ -126,6 +129,11 @@ while [ ${#} -gt 0 ]; do
   --header-prefix)
     need_value "${1}" "${#}"
     header_prefix="${2}"
+    shift 2
+    ;;
+  --backend-container)
+    need_value "${1}" "${#}"
+    backend_container="${2}"
     shift 2
     ;;
   --noca-container)
@@ -231,6 +239,32 @@ request() {
   request_url "${url}" "$@"
 }
 
+# backend_lines: number of log lines the albedo test backend has emitted so far
+backend_lines() {
+  docker logs "${backend_container}" 2>&1 | wc -l
+}
+
+# inspect <target_url> <curl args...>: request the albedo test backend's
+# /inspect endpoint through the proxy and print the backend log lines that the
+# request produced. Albedo logs the headers it receives there, which is how the
+# forwarded client identity is verified.
+inspect() {
+  local target_url="${1}"
+  shift
+  local before delta=""
+  before="$(backend_lines)"
+  curl -sk --connect-timeout 5 --max-time 10 -o /dev/null "$@" "${target_url}/inspect"
+  local attempt
+  for attempt in 1 2 3 4 5 6 7 8 9 10; do
+    delta="$(docker logs "${backend_container}" 2>&1 | tail -n +$((before + 1)))"
+    if grep -qi "inspection request" <<< "${delta}"; then
+      break
+    fi
+    sleep 0.2
+  done
+  printf '%s\n' "${delta}"
+}
+
 workdir="$(mktemp -d)"
 trap 'rm -rf "${workdir}"' EXIT
 
@@ -295,26 +329,28 @@ curl -sk -D "${attack_headers}" -o /dev/null \
   --cert "${client_cert}" --key "${client_key}" "${url}/?test=../../etc/passwd"
 check "attack request is blocked" "403" "$(status "${attack_headers}")"
 
-# check_identity <target_url> <prefix>: verify that the backend receives the
-# expected client DN and verification status under <prefix>, and that
-# client-supplied forged headers with that prefix are replaced.
+# check_identity <target_url> <prefix>: verify through the albedo test backend
+# log that the backend receives the expected client DN and verification status
+# under <prefix>, and that client-supplied forged headers with that prefix are
+# replaced.
 check_identity() {
   local target_url="${1}"
   local prefix="${2}"
   local dn_header="${prefix}Client-DN"
   local verify_header="${prefix}Client-Verify"
-  local body="${workdir}/body.txt"
+  local delta
 
-  curl -sk -o "${body}" --cert "${client_cert}" --key "${client_key}" "${target_url}/"
+  delta="$(inspect "${target_url}" --cert "${client_cert}" --key "${client_key}")"
   check "backend receives ${dn_header}" "yes" \
-    "$(grep -qiF "${dn_header}: ${expect_dn}" "${body}" && echo yes || echo no)"
+    "$(grep -iF "request.headers.${dn_header}=" <<< "${delta}" | grep -qF "${expect_dn}" && echo yes || echo no)"
   check "backend receives ${verify_header}" "yes" \
-    "$(grep -qiF "${verify_header}: success" "${body}" && echo yes || echo no)"
+    "$(grep -iF "request.headers.${verify_header}=" <<< "${delta}" | grep -qi "success" && echo yes || echo no)"
 
-  curl -sk -o "${body}" --cert "${client_cert}" --key "${client_key}" \
-    -H "${dn_header}: CN=forged-dn" -H "${verify_header}: forged-verify" "${target_url}/"
+  delta="$(inspect "${target_url}" --cert "${client_cert}" --key "${client_key}" \
+    -H "${dn_header}: CN=forged-dn" -H "${verify_header}: forged-verify")"
   check "forged ${prefix}Client-* headers are replaced" "yes" \
-    "$(grep -qiF "${dn_header}: ${expect_dn}" "${body}" && ! grep -qiF "forged" "${body}" && echo yes || echo no)"
+    "$(grep -iF "request.headers.${dn_header}=" <<< "${delta}" | grep -qF "${expect_dn}" \
+      && ! grep -qiF "forged" <<< "${delta}" && echo yes || echo no)"
 }
 
 if [ -n "${expect_dn}" ]; then
@@ -339,27 +375,24 @@ if [ -n "${unverified_url}" ]; then
 
   wait_for_container "${unverified_url}" "${selfsigned_cert}" "${selfsigned_key}"
 
-  unverified_body="${workdir}/unverified.txt"
-  curl -sk -o "${unverified_body}" \
-    --cert "${selfsigned_cert}" --key "${selfsigned_key}" "${unverified_url}/"
   check "self-signed client certificate is accepted under optional_no_ca" "200" \
     "$(request_url "${unverified_url}" --cert "${selfsigned_cert}" --key "${selfsigned_key}")"
+
+  delta="$(inspect "${unverified_url}" --cert "${selfsigned_cert}" --key "${selfsigned_key}")"
   check "claimed DN of unverified certificate is not forwarded" "no" \
-    "$(grep -qiF "${header_prefix}Client-DN:" "${unverified_body}" && echo yes || echo no)"
+    "$(grep -qiF "request.headers.${header_prefix}Client-DN=" <<< "${delta}" && echo yes || echo no)"
   check "verification result of unverified certificate is forwarded" "yes" \
-    "$(grep -qiF "${header_prefix}Client-Verify:" "${unverified_body}" && echo yes || echo no)"
+    "$(grep -qiF "request.headers.${header_prefix}Client-Verify=" <<< "${delta}" && echo yes || echo no)"
 
   # Under permissive modes (optional / optional_no_ca), a TLS request without a
   # client certificate is allowed and proxied to the backend. Verify that
   # client-supplied identity headers are stripped when no certificate was
   # presented, so an unauthenticated client cannot forge an identity.
-  nocert_body="${workdir}/nocert.txt"
-  curl -sk -o "${nocert_body}" \
+  delta="$(inspect "${unverified_url}" \
     -H "${header_prefix}Client-DN: CN=forged-dn" \
-    -H "${header_prefix}Client-Verify: forged-verify" \
-    "${unverified_url}/"
+    -H "${header_prefix}Client-Verify: forged-verify")"
   check "forged identity headers are not forwarded without a certificate" "no" \
-    "$(grep -qiF "forged" "${nocert_body}" && echo yes || echo no)"
+    "$(grep -qiF "forged" <<< "${delta}" && echo yes || echo no)"
 fi
 
 if [ -n "${revoked_url}" ] && [ -n "${rejected_cert}" ]; then
