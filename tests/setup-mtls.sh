@@ -64,9 +64,11 @@ chmod 644 "${certs_dir}"/*.crt "${certs_dir}"/*.key "${certs_dir}"/*.crl
 
 if [ -n "${target}" ]; then
   verify="on"
+  disabled_verify="off"
   cert_dir="/etc/nginx/ssl"
   if grep -q "apache" <<< "${target}"; then
     verify="require"
+    disabled_verify="none"
     cert_dir="/usr/local/apache2/conf"
   fi
 
@@ -80,6 +82,7 @@ if [ -n "${target}" ]; then
 MTLS_IMAGE=${MTLS_IMAGE:-${target}-verification}
 MTLS_ENV_FILE=${env_file}
 SSL_VERIFY=${verify}
+MTLS_DISABLED_VERIFY=${disabled_verify}
 MTLS_CERT_DIR=${cert_dir}
 EOF
 fi

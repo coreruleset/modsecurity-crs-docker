@@ -74,3 +74,20 @@ services:
     ports:
       - "8093:8080"
       - "8446:8443"
+
+  # Client certificate verification disabled: client-supplied identity headers
+  # must pass through untouched and plain HTTP must keep being proxied.
+  mtls-off-test:
+    image: ${MTLS_IMAGE}
+    container_name: mtls-off-test
+    pull_policy: never
+    depends_on:
+      - mtls-backend
+    env_file:
+      - ${MTLS_ENV_FILE}
+    environment:
+      BACKEND: http://mtls-backend:8080
+      SSL_VERIFY: ${MTLS_DISABLED_VERIFY}
+    ports:
+      - "8094:8080"
+      - "8447:8443"

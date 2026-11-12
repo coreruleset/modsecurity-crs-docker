@@ -45,6 +45,11 @@ Options:
   --revoked-url URL        HTTPS base URL of a CRL-enabled container.
   --revoked-prefix PREFIX  Header prefix expected on the CRL container
                            (default X-TLS-).
+  --off-url URL            HTTPS base URL of a container with client
+                           certificate verification disabled (default
+                           https://localhost:8447 in compose mode).
+  --off-http-url URL       Plain HTTP base URL of that container (default
+                           http://localhost:8094 in compose mode).
   --timeout SECONDS        How long to wait for a container to answer
                            (default 60).
 EOF
@@ -68,6 +73,8 @@ noca_container=""
 unverified_url=""
 revoked_url=""
 revoked_prefix="X-TLS-"
+off_url=""
+off_http_url=""
 timeout=60
 
 # need_value <option> <remaining args>: the option takes a value if there is one
@@ -156,6 +163,16 @@ while [ ${#} -gt 0 ]; do
     revoked_prefix="${2}"
     shift 2
     ;;
+  --off-url)
+    need_value "${1}" "${#}"
+    off_url="${2}"
+    shift 2
+    ;;
+  --off-http-url)
+    need_value "${1}" "${#}"
+    off_http_url="${2}"
+    shift 2
+    ;;
   --timeout)
     need_value "${1}" "${#}"
     timeout="${2}"
@@ -188,6 +205,8 @@ if [ -z "${client_cert}" ] && [ -z "${client_key}" ] && [ -f "${certs_dir}/clien
   noca_container="${noca_container:-mtls-noca-test}"
   unverified_url="${unverified_url:-https://localhost:8445}"
   revoked_url="${revoked_url:-https://localhost:8446}"
+  off_url="${off_url:-https://localhost:8447}"
+  off_http_url="${off_http_url:-http://localhost:8094}"
 fi
 
 url="${url:-https://localhost:8443}"
@@ -276,24 +295,41 @@ if [ -z "${selfsigned_cert}" ] || [ -z "${selfsigned_key}" ]; then
     -subj "/CN=untrusted" 2>/dev/null
 fi
 
-# wait_for_container <target_url> <cert> <key>: wait until the container at
-# target_url accepts the given client certificate
-wait_for_container() {
+# wait_for_url <target_url> <curl args...>: wait until the container at
+# target_url answers
+wait_for_url() {
   local target_url="${1}"
-  local cert="${2}"
-  local key="${3}"
+  shift
   # SECONDS is a bash built-in variable that automatically increments by 1 each
   # second since the shell started.
   local deadline=$((SECONDS + timeout))
   while [ "${SECONDS}" -lt "${deadline}" ]; do
-    if [ "$(request_url "${target_url}" --cert "${cert}" --key "${key}")" != "rejected" ]; then
+    if [ "$(request_url "${target_url}" "$@")" != "rejected" ]; then
       return 0
     fi
     sleep 2
   done
-  printf 'Container did not accept the client certificate within %s seconds\n' \
-    "${timeout}" >&2
+  printf 'Container did not answer within %s seconds\n' "${timeout}" >&2
   return 1
+}
+
+# wait_for_container <target_url> <cert> <key>: wait until the container at
+# target_url accepts the given client certificate
+wait_for_container() {
+  wait_for_url "${1}" --cert "${2}" --key "${3}"
+}
+
+# wait_for_exit <container>: wait until the container stops, for at most
+# $timeout seconds; the following checks report whether it actually stopped
+wait_for_exit() {
+  local container="${1}"
+  local deadline=$((SECONDS + timeout))
+  while [ "${SECONDS}" -lt "${deadline}" ]; do
+    if [ "$(docker inspect -f '{{.State.Running}}' "${container}")" = "false" ]; then
+      break
+    fi
+    sleep 1
+  done
 }
 
 wait_for_container "${url}" "${client_cert}" "${client_key}"
@@ -318,8 +354,8 @@ if [ -n "${http_url}" ]; then
     "${http_url}/"
   check "plain HTTP request redirects to HTTPS with 301" "301" \
     "$(status "${http_headers}")"
-  check "plain HTTP redirect points to https://" "yes" \
-    "$(grep -qi '^location: https://' "${http_headers}" && echo yes || echo no)"
+  check "plain HTTP redirect includes the HTTPS port" "yes" \
+    "$(grep -qiE '^location: https://[^/]*:[0-9]+/' "${http_headers}" && echo yes || echo no)"
 fi
 
 printf '\n### mutual TLS: request filtering ###\n'
@@ -358,10 +394,30 @@ if [ -n "${expect_dn}" ]; then
   check_identity "${url}" "${header_prefix}"
 fi
 
+if [ -n "${off_url}" ]; then
+  printf '\n### mutual TLS: verification disabled ###\n'
+
+  wait_for_url "${off_url}"
+
+  if [ -n "${off_http_url}" ]; then
+    check "plain HTTP request is proxied when verification is disabled" "200" \
+      "$(request_url "${off_http_url}")"
+  fi
+
+  # With client certificate verification disabled the proxy must not touch the
+  # identity headers, so deployments behind their own mTLS proxy keep working.
+  delta="$(inspect "${off_url}" \
+    -H "${header_prefix}Client-DN: CN=off-dn" \
+    -H "${header_prefix}Client-Verify: SUCCESS")"
+  check "client-supplied identity headers pass through when verification is disabled" "yes" \
+    "$(grep -qiF "request.headers.${header_prefix}Client-DN=" <<< "${delta}" \
+      && grep -qiF "CN=off-dn" <<< "${delta}" && echo yes || echo no)"
+fi
+
 if [ -n "${noca_container}" ]; then
   printf '\n### mutual TLS: missing CA refusal ###\n'
 
-  timeout "${timeout}" docker wait "${noca_container}" >/dev/null 2>&1 || true
+  wait_for_exit "${noca_container}"
   check "container without CA certificates stops" "false" \
     "$(docker inspect -f '{{.State.Running}}' "${noca_container}")"
   check "container without CA certificates exits non-zero" "yes" \

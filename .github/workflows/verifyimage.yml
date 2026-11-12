@@ -263,7 +263,9 @@ jobs:
         env:
           TARGET: ${{ matrix.target }}
         run: |
-          trap 'docker compose -f tests/docker-compose.mtls.yml down -vt 0; rm -rf tests/mtls-certs tests/.env' EXIT
+          # Print the compose logs before tearing the stack down so a failing
+          # assertion still leaves diagnostics in the job output.
+          trap '_rc=$?; if [ "${_rc}" -ne 0 ]; then docker compose -f tests/docker-compose.mtls.yml logs || true; fi; docker compose -f tests/docker-compose.mtls.yml down -vt 0; rm -rf tests/mtls-certs tests/.env' EXIT
           ./tests/setup-mtls.sh "${TARGET}"
           docker compose -f tests/docker-compose.mtls.yml up -d
           ./tests/verify-mtls.sh
@@ -275,7 +277,9 @@ jobs:
         run: |
           docker logs "${TARGET}-test" || true
           docker logs "${TARGET}-http3-test" || true
-          docker compose -f tests/docker-compose.mtls.yml logs || true
+          docker logs "${TARGET}-mtls-test" || true
+          docker logs "${TARGET}-mtls-missing-test" || true
+          docker logs mtls-backend || true
 
       - name: Checkout CRS
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # ratchet:actions/checkout@v7.0.0
