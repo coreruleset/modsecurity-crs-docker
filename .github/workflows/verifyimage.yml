@@ -270,6 +270,18 @@ jobs:
           docker compose -f tests/docker-compose.mtls.yml up -d
           ./tests/verify-mtls.sh
 
+      - name: Verify TLS redirect for ${{ matrix.target }}
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          variant="apache"
+          if grep -q "nginx" <<< "${TARGET}"; then
+            variant="nginx"
+          fi
+          ./tests/verify-image.sh \
+            --variant "${variant}" \
+            --tls-redirect-image "$(docker image inspect -f '{{.Id}}' "${TARGET}-verification")"
+
       - name: Container logs
         if: failure()
         env:
