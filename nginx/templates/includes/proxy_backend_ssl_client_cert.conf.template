@@ -1,0 +1,2 @@
+proxy_ssl_certificate ${PROXY_SSL_CERT_FILE};
+proxy_ssl_certificate_key ${PROXY_SSL_CERT_KEY_FILE};

@@ -29,7 +29,8 @@
       "groupSlug": "all-minor-patch",
       "matchUpdateTypes": [
         "minor",
-        "patch"
+        "patch",
+        "digest"
       ],
       "prBodyColumns": [
         "Package",
@@ -74,9 +75,9 @@
     },
     {
       "matchDepNames": [
-        "nginxinc/nginx-unprivileged"
+        "nginx/nginx-unprivileged"
       ],
-      "allowedVersions": "/^[0-9]+\\.(?:[1-9]\\d*)?[02468]\\.[0-9]+$/",
+      "allowedVersions": "/^[0-9]+\\.(?:[1-9]\\d*)?[02468]\\.[0-9]+(?:-alpine)?$/",
       "minimumReleaseAge": "0 days"
     },
     {
@@ -94,7 +95,7 @@
         "/^docker-bake\\.hcl$/"
       ],
       "matchStrings": [
-        "depName=(?<depName>[^\\s]+)(?:\\s+packageName=(?<packageName>[^\\s]+))?\\s+datasource=(?<datasource>[^\\s]+)\\s+[^\"]+\"(?<currentValue>[^\"]+)\""
+        "depName=(?<depName>[^\\s]+)(?:\\s+packageName=(?<packageName>[^\\s]+))?\\s+datasource=(?<datasource>[^\\s]+)\\s+[^\"]+\"(?<currentValue>[^\"@]+)(?:@(?<currentDigest>sha256:[a-f0-9]+))?\""
       ]
     },
     {
@@ -106,7 +107,7 @@
       "matchStrings": [
         ".*on [Nn]ginx (?<currentValue>\\d+\\.\\d+\\.\\d+)"
       ],
-      "depNameTemplate": "nginxinc/nginx-unprivileged",
+      "depNameTemplate": "nginx/nginx-unprivileged",
       "datasourceTemplate": "docker"
     },
     {

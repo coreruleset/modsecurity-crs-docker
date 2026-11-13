@@ -1,7 +1,7 @@
 # docker-bake.hcl
 variable "modsec3-version" {
     # renovate: depName=ModSecurity3 packageName=owasp-modsecurity/ModSecurity datasource=github-releases
-    default = "3.0.16"
+    default = "3.0.17"
 }
 
 variable "modsec3-flags" {
@@ -10,11 +10,15 @@ variable "modsec3-flags" {
 
 variable "modsec2-version" {
     # renovate: depName=ModSecurity2 packageName=owasp-modsecurity/ModSecurity datasource=github-releases
-    default = "2.9.14"
+    default = "2.9.15"
 }
 
 variable "modsec2-flags" {
-    default = "--with-yajl --with-ssdeep --with-pcre2"
+    default = "--with-yajl --with-ssdeep --enable-pcre-jit"
+}
+
+variable "modsec2-no-jit-flags" {
+    default = "--with-yajl --with-ssdeep"
 }
 
 variable "previous-lts-crs-version" {
@@ -24,30 +28,44 @@ variable "previous-lts-crs-version" {
 
 variable "major-crs-version" {
     # renovate: depName=coreruleset/coreruleset datasource=github-releases
-    default = "4.29.0"
+    default = "4.30.0"
 }
 
-variable "v4-lts-crs-version" {
+variable "current-lts-crs-version" {
     # renovate: depName=coreruleset-v4-lts packageName=coreruleset/coreruleset datasource=github-releases
-    default = "4.25.1"
+    default = "4.25.2"
 }
 
 variable "crs-versions" {
   default = [
-    { tag = "previous-lts", version = previous-lts-crs-version },
-    { tag = "lts",      version = v4-lts-crs-version },
-    { tag = "latest",   version = major-crs-version }
+    { tag = "v3-lts", version = previous-lts-crs-version },
+    { tag = "v4-lts", version = current-lts-crs-version },
+    { tag = "latest", version = major-crs-version }
   ]
 }
 
-variable "nginx-version" {
-    # renovate: depName=nginxinc/nginx-unprivileged datasource=docker
-    default = "1.30.5"
+# Base images are pinned by digest as well as by tag, so that a base image that
+# is re-pushed under the same tag (e.g. with security fixes) results in a
+# Renovate PR, and thus a new release. Each variant has its own digest, so each
+# variant has its own variable. The value is "<tag>@<digest>".
+variable "nginx-debian-image" {
+    # renovate: depName=nginx/nginx-unprivileged datasource=docker
+    default = "1.30.6@sha256:847080049e23239e86144f01a4b79252db60494cebea58e827ae4e7d66c96c58"
 }
 
-variable "httpd-version" {
+variable "nginx-alpine-image" {
+    # renovate: depName=nginx/nginx-unprivileged datasource=docker
+    default = "1.30.6-alpine@sha256:44e74ca483234093081138b6d7b6f561d55557756a2deefc3a5056148defeb99"
+}
+
+variable "httpd-debian-image" {
     # renovate: depName=httpd datasource=docker
-    default = "2.4.68"
+    default = "2.4.69@sha256:f6a86043744215e4be90cf8804375d90022a711d892c9aa2d7085c089ee2cb54"
+}
+
+variable "httpd-alpine-image" {
+    # renovate: depName=httpd datasource=docker
+    default = "2.4.69-alpine@sha256:27336a0e73b420664ea3de684d575c9c5cb09b328dc4449c4c4e47c6d101810c"
 }
 
 variable "modsecurity-nginx-version" {
@@ -105,6 +123,13 @@ function "patch" {
     result = join(".", slice(split(".", version),0,3))
 }
 
+# Extracts the upstream version from an image reference of the form
+# "<version>[-<suffix>]@<digest>", e.g. "1.30.6-alpine@sha256:..." -> "1.30.6".
+function "image-version" {
+    params = [image]
+    result = split("-", split("@", image)[0])[0]
+}
+
 function "tag" {
     params = [tag]
     result = [for repo in split(",", REPOS) : "${trimspace(repo)}:${tag}"]
@@ -123,7 +148,9 @@ function "lts-tag" {
     params = [semver, variant]
     result = concat(
         tag("${minor(semver)}-${variant}-lts"),
-        tag("${patch(semver)}-${variant}-lts")
+        tag("${patch(semver)}-${variant}-lts"),
+        tag("${minor(semver)}-${variant}-${formatdate("YYYYMMDDHHMM", timestamp())}-lts"),
+        tag("${patch(semver)}-${variant}-${formatdate("YYYYMMDDHHMM", timestamp())}-lts")
     )
 }
 
@@ -136,7 +163,7 @@ group "default" {
 
 target "platforms-base" {
     context="."
-    platforms = ["linux/amd64", "linux/arm64", "linux/i386"]
+    platforms = ["linux/amd64", "linux/arm64"]
     labels = {
         "org.opencontainers.image.source" = "https://github.com/coreruleset/modsecurity-crs-docker"
     }
@@ -157,14 +184,14 @@ target "apache" {
             {
                 name = "debian"
                 dockerfile="apache/Dockerfile"
-                image = "docker-image://httpd:${httpd-version}"
+                image = "docker-image://httpd:${httpd-debian-image}"
                 lua_modules = join(" ", lua-modules-debian)
                 tag_base = "apache"
             },
             {
                 name = "alpine"
                 dockerfile = "apache/Dockerfile-alpine"
-                image = "docker-image://httpd:${httpd-version}-alpine"
+                image = "docker-image://httpd:${httpd-alpine-image}"
                 lua_modules = join(" ", lua-modules-alpine)
                 tag_base = "apache-alpine"
             }
@@ -182,9 +209,48 @@ target "apache" {
         LUA_MODULES = base.lua_modules
     }
     tags = concat(
-        tag(base.tag_base),
-        vtag("${crs_entry.version}", base.tag_base),
-        equal(crs_entry.tag, "lts") ? lts-tag("${crs_entry.version}", base.tag_base) : []
+        equal(crs_entry.tag, "latest") ? tag(base.tag_base) : [],
+        equal(crs_entry.tag, "latest") ? vtag("${crs_entry.version}", base.tag_base) : [],
+        contains(["v3-lts", "v4-lts"], crs_entry.tag) ? lts-tag("${crs_entry.version}", base.tag_base) : []
+    )
+}
+
+target "apache-no-jit" {
+    matrix = {
+        crs_entry = crs-versions
+        base = [
+            {
+                name = "debian"
+                dockerfile = "apache/Dockerfile"
+                image = "docker-image://httpd:${httpd-debian-image}"
+                lua_modules = join(" ", lua-modules-debian)
+                tag_base = "apache-no-jit"
+            },
+            {
+                name = "alpine"
+                dockerfile = "apache/Dockerfile-alpine"
+                image = "docker-image://httpd:${httpd-alpine-image}"
+                lua_modules = join(" ", lua-modules-alpine)
+                tag_base = "apache-alpine-no-jit"
+            }
+        ]
+    }
+
+    inherits = ["platforms-base"]
+    name = "apache-no-jit-${base.name}-${crs_entry.tag}"
+    contexts = {
+        image = base.image
+    }
+    dockerfile = base.dockerfile
+    args = {
+        MODSEC2_FLAGS = modsec2-no-jit-flags
+        CRS_RELEASE = crs_entry.version
+        LUA_MODULES = base.lua_modules
+    }
+    tags = concat(
+        equal(crs_entry.tag, "latest") ? tag(base.tag_base) : [],
+        equal(crs_entry.tag, "latest") ? vtag("${crs_entry.version}", base.tag_base) : [],
+        contains(["v3-lts", "v4-lts"], crs_entry.tag) ? lts-tag("${crs_entry.version}", base.tag_base) : []
     )
 }
 
@@ -195,14 +261,16 @@ target "nginx" {
             {
                 name = "debian"
                 dockerfile = "nginx/Dockerfile"
-                image = "docker-image://nginxinc/nginx-unprivileged:${nginx-version}"
+                image = "docker-image://nginx/nginx-unprivileged:${nginx-debian-image}"
+                version = image-version(nginx-debian-image)
                 lua_modules = join(" ", lua-modules-debian)
                 tag_base = "nginx"
             },
             {
                 name = "alpine"
                 dockerfile = "nginx/Dockerfile-alpine"
-                image = "docker-image://nginxinc/nginx-unprivileged:${nginx-version}-alpine"
+                image = "docker-image://nginx/nginx-unprivileged:${nginx-alpine-image}"
+                version = image-version(nginx-alpine-image)
                 lua_modules = join(" ", lua-modules-alpine)
                 tag_base = "nginx-alpine"
                 crs_release = crs-versions
@@ -227,15 +295,15 @@ target "nginx" {
     dockerfile = base.dockerfile
     args = {
         CRS_RELEASE = crs_entry.version
-        NGINX_VERSION = nginx-version
+        NGINX_VERSION = base.version
         LUA_MODULES = base.lua_modules
         NGINX_DYNAMIC_MODULES = join(" ", [for mod in nginx-dynamic-modules : join(" ", [mod.owner, mod.name, mod.version])])
         NGINX_HOME = "/etc/nginx"
         READ_ONLY_FS = read-only-fs.read-only
     }
     tags = concat(
-        tag("${base.tag_base}${equal(read-only-fs.read-only, "true") ? "-read-only" : ""}"),
-        vtag("${crs_entry.version}", "${base.tag_base}${equal(read-only-fs.read-only, "true") ? "-read-only" : ""}"),
-        equal(crs_entry.tag, "lts") ? lts-tag("${crs_entry.version}", "${base.tag_base}${equal(read-only-fs.read-only, "true") ? "-read-only" : ""}") : []
+        equal(crs_entry.tag, "latest") ? tag("${base.tag_base}${equal(read-only-fs.read-only, "true") ? "-read-only" : ""}") : [],
+        equal(crs_entry.tag, "latest") ? vtag("${crs_entry.version}", "${base.tag_base}${equal(read-only-fs.read-only, "true") ? "-read-only" : ""}") : [],
+        contains(["v3-lts", "v4-lts"], crs_entry.tag) ? lts-tag("${crs_entry.version}", "${base.tag_base}${equal(read-only-fs.read-only, "true") ? "-read-only" : ""}") : []
     )
 }
