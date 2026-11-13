@@ -44,10 +44,10 @@ server {
         client_max_body_size 0;
 
         if ($always_redirect = on) {
-            return 301 https://$host:${SSL_PORT}$request_uri;
+            return 301 https://$host:${SSL_REDIRECT_PORT}$request_uri;
         }
         if ($ssl_verify != off) {
-            return 301 https://$host:${SSL_PORT}$request_uri;
+            return 301 https://$host:${SSL_REDIRECT_PORT}$request_uri;
         }
 
         include includes/cors.conf;

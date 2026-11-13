@@ -25,6 +25,10 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 VERIFY="${SSL_VERIFY:-off}"
 
+# SSL_VERIFY_DEPTH is substituted into the configuration even when client
+# certificate verification is disabled, so validate it unconditionally.
+check-ssl-client-verify-env depth
+
 case "${VERIFY}" in
     off)
         echo "${0}: client certificate verification disabled"

@@ -220,6 +220,7 @@ ENV \
     SSL_DH_BITS=2048 \
     SSL_OCSP_STAPLING=on \
     SSL_PORT=8443 \
+    SSL_REDIRECT_PORT= \
     SSL_PREFER_CIPHERS=off \
     SSL_PROTOCOLS="TLSv1.2 TLSv1.3" \
     SSL_VERIFY_DEPTH=1 \
@@ -239,7 +240,7 @@ COPY --from=crs_release /opt/owasp-crs /opt/owasp-crs
 COPY src/etc/modsecurity.d/modsecurity.conf /etc/nginx/templates/modsecurity.d/modsecurity.conf.template
 COPY src/etc/modsecurity.d/modsecurity-override.conf /etc/nginx/templates/modsecurity.d/modsecurity-override.conf.template
 COPY src/etc/modsecurity.d/setup.conf /etc/nginx/templates/modsecurity.d/setup.conf.template
-COPY nginx/docker-entrypoint.d/*.sh /docker-entrypoint.d/
+COPY nginx/docker-entrypoint.d/*.sh nginx/docker-entrypoint.d/*.envsh /docker-entrypoint.d/
 COPY src/opt/modsecurity/activate-plugins.sh /docker-entrypoint.d/94-activate-plugins.sh
 COPY src/opt/modsecurity/configure-rules.sh /docker-entrypoint.d/95-configure-rules.sh
 COPY src/opt/modsecurity/configure-rules.*.conf /docker-entrypoint.d/

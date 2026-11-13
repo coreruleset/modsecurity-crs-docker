@@ -5,6 +5,12 @@
 /usr/local/bin/update-proxy-ssl-config /usr/local/apache2
 /usr/local/bin/update-ssl-client-verify-config /usr/local/apache2
 
+# The port used in HTTP -> HTTPS redirects defaults to SSL_PORT. Deployments
+# that publish the TLS listener on a different external port (for example
+# `-p 443:8443`) override it with SSL_REDIRECT_PORT.
+SSL_REDIRECT_PORT="${SSL_REDIRECT_PORT:-${SSL_PORT:-8443}}"
+export SSL_REDIRECT_PORT
+
 /opt/modsecurity/activate-plugins.sh
 /opt/modsecurity/configure-rules.sh
 

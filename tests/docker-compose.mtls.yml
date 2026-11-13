@@ -21,6 +21,9 @@ services:
       BACKEND: http://mtls-backend:8080
       SSL_VERIFY: ${SSL_VERIFY}
       SSL_CLIENT_CA_CERT_FILE: ${MTLS_CERT_DIR}/ca.crt
+      # The TLS listener is published on 8444, so the HTTP -> HTTPS redirect
+      # has to point at that external port instead of SSL_PORT (8443).
+      SSL_REDIRECT_PORT: "8444"
     volumes:
       - ./mtls-certs/ca.crt:${MTLS_CERT_DIR}/ca.crt:ro
     ports:
@@ -36,6 +39,20 @@ services:
     environment:
       BACKEND: http://mtls-backend:8080
       SSL_VERIFY: ${SSL_VERIFY}
+
+  # An invalid SSL_VERIFY_DEPTH must stop the container even when client
+  # certificate verification is disabled: the value is substituted into the
+  # configuration unconditionally.
+  mtls-bad-depth-test:
+    image: ${MTLS_IMAGE}
+    container_name: mtls-bad-depth-test
+    pull_policy: never
+    env_file:
+      - ${MTLS_ENV_FILE}
+    environment:
+      BACKEND: http://mtls-backend:8080
+      SSL_VERIFY: ${MTLS_DISABLED_VERIFY}
+      SSL_VERIFY_DEPTH: not-a-number
 
   mtls-unverified-test:
     image: ${MTLS_IMAGE}

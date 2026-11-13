@@ -281,6 +281,17 @@ jobs:
           docker logs "${TARGET}-mtls-missing-test" || true
           docker logs mtls-backend || true
 
+      - name: Clean up proxy mTLS containers
+        if: ${{ always() && (matrix.target == 'apache-debian-latest' || matrix.target == 'nginx-debian-writable-latest') && matrix.platforms == 'linux/amd64' }}
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          # The containers are kept around for the failure log step above (and
+          # for debugging), so remove them and the network unconditionally.
+          docker rm -f "${TARGET}-mtls-test" "${TARGET}-mtls-missing-test" mtls-backend 2>/dev/null || true
+          docker network rm mtls-net 2>/dev/null || true
+          rm -f proxy.crt proxy.key proxy.csr backend.crt backend.key ca.crt ca.key ca.srl
+
       - name: Checkout CRS
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # ratchet:actions/checkout@v7.0.0
         with:

@@ -6,8 +6,13 @@
 # could break out of the directive they are written to, or that are otherwise
 # invalid.
 #
-# The calling startup script decides whether client certificate verification is
-# enabled at all and only runs these checks in that case.
+# usage: check-ssl-client-verify-env [depth]
+#
+# With the "depth" argument only SSL_VERIFY_DEPTH is validated. It is
+# substituted into the webserver configuration even when client certificate
+# verification is disabled, so the startup scripts have to check it
+# unconditionally. Without arguments all variables are validated; the calling
+# startup script only does that when verification is enabled.
 
 # check_config_value <name> <value>
 check_config_value() {
@@ -23,6 +28,10 @@ case "${SSL_VERIFY_DEPTH-1}" in
         exit 1
         ;;
 esac
+
+if [ "${1:-}" = "depth" ]; then
+    exit 0
+fi
 
 case "${SSL_CLIENT_HEADER_PREFIX-X-SSL-}" in
     '' | *[!A-Za-z0-9_-]*)

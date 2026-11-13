@@ -30,6 +30,10 @@ HEADERS_CONFIG="${PREFIX}/conf/extra/httpd-client-headers.conf"
 
 VERIFY="${SSL_VERIFY:-none}"
 
+# SSL_VERIFY_DEPTH is substituted into the configuration even when client
+# certificate verification is disabled, so validate it unconditionally.
+check-ssl-client-verify-env depth
+
 case "${VERIFY}" in
     none)
         echo "${0}: client certificate verification disabled"

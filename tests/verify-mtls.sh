@@ -50,6 +50,11 @@ Options:
                            https://localhost:8447 in compose mode).
   --off-http-url URL       Plain HTTP base URL of that container (default
                            http://localhost:8094 in compose mode).
+  --redirect-port PORT     Expected port in the HTTP -> HTTPS redirect
+                           (default 8444 in compose mode; any port when unset).
+  --bad-depth-container NAME
+                           Container started with an invalid SSL_VERIFY_DEPTH
+                           that must refuse to start.
   --timeout SECONDS        How long to wait for a container to answer
                            (default 60).
 EOF
@@ -75,6 +80,8 @@ revoked_url=""
 revoked_prefix="X-TLS-"
 off_url=""
 off_http_url=""
+redirect_port=""
+bad_depth_container=""
 timeout=60
 
 # need_value <option> <remaining args>: the option takes a value if there is one
@@ -173,6 +180,16 @@ while [ ${#} -gt 0 ]; do
     off_http_url="${2}"
     shift 2
     ;;
+  --redirect-port)
+    need_value "${1}" "${#}"
+    redirect_port="${2}"
+    shift 2
+    ;;
+  --bad-depth-container)
+    need_value "${1}" "${#}"
+    bad_depth_container="${2}"
+    shift 2
+    ;;
   --timeout)
     need_value "${1}" "${#}"
     timeout="${2}"
@@ -207,6 +224,8 @@ if [ -z "${client_cert}" ] && [ -z "${client_key}" ] && [ -f "${certs_dir}/clien
   revoked_url="${revoked_url:-https://localhost:8446}"
   off_url="${off_url:-https://localhost:8447}"
   off_http_url="${off_http_url:-http://localhost:8094}"
+  redirect_port="${redirect_port:-8444}"
+  bad_depth_container="${bad_depth_container:-mtls-bad-depth-test}"
 fi
 
 url="${url:-https://localhost:8443}"
@@ -235,18 +254,32 @@ status() {
 }
 
 # request_url <target_url> <curl args...>: outcome of a benign request against
-# target_url. Returns the HTTP status code of the response, or "rejected" when
-# the TLS handshake or the request was turned away: httpd fails the handshake
-# outright, while nginx completes the TLS 1.3 handshake and answers the request
-# with 400.
+# target_url. Returns the HTTP status code of the response, "rejected" when the
+# TLS handshake or the request was turned away (httpd fails the handshake
+# outright, while nginx completes the TLS 1.3 handshake and answers with 400),
+# or "error-<curl exit status>" when the request failed for another reason.
+# Only a TLS alert (for example "alert certificate required", "alert unknown
+# ca" or "alert certificate revoked") counts as a rejection, so a missing
+# certificate file, an unreachable container or a timeout fails the check
+# instead of passing as an expected rejection.
 request_url() {
   local target_url="${1}"
   shift
-  local code
-  if ! code="$(curl -sk --connect-timeout 5 --max-time 10 -o /dev/null \
-    -w '%{http_code}' "$@" "${target_url}/" 2>/dev/null)"; then
-    echo "rejected"
-  elif [ "${code}" = "400" ]; then
+  local code rc=0 err="${workdir}/curl.err"
+  code="$(curl -skS --connect-timeout 5 --max-time 10 -o /dev/null \
+    -w '%{http_code}' "$@" "${target_url}/" 2>"${err}")" || rc=$?
+  if [ "${rc}" -ne 0 ]; then
+    if grep -qi 'alert' "${err}"; then
+      echo "rejected"
+      return 0
+    fi
+    printf 'request to %s failed unexpectedly (curl exit status %s):\n' \
+      "${target_url}" "${rc}" >&2
+    sed 's/^/  /' "${err}" >&2
+    echo "error-${rc}"
+    return 0
+  fi
+  if [ "${code}" = "400" ]; then
     echo "rejected"
   else
     echo "${code}"
@@ -303,10 +336,13 @@ wait_for_url() {
   # SECONDS is a bash built-in variable that automatically increments by 1 each
   # second since the shell started.
   local deadline=$((SECONDS + timeout))
+  local outcome
   while [ "${SECONDS}" -lt "${deadline}" ]; do
-    if [ "$(request_url "${target_url}" "$@")" != "rejected" ]; then
-      return 0
-    fi
+    outcome="$(request_url "${target_url}" "$@" 2>/dev/null)"
+    case "${outcome}" in
+      rejected | error-*) ;;
+      *) return 0 ;;
+    esac
     sleep 2
   done
   printf 'Container did not answer within %s seconds\n' "${timeout}" >&2
@@ -354,8 +390,13 @@ if [ -n "${http_url}" ]; then
     "${http_url}/"
   check "plain HTTP request redirects to HTTPS with 301" "301" \
     "$(status "${http_headers}")"
-  check "plain HTTP redirect includes the HTTPS port" "yes" \
-    "$(grep -qiE '^location: https://[^/]*:[0-9]+/' "${http_headers}" && echo yes || echo no)"
+  if [ -n "${redirect_port}" ]; then
+    check "plain HTTP redirect uses the configured redirect port" "yes" \
+      "$(grep -qiE "^location: https://[^/]*:${redirect_port}/" "${http_headers}" && echo yes || echo no)"
+  else
+    check "plain HTTP redirect includes the HTTPS port" "yes" \
+      "$(grep -qiE '^location: https://[^/]*:[0-9]+/' "${http_headers}" && echo yes || echo no)"
+  fi
 fi
 
 printf '\n### mutual TLS: request filtering ###\n'
@@ -426,6 +467,18 @@ if [ -n "${noca_container}" ]; then
     "$(docker logs "${noca_container}" 2>&1 | grep -q "requires SSL_CLIENT_CA_CERT_FILE" && echo yes || echo no)"
 fi
 
+if [ -n "${bad_depth_container}" ]; then
+  printf '\n### mutual TLS: invalid verification depth refusal ###\n'
+
+  wait_for_exit "${bad_depth_container}"
+  check "container with an invalid SSL_VERIFY_DEPTH stops" "false" \
+    "$(docker inspect -f '{{.State.Running}}' "${bad_depth_container}")"
+  check "container with an invalid SSL_VERIFY_DEPTH exits non-zero" "yes" \
+    "$([ "$(docker inspect -f '{{.State.ExitCode}}' "${bad_depth_container}")" != "0" ] && echo yes || echo no)"
+  check "container logs invalid SSL_VERIFY_DEPTH error" "yes" \
+    "$(docker logs "${bad_depth_container}" 2>&1 | grep -q "invalid SSL_VERIFY_DEPTH" && echo yes || echo no)"
+fi
+
 if [ -n "${unverified_url}" ]; then
   printf '\n### mutual TLS: unverified client certificates (optional_no_ca) ###\n'
 
@@ -435,6 +488,8 @@ if [ -n "${unverified_url}" ]; then
     "$(request_url "${unverified_url}" --cert "${selfsigned_cert}" --key "${selfsigned_key}")"
 
   delta="$(inspect "${unverified_url}" --cert "${selfsigned_cert}" --key "${selfsigned_key}")"
+  check "unverified certificate request reaches the backend" "yes" \
+    "$(grep -qi "inspection request" <<< "${delta}" && echo yes || echo no)"
   check "claimed DN of unverified certificate is not forwarded" "no" \
     "$(grep -qiF "request.headers.${header_prefix}Client-DN=" <<< "${delta}" && echo yes || echo no)"
   check "verification result of unverified certificate is forwarded" "yes" \
@@ -447,6 +502,8 @@ if [ -n "${unverified_url}" ]; then
   delta="$(inspect "${unverified_url}" \
     -H "${header_prefix}Client-DN: CN=forged-dn" \
     -H "${header_prefix}Client-Verify: forged-verify")"
+  check "no-certificate request reaches the backend under optional_no_ca" "yes" \
+    "$(grep -qi "inspection request" <<< "${delta}" && echo yes || echo no)"
   check "forged identity headers are not forwarded without a certificate" "no" \
     "$(grep -qiF "forged" <<< "${delta}" && echo yes || echo no)"
 fi
