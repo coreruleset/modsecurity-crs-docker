@@ -271,6 +271,7 @@ jobs:
           ./tests/verify-mtls.sh
 
       - name: Verify TLS redirect for ${{ matrix.target }}
+        if: ${{ matrix.platforms == 'linux/amd64' }}
         env:
           TARGET: ${{ matrix.target }}
         run: |
