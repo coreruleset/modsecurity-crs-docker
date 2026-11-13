@@ -307,7 +307,7 @@ inspect() {
   before="$(backend_lines)"
   curl -sk --connect-timeout 5 --max-time 10 -o /dev/null "$@" "${target_url}/inspect"
   local attempt
-  for attempt in 1 2 3 4 5 6 7 8 9 10; do
+  for attempt in {1..10}; do
     delta="$(docker logs "${backend_container}" 2>&1 | tail -n +$((before + 1)))"
     if grep -qi "inspection request" <<< "${delta}"; then
       break

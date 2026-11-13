@@ -196,7 +196,7 @@ Previously, nginx's default `port_in_redirect on` caused the internal listening 
 
 With `port_in_redirect off` (the default), nginx omits the port from redirect URLs, so clients follow redirects using the correct external port. **If you relied on the port being included in nginx-generated redirects, set `NGINX_PORT_IN_REDIRECT=on`.**
 
-The explicit HTTP to HTTPS redirect (emitted when `SSL_VERIFY` is enabled or `NGINX_ALWAYS_TLS_REDIRECT=on`) is not affected by `port_in_redirect`; it uses `SSL_REDIRECT_PORT`, which defaults to `SSL_PORT`. Set `SSL_REDIRECT_PORT` to the externally reachable TLS port when it differs from `SSL_PORT` (for example `SSL_REDIRECT_PORT=443` with `-p 443:8443`).
+The explicit HTTP to HTTPS redirect (emitted when `SSL_VERIFY` is enabled or `*_ALWAYS_TLS_REDIRECT=on`) is not affected by `port_in_redirect`; it uses `SSL_REDIRECT_PORT`, which defaults to `SSL_PORT`. Set `SSL_REDIRECT_PORT` to the externally reachable TLS port when it differs from `SSL_PORT` (for example `SSL_REDIRECT_PORT=443` with `-p 443:8443`).
 
 ### Common ENV Variables
 
