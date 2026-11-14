@@ -12,11 +12,31 @@ map $http_upgrade $connection_upgrade {
     '' close;
 }
 
+# ${SSL_CLIENT_HEADER_PREFIX}Client-Verify is forwarded whenever the client
+# presented a certificate; ${SSL_CLIENT_HEADER_PREFIX}Client-DN only when the
+# certificate verified successfully (${SSL_CLIENT_HEADER_PREFIX}Client-Verify:
+# SUCCESS): the claimed subject of a certificate accepted without verification
+# (optional_no_ca) is not an identity. proxy_set_header drops headers with an
+# empty value, which also keeps both headers out of requests without a client
+# certificate and replaces client-supplied ones. Keying on the verification
+# result (instead of the subject DN) also covers valid certificates with an
+# empty subject DN.
+map $ssl_client_verify $ssl_client_verify_header {
+    NONE    "";
+    default $ssl_client_verify;
+}
+
+map $ssl_client_verify $ssl_client_dn_header {
+    SUCCESS $ssl_client_s_dn;
+    default "";
+}
+
 server {
     listen ${PORT} default_server;
 
     server_name ${SERVER_NAME};
     set $always_redirect ${NGINX_ALWAYS_TLS_REDIRECT};
+    set $ssl_verify ${SSL_VERIFY};
 
     PROXY_SSL_CONFIG
 
@@ -24,7 +44,10 @@ server {
         client_max_body_size 0;
 
         if ($always_redirect = on) {
-            return 301 https://$host$request_uri;
+            return 301 https://$host:${SSL_REDIRECT_PORT}$request_uri;
+        }
+        if ($ssl_verify != off) {
+            return 301 https://$host:${SSL_REDIRECT_PORT}$request_uri;
         }
 
         include includes/cors.conf;
@@ -61,6 +84,8 @@ server {
 
     ssl_verify_client ${SSL_VERIFY};
     ssl_verify_depth ${SSL_VERIFY_DEPTH};
+
+    include includes/client_ca.conf;
 
     PROXY_SSL_CONFIG
 

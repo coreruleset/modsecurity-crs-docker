@@ -258,6 +258,18 @@ jobs:
           docker network rm mtls-net
           rm -f proxy.crt proxy.key proxy.csr backend.crt backend.key ca.crt ca.key ca.srl
 
+      - name: Verify server-side mTLS opt-in
+        if: ${{ (matrix.target == 'apache-debian-latest' || matrix.target == 'nginx-debian-writable-latest') && matrix.platforms == 'linux/amd64' }}
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          # Print the compose logs before tearing the stack down so a failing
+          # assertion still leaves diagnostics in the job output.
+          trap '_rc=$?; if [ "${_rc}" -ne 0 ]; then docker compose -f tests/docker-compose.mtls.yml logs || true; fi; docker compose -f tests/docker-compose.mtls.yml down -vt 0; rm -rf tests/mtls-certs tests/.env' EXIT
+          ./tests/setup-mtls.sh "${TARGET}"
+          docker compose -f tests/docker-compose.mtls.yml up -d
+          ./tests/verify-mtls.sh
+
       - name: Container logs
         if: failure()
         env:
@@ -268,6 +280,17 @@ jobs:
           docker logs "${TARGET}-mtls-test" || true
           docker logs "${TARGET}-mtls-missing-test" || true
           docker logs mtls-backend || true
+
+      - name: Clean up proxy mTLS containers
+        if: ${{ always() && (matrix.target == 'apache-debian-latest' || matrix.target == 'nginx-debian-writable-latest') && matrix.platforms == 'linux/amd64' }}
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          # The containers are kept around for the failure log step above (and
+          # for debugging), so remove them and the network unconditionally.
+          docker rm -f "${TARGET}-mtls-test" "${TARGET}-mtls-missing-test" mtls-backend 2>/dev/null || true
+          docker network rm mtls-net 2>/dev/null || true
+          rm -f proxy.crt proxy.key proxy.csr backend.crt backend.key ca.crt ca.key ca.srl
 
       - name: Checkout CRS
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # ratchet:actions/checkout@v7.0.0

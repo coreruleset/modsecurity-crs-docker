@@ -1,0 +1,110 @@
+# Docker Compose setup for server-side mutual TLS (client certificate
+# verification) tests. Run `./tests/setup-mtls.sh <target>` first to generate
+# `tests/mtls-certs/` and `tests/.env`.
+services:
+  # Albedo is the CRS test backend. It logs the request headers it receives on
+  # /inspect (used by tests/verify-mtls.sh to verify the forwarded client
+  # identity) and returns configurable responses.
+  mtls-backend:
+    image: ghcr.io/coreruleset/albedo:0.3.0@sha256:843ed01d28f48b594dcc0278ea9403175a0bf40ec065432040b796f589e89507
+    container_name: mtls-backend
+
+  mtls-test:
+    image: ${MTLS_IMAGE}
+    container_name: mtls-test
+    pull_policy: never
+    depends_on:
+      - mtls-backend
+    env_file:
+      - ${MTLS_ENV_FILE}
+    environment:
+      BACKEND: http://mtls-backend:8080
+      SSL_VERIFY: ${SSL_VERIFY}
+      SSL_CLIENT_CA_CERT_FILE: ${MTLS_CERT_DIR}/ca.crt
+      # The TLS listener is published on 8444, so the HTTP -> HTTPS redirect
+      # has to point at that external port instead of SSL_PORT (8443).
+      SSL_REDIRECT_PORT: "8444"
+    volumes:
+      - ./mtls-certs/ca.crt:${MTLS_CERT_DIR}/ca.crt:ro
+    ports:
+      - "8091:8080"
+      - "8444:8443"
+
+  mtls-noca-test:
+    image: ${MTLS_IMAGE}
+    container_name: mtls-noca-test
+    pull_policy: never
+    env_file:
+      - ${MTLS_ENV_FILE}
+    environment:
+      BACKEND: http://mtls-backend:8080
+      SSL_VERIFY: ${SSL_VERIFY}
+
+  # An invalid SSL_VERIFY_DEPTH must stop the container even when client
+  # certificate verification is disabled: the value is substituted into the
+  # configuration unconditionally.
+  mtls-bad-depth-test:
+    image: ${MTLS_IMAGE}
+    container_name: mtls-bad-depth-test
+    pull_policy: never
+    env_file:
+      - ${MTLS_ENV_FILE}
+    environment:
+      BACKEND: http://mtls-backend:8080
+      SSL_VERIFY: ${MTLS_DISABLED_VERIFY}
+      SSL_VERIFY_DEPTH: not-a-number
+
+  mtls-unverified-test:
+    image: ${MTLS_IMAGE}
+    container_name: mtls-unverified-test
+    pull_policy: never
+    depends_on:
+      - mtls-backend
+    env_file:
+      - ${MTLS_ENV_FILE}
+    environment:
+      BACKEND: http://mtls-backend:8080
+      SSL_VERIFY: optional_no_ca
+    ports:
+      - "8092:8080"
+      - "8445:8443"
+
+  mtls-revoked-test:
+    image: ${MTLS_IMAGE}
+    container_name: mtls-revoked-test
+    pull_policy: never
+    depends_on:
+      - mtls-backend
+    env_file:
+      - ${MTLS_ENV_FILE}
+    environment:
+      BACKEND: http://mtls-backend:8080
+      SSL_VERIFY: ${SSL_VERIFY}
+      SSL_CLIENT_CA_CERT_FILE: ${MTLS_CERT_DIR}/ca.crt
+      # SSL_CLIENT_CA_REVOCATION_CHECK is deliberately left unset to verify
+      # that a configured revocation file defaults the check to chain.
+      SSL_CLIENT_CA_REVOCATION_FILE: ${MTLS_CERT_DIR}/ca.crl
+      SSL_CLIENT_HEADER_PREFIX: X-TLS-
+    volumes:
+      - ./mtls-certs/ca.crt:${MTLS_CERT_DIR}/ca.crt:ro
+      - ./mtls-certs/ca.crl:${MTLS_CERT_DIR}/ca.crl:ro
+    ports:
+      - "8093:8080"
+      - "8446:8443"
+
+  # Client certificate verification disabled: client-supplied identity headers
+  # must pass through untouched and plain HTTP must keep being proxied.
+  mtls-off-test:
+    image: ${MTLS_IMAGE}
+    container_name: mtls-off-test
+    pull_policy: never
+    depends_on:
+      - mtls-backend
+    env_file:
+      - ${MTLS_ENV_FILE}
+    environment:
+      BACKEND: http://mtls-backend:8080
+      SSL_VERIFY: ${MTLS_DISABLED_VERIFY}
+    ports:
+      - "8094:8080"
+      - "8447:8443"

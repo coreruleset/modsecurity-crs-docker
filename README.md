@@ -196,6 +196,8 @@ Previously, nginx's default `port_in_redirect on` caused the internal listening 
 
 With `port_in_redirect off` (the default), nginx omits the port from redirect URLs, so clients follow redirects using the correct external port. **If you relied on the port being included in nginx-generated redirects, set `NGINX_PORT_IN_REDIRECT=on`.**
 
+The explicit HTTP to HTTPS redirect (emitted when `SSL_VERIFY` is enabled or `*_ALWAYS_TLS_REDIRECT=on`) is not affected by `port_in_redirect`; it uses `SSL_REDIRECT_PORT`, which defaults to `SSL_PORT`. Set `SSL_REDIRECT_PORT` to the externally reachable TLS port when it differs from `SSL_PORT` (for example `SSL_REDIRECT_PORT=443` with `-p 443:8443`).
+
 ### Common ENV Variables
 
 These variables are common to image variants and will set defaults based on the image name.
@@ -221,14 +223,22 @@ These variables are common to image variants and will set defaults based on the 
 | SSL_CERT_FILE | A string indicating the path to the PEM-encoded X.509 certificate data file or token identifier of the proxied server | `/usr/local/apache2/conf/server.crt` | `/etc/nginx/conf/server.crt` |
 | SSL_CERT_KEY_FILE | A string indicating the path to the PEM-encoded private key file of the proxied server | `/usr/local/apache2/conf/server.key` | `/etc/nginx/conf/server.key` |
 | SSL_CIPHERS| A string indicating the cipher suite for incoming TLS connections | `"ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384"` | - |
+| SSL_CLIENT_CA_CERT_FILE | A string indicating the path to the PEM-encoded list of accepted CA certificates used to verify TLS client certificates ([mutual TLS](https://en.wikipedia.org/wiki/Mutual_authentication)). Required when `SSL_VERIFY` is set to anything other than `none` / `off`, except for `optional_no_ca` | `/usr/local/apache2/conf/ca.crt` | `/etc/nginx/ssl/ca.crt` |
+| SSL_CLIENT_CA_REVOCATION_CHECK | A string indicating if and how TLS client certificates are checked against CRLs (see [SSLCARevocationCheck](https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslcarevocationcheck) on httpd and [ssl_crl](https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_crl) on nginx). Requires `SSL_CLIENT_CA_REVOCATION_FILE`, and when a revocation file is configured the check defaults to `chain` instead of `none`, so a configured CRL is never left unused. Allowed values differ: `none`, `leaf`, `chain` on httpd and `none`, `chain` on nginx (nginx's `ssl_crl` always checks the whole certificate chain and refuses `leaf`) | `none` | `none` |
+| SSL_CLIENT_CA_REVOCATION_FILE | A string indicating the path to the PEM-encoded list of CRLs used to check TLS client certificates for revocation (see [SSLCARevocationFile](https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslcarevocationfile) on httpd and [ssl_crl](https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_crl) on nginx). Configuring it enables revocation checking (see `SSL_CLIENT_CA_REVOCATION_CHECK`) | - | - |
+| SSL_CLIENT_HEADER_PREFIX | Prefix for the request headers forwarding the TLS client certificate subject DN (`${SSL_CLIENT_HEADER_PREFIX}Client-DN`) and verification result (`${SSL_CLIENT_HEADER_PREFIX}Client-Verify`) to the backend. The headers are only modified while client certificate verification is enabled; otherwise client-supplied values pass through | `X-SSL-` | `X-SSL-` |
+| SSL_CLIENT_OCSP | A string enabling OCSP validation of the TLS client certificate chain (see [SSLOCSPEnable](https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslocspenable)). nginx has no equivalent and ignores it. (Allowed values: `off`, `on`, `leaf`. Default: `off`) | `off` | - |
 | SSL_OCSP_STAPLING | Enable / disable OCSP stapling | `On` | `on` |
 | SSL_PROTOCOLS | TLS protocols to enable for the connection to the backend | `"all -SSLv3 -TLSv1 -TLSv1.1"` | `TLSv1.2 TLSv1.3` |
+| SSL_REDIRECT_PORT | Port used in the HTTP to HTTPS redirect (`Location: https://<host>:<port>`) when `SSL_VERIFY` is enabled or `*_ALWAYS_TLS_REDIRECT` is `on`. Defaults to `SSL_PORT`; set it when the TLS listener is reachable on a different external port (port mapping or load balancer), for example `SSL_REDIRECT_PORT=443` with `-p 443:8443` | `SSL_PORT` | `SSL_PORT` |
+| SSL_VERIFY | A string value indicating if the client certificates have to be verified. Maps to `SSLVerifyClient` (httpd) and `ssl_verify_client` (nginx), so the allowed values differ: `none`, `optional`, `require`, `optional_no_ca` on httpd and `off`, `optional`, `optional_no_ca`, `on` on nginx. Enabling it (any value other than `none` / `off`) requires TLS (`SSL_ENGINE=on` on httpd) and automatically enables the 301 redirect from HTTP (`PORT`) to HTTPS (`SSL_REDIRECT_PORT`, defaults to `SSL_PORT`). Unless the value is `none` / `off` or `optional_no_ca`, `SSL_CLIENT_CA_CERT_FILE` has to name a readable file, otherwise the container refuses to start | `none` | `off` |
+| SSL_VERIFY_DEPTH | An integer value indicating the verification depth for the client certificate chain | `1` | - |
 
 ### Apache ENV Variables
 
 | Name     | Description|
 | -------- | ------------------------------------------------------------------- |
-| APACHE_ALWAYS_TLS_REDIRECT | A string value indicating if http should redirect to https (Allowed values: `on`, `off`. Default: `off`) |
+| APACHE_ALWAYS_TLS_REDIRECT | A string value indicating if http should redirect to https (to `https://<host>:<SSL_REDIRECT_PORT>`, which defaults to `SSL_PORT`); also enabled automatically when `SSL_VERIFY` is not `none` (Allowed values: `on`, `off`. Default: `off`) |
 | APACHE_ERRORLOG_FORMAT | A string value indicating the `ErrorLogFormat` that Apache should use. (Default: `'"[%{u}t] [%-m:%l] [pid %P:tid %T] %7F: %E: [client\ %a] %M% ,\ referer\ %{Referer}i"'` |
 | APACHE_LOGFORMAT | A string value indicating the LogFormat that apache should use. (Default: `'"%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""'` (combined). Tip: use single quotes outside your double quoted format string.) ⚠️ Do not add a `|` as part of the log format. It is used internally. ℹ️ See also `USE_FOLINIS_MODSEC_LOGFORMAT`. |
 | APACHE_METRICS_LOGFORMAT | A string value indicating the LogFormat that the additional log apache metrics should use. (Default:'"%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""' (combined). Tip: use single quotes outside your double quoted format string.) ⚠️ Do not add a `|` as part of the log format. It is used internally.  |
@@ -277,7 +287,7 @@ These variables are common to image variants and will set defaults based on the 
 | HTTP3 | A string value indicating whether HTTP/3 (QUIC) should be enabled on `SSL_PORT` (Allowed values: `on`, `off`. Default: `off`). This is independent of HTTP/2: enabling `HTTP3` does not enable HTTP/2, and `HTTP2=off` still disables HTTP/2 over TCP regardless of this setting. See `HTTP2` to control HTTP/2. QUIC runs over UDP, so the container's `SSL_PORT` must also be published as a UDP port (e.g. `-p 8443:8443/udp`) for clients to reach it. |
 | HTTP3_ALT_SVC_PORT | The port advertised in the `Alt-Svc` response header for HTTP/3 clients, only used when `HTTP3=on` (Default: `SSL_PORT`). Set this when the externally reachable port differs from `SSL_PORT` (e.g. behind port remapping such as `-p 8444:8443/udp`), so clients are told the correct port to reach HTTP/3 on. |
 | KEEPALIVE_TIMEOUT  | Number of seconds for a keep-alive client connection to stay open on the server side (Default: `60s`) |
-| NGINX_ALWAYS_TLS_REDIRECT | A string value indicating if http should redirect to https (Allowed values: `on`, `off`. Default: `off`) |
+| NGINX_ALWAYS_TLS_REDIRECT | A string value indicating if http should redirect to https (to `https://<host>:<SSL_REDIRECT_PORT>`, which defaults to `SSL_PORT`); also enabled automatically when `SSL_VERIFY` is not `off` (Allowed values: `on`, `off`. Default: `off`) |
 | NGINX_PORT_IN_REDIRECT | Controls nginx's [`port_in_redirect`](https://nginx.org/en/docs/http/ngx_http_core_module.html#port_in_redirect) directive in the `http` block. When `off`, nginx omits the internal port (e.g., `8080`) from redirect URLs — correct for most reverse-proxy deployments. Set to `on` only if you need nginx to include its listening port in redirects. (Allowed values: `on`, `off`. Default: `off`) |
 | NGINX_WORKER_PROCESSES | Controls nginx's [`worker_processes`](https://nginx.org/en/docs/ngx_core_module.html#worker_processes) directive. Set to `1` to avoid out-of-order log entries when relying on log markers for testing. (Default: `auto`) |
 | NGINX_X_FORWARDED_PORT | A string indicating the port of the initial request, sent as the `X-Forwarded-Port` header to the upstream backend. Can be set to a fixed port (e.g., `443`) when the container is behind a reverse proxy. (Default: `$server_port`) |
@@ -296,8 +306,6 @@ These variables are common to image variants and will set defaults based on the 
 | SSL_DH_BITS | A numeric value indicating the size (in bits) to use for the generated DH-params file (Default 2048) |
 | SSL_PORT | Port number where the SSL enabled webserver is listening | `8443` | We run as unprivileged user. |
 | SSL_PREFER_CIPHERS | A string value indicating if the server ciphers should be preferred over client ciphers when using the SSLv3 and TLS protocols (Allowed values: `on`, `off`. Default: `off`)|
-| SSL_VERIFY  | A string value indicating if the client certificates should be verified (Allowed values: `on`, `off`. Default: `off`) |
-| SSL_VERIFY_DEPTH  | An integer value indicating the verification depth for the client certificate chain (Default: `1`) |
 | WORKER_CONNECTIONS  | Maximum number of simultaneous connections that can be opened by a worker process (Default: `1024`) |
 
 ### Openresty ENV Variables
@@ -395,6 +403,64 @@ TLS is configured on port `8443` and enabled by default.
 We use sane intermediate defaults taken from the [Mozilla SSL config tool](https://ssl-config.mozilla.org/). Please review the defaults and choose the ones that best match your needs.
 
 You can set the `*_ALWAYS_TLS_REDIRECT` environment variables to always redirect from `http` to `https`.
+
+## Mutual TLS with clients
+
+TLS client certificate verification (mutual TLS) makes clients authenticate against a CA you control before their request is inspected and proxied. It is configured through `SSL_VERIFY` and `SSL_CLIENT_CA_CERT_FILE`; `SSL_VERIFY` maps directly to `SSLVerifyClient` (httpd) and `ssl_verify_client` (nginx), so the allowed values differ per variant:
+
+| Setting | httpd | nginx |
+| -- | -- | -- |
+| `SSL_VERIFY` | `none`, `optional`, `require`, `optional_no_ca` | `off`, `optional`, `optional_no_ca`, `on` |
+| require a valid client certificate | `SSL_VERIFY=require` | `SSL_VERIFY=on` |
+| accept a certificate without verifying it | `SSL_VERIFY=optional_no_ca` | `SSL_VERIFY=optional_no_ca` |
+
+> [!WARNING]
+> **Breaking change for existing users of `SSL_VERIFY`:**
+>
+> - Enabling client certificate verification (any value other than `none` / `off`) now requires `SSL_CLIENT_CA_CERT_FILE` to name a readable file on both variants. On nginx, configurations that provided the CA through a custom `ssl_client_certificate` include have to set `SSL_CLIENT_CA_CERT_FILE` instead (or mount the CA at its default path, `/etc/nginx/ssl/ca.crt`); the container refuses to start until the CA is available.
+> - While `SSL_VERIFY` is enabled, the plain HTTP listener always redirects to HTTPS (with a `301` response to `https://<host>:<SSL_REDIRECT_PORT>`), so requests cannot bypass client certificate verification over HTTP. `SSL_REDIRECT_PORT` defaults to `SSL_PORT`; set it when the TLS listener is reachable on a different external port (for example `SSL_REDIRECT_PORT=443` with `-p 443:8443`, or behind a load balancer). Deployments that must keep serving plain HTTP need to disable `SSL_VERIFY` and terminate TLS (including client certificate verification) in front of the container.
+>
+> Both changes only take effect while `SSL_VERIFY` is enabled. With client certificate verification disabled, the identity headers and the plain HTTP listener behave as before.
+
+Generate a CA and a client certificate, mount the CA bundle into the container, and require the certificate (the mount paths below are the defaults of `SSL_CLIENT_CA_CERT_FILE`):
+
+```bash
+openssl req -x509 -newkey rsa:2048 -nodes -days 365 \
+   -keyout ca.key -out ca.crt -subj "/CN=my-ca"
+openssl req -newkey rsa:2048 -nodes \
+   -keyout client.key -out client.csr -subj "/CN=my-client"
+openssl x509 -req -days 365 -in client.csr -CA ca.crt -CAkey ca.key \
+   -CAcreateserial -out client.crt
+
+# Apache
+docker run -p 8443:8443 \
+   -e SSL_VERIFY=require \
+   -v ./ca.crt:/usr/local/apache2/conf/ca.crt:ro \
+   owasp/modsecurity-crs:apache
+
+# nginx
+docker run -p 8443:8443 \
+   -e SSL_VERIFY=on \
+   -v ./ca.crt:/etc/nginx/ssl/ca.crt:ro \
+   owasp/modsecurity-crs:nginx
+
+curl --insecure --cert client.crt --key client.key https://localhost:8443/
+```
+
+> [!NOTE]
+> Enabling `SSL_VERIFY` (any value other than `none` / `off`) requires TLS (`SSL_ENGINE=on` on httpd, which is the default) and automatically enables a `301` redirect from the plain HTTP listener (`PORT`) to the HTTPS endpoint (`SSL_PORT`), so unauthenticated HTTP requests cannot bypass client certificate verification.
+>
+> With any `SSL_VERIFY` value other than `none` / `off`, `SSL_CLIENT_CA_CERT_FILE` has to name a readable file: the container refuses to start otherwise, because falling back silently would accept unauthenticated clients. The exception is `optional_no_ca`, which accepts client certificates without verifying them and does not need a CA. The mounted files have to be readable by the unprivileged user the container runs as.
+>
+> `--insecure` is only needed for this example because the image generated a self-signed server certificate on first run; real clients must validate the server certificate instead (e.g. `curl --cacert ...`).
+>
+> Do not mount the CA bundle into `${NGINX_HOME}/conf` on nginx images: that directory is where the server certificate is generated at startup, and when Docker creates it for the mount it does so as root, which the unprivileged user cannot write to. The default `/etc/nginx/ssl/ca.crt` is safe.
+>
+> Both the client ↔ WAF connection and the connection to the backend are configured independently: `SSL_VERIFY` and `SSL_CLIENT_CA_CERT_FILE` cover the client ↔ WAF connection, the `PROXY_SSL*` variables the WAF ↔ backend connection.
+
+**Forwarding the client identity**: when a client presents a certificate, the proxy sends its subject DN and the verification result to the backend in the `${SSL_CLIENT_HEADER_PREFIX}Client-DN` and `${SSL_CLIENT_HEADER_PREFIX}Client-Verify` request headers (`SSL_CLIENT_HEADER_PREFIX` defaults to `X-SSL-`, yielding `X-SSL-Client-DN` and `X-SSL-Client-Verify`). `${SSL_CLIENT_HEADER_PREFIX}Client-DN` is only forwarded when the certificate verified successfully (`${SSL_CLIENT_HEADER_PREFIX}Client-Verify: SUCCESS`): the claimed subject of a certificate that was accepted without verification (`optional_no_ca`, reported as `GENEROUS` on httpd and `FAILED:...` on nginx) is not forwarded as an identity. Without a client certificate the headers are not sent, and client-supplied `${SSL_CLIENT_HEADER_PREFIX}Client-*` headers are removed before forwarding, so the forwarded identity cannot be forged. These headers are only touched while client certificate verification is enabled; with `SSL_VERIFY` disabled, client-supplied values pass through unchanged (e.g. when another proxy in front of the container already performs client certificate verification).
+
+**Revocation**: set `SSL_CLIENT_CA_REVOCATION_FILE` to a PEM-encoded CRL bundle to reject revoked client certificates on both variants (httpd [`SSLCARevocationFile`](https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslcarevocationfile), nginx [`ssl_crl`](https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_crl)). A configured revocation file always enables checking: `SSL_CLIENT_CA_REVOCATION_CHECK` selects the mode and defaults to `chain`, which checks the whole certificate chain; `leaf` limits the check to the client certificate itself and is httpd only, since nginx's `ssl_crl` always checks the whole chain. Selecting a mode without a revocation file makes the container refuse to start. On httpd, `SSL_CLIENT_OCSP=on` additionally validates the client certificate chain through OCSP.
 
 ## Proxy Configuration
 

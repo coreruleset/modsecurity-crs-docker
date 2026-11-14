@@ -213,9 +213,14 @@ ENV \
     SSL_CERT_FILE=/etc/nginx/conf/server.crt \
     SSL_CERT_KEY_FILE=/etc/nginx/conf/server.key \
     SSL_CIPHERS="ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384" \
+    SSL_CLIENT_CA_CERT_FILE=/etc/nginx/ssl/ca.crt \
+    SSL_CLIENT_CA_REVOCATION_CHECK=none \
+    SSL_CLIENT_CA_REVOCATION_FILE= \
+    SSL_CLIENT_HEADER_PREFIX=X-SSL- \
     SSL_DH_BITS=2048 \
     SSL_OCSP_STAPLING=on \
     SSL_PORT=8443 \
+    SSL_REDIRECT_PORT= \
     SSL_PREFER_CIPHERS=off \
     SSL_PROTOCOLS="TLSv1.2 TLSv1.3" \
     SSL_VERIFY_DEPTH=1 \
@@ -234,7 +239,7 @@ COPY --from=crs_release /opt/owasp-crs /opt/owasp-crs
 COPY src/etc/modsecurity.d/modsecurity.conf /etc/nginx/templates/modsecurity.d/modsecurity.conf.template
 COPY src/etc/modsecurity.d/modsecurity-override.conf /etc/nginx/templates/modsecurity.d/modsecurity-override.conf.template
 COPY src/etc/modsecurity.d/setup.conf /etc/nginx/templates/modsecurity.d/setup.conf.template
-COPY nginx/docker-entrypoint.d/*.sh /docker-entrypoint.d/
+COPY nginx/docker-entrypoint.d/*.sh nginx/docker-entrypoint.d/*.envsh /docker-entrypoint.d/
 COPY src/opt/modsecurity/activate-plugins.sh /docker-entrypoint.d/94-activate-plugins.sh
 COPY src/opt/modsecurity/configure-rules.sh /docker-entrypoint.d/95-configure-rules.sh
 COPY src/opt/modsecurity/configure-rules.*.conf /docker-entrypoint.d/
