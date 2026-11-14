@@ -402,7 +402,7 @@ TLS is configured on port `8443` and enabled by default.
 
 We use sane intermediate defaults taken from the [Mozilla SSL config tool](https://ssl-config.mozilla.org/). Please review the defaults and choose the ones that best match your needs.
 
-You can set the `*_ALWAYS_TLS_REDIRECT` environment variables to always redirect from `http` to `https`.
+You can set the `*_ALWAYS_TLS_REDIRECT` environment variables to always redirect from `http` to `https`. Requests to `/.well-known/acme-challenge/` are never redirected, so that ACME clients (e.g., Let's Encrypt HTTP-01 validation) keep working. They are forwarded to `BACKEND` like any other request, using the protocol configured there, so `BACKEND` has to serve the challenge token; the container does not answer them itself.
 
 ## Mutual TLS with clients
 

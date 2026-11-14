@@ -99,6 +99,17 @@
       ]
     },
     {
+      "description": "Test script: Albedo backend",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^tests/verify-image\\.sh$/"
+      ],
+      "matchStrings": [
+        "(?<depName>ghcr\\.io/coreruleset/albedo):(?<currentValue>[^@\\s]+)@(?<currentDigest>sha256:[a-f0-9]+)"
+      ],
+      "datasourceTemplate": "docker"
+    },
+    {
       "description": "Docs: nginx",
       "customType": "regex",
       "managerFilePatterns": [
