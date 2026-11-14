@@ -72,11 +72,9 @@ if [ -n "${target}" ]; then
     cert_dir="/usr/local/apache2/conf"
   fi
 
-  env_file="../${target}.env"
-  if [ ! -f "${script_dir}/${env_file}" ]; then
-    touch "${certs_dir}/empty.env"
-    env_file="./mtls-certs/empty.env"
-  fi
+  # Kept next to the certificates, which are removed together with it
+  "${script_dir}/write-target-env.sh" "${target}" "${certs_dir}/target.env"
+  env_file="./mtls-certs/target.env"
 
   cat > "${script_dir}/.env" <<EOF
 MTLS_IMAGE=${MTLS_IMAGE:-${target}-verification}
