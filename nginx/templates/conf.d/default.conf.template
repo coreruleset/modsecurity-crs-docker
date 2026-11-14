@@ -58,12 +58,17 @@ map $uri $redirect_to_tls {
     ~^/\.well-known/acme-challenge/ off;
 }
 
+# The redirect that SSL_VERIFY turns on gets the same exemption
+map $uri $redirect_for_ssl_verify {
+    default ${SSL_VERIFY};
+    ~^/\.well-known/acme-challenge/ off;
+}
+
 server {
     listen ${PORT} default_server;
 
     server_name ${SERVER_NAME};
     set $always_redirect ${NGINX_ALWAYS_TLS_REDIRECT};
-    set $ssl_verify ${SSL_VERIFY};
 
     PROXY_SSL_CONFIG
 
@@ -73,7 +78,7 @@ server {
         if ($redirect_to_tls = on) {
             return 301 https://$host:${SSL_REDIRECT_PORT}$request_uri;
         }
-        if ($ssl_verify != off) {
+        if ($redirect_for_ssl_verify != off) {
             return 301 https://$host:${SSL_REDIRECT_PORT}$request_uri;
         }
 

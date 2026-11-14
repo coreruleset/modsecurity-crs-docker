@@ -28,6 +28,10 @@ Options:
                          to https for regular requests but none for ACME HTTP-01
                          challenges, which have to reach the backend unchanged.
                          The containers are removed afterwards; --url is ignored.
+  --tls-redirect-trigger always|ssl-verify
+                         What turns the redirect on for --tls-redirect-image:
+                         the always-TLS-redirect option (default) or
+                         SSL_VERIFY=optional_no_ca.
   --timeout SECONDS      How long to wait for the container to answer
                          (default 60).
 EOF
@@ -38,6 +42,7 @@ url="http://localhost:8080"
 tls_url="https://localhost:8443"
 expect_h3_port=""
 tls_redirect_image=""
+tls_redirect_trigger="always"
 timeout=60
 
 # Backend of the TLS redirect test
@@ -79,6 +84,11 @@ while [ ${#} -gt 0 ]; do
     tls_redirect_image="${2}"
     shift 2
     ;;
+  --tls-redirect-trigger)
+    need_value "${1}" "${#}"
+    tls_redirect_trigger="${2}"
+    shift 2
+    ;;
   --timeout)
     need_value "${1}" "${#}"
     timeout="${2}"
@@ -105,6 +115,14 @@ nginx | apache) ;;
   ;;
 *)
   printf 'Unknown variant: %s (expected nginx or apache)\n' "${variant}" >&2
+  exit 2
+  ;;
+esac
+
+case "${tls_redirect_trigger}" in
+always | ssl-verify) ;;
+*)
+  printf 'Unknown --tls-redirect-trigger: %s (expected always or ssl-verify)\n' "${tls_redirect_trigger}" >&2
   exit 2
   ;;
 esac
@@ -171,9 +189,13 @@ published_port() {
 # The rule engine is off so that the redirect, and not a CRS rule, decides the
 # outcome for the paths under test.
 start_tls_redirect_containers() {
-  local redirect_var="APACHE_ALWAYS_TLS_REDIRECT"
+  local redirect_env="APACHE_ALWAYS_TLS_REDIRECT=on"
   if [ "${variant}" = "nginx" ]; then
-    redirect_var="NGINX_ALWAYS_TLS_REDIRECT"
+    redirect_env="NGINX_ALWAYS_TLS_REDIRECT=on"
+  fi
+  # optional_no_ca needs no CA file, and both servers accept it
+  if [ "${tls_redirect_trigger}" = "ssl-verify" ]; then
+    redirect_env="SSL_VERIFY=optional_no_ca"
   fi
   redirect_network="tls-redirect-net-$$"
   redirect_backend="tls-redirect-backend-$$"
@@ -185,7 +207,7 @@ start_tls_redirect_containers() {
   docker run -d --pull never --name "${redirect_waf}" --network "${redirect_network}" \
     -p 127.0.0.1::8080 \
     -e MODSEC_RULE_ENGINE=off \
-    -e "${redirect_var}=on" \
+    -e "${redirect_env}" \
     -e "BACKEND=http://${redirect_backend}:8080" \
     "${tls_redirect_image}" >/dev/null
 
@@ -232,7 +254,7 @@ if [ -n "${tls_redirect_image}" ]; then
   # rewritten on the way.
   acme_path="/.well-known/acme-challenge/test-token"
   acme_token="test-token.thumbprint"
-  curl -sS -o /dev/null -X POST -H 'Content-Type: application/json' \
+  curl -sS --fail -o /dev/null -X POST -H 'Content-Type: application/json' \
     --data "{\"status\": 200, \"body\": \"${acme_token}\", \"endpoints\": [{\"method\": \"GET\", \"url\": \"${acme_path}\"}]}" \
     "${albedo_url}/configure_reflection"
   acme_body="${workdir}/acme-body.txt"
