@@ -528,6 +528,10 @@ On nginx, `PROXY_SSL_SERVER_NAME=on` (as shown) sends the backend name with SNI,
 >
 > On nginx images built for a read-only root filesystem (experimental, unpublished; see [Read-only Root Filesystem](#read-only-root-filesystem)), do not mount the certificates into `${NGINX_HOME}/conf`: that directory is populated from the bootstrap copy at startup. Mount them somewhere else and point `PROXY_SSL_CERT_FILE` and `PROXY_SSL_CERT_KEY_FILE` at the mounted paths instead.
 
+### Standalone mode (no backend)
+
+If you don't have a backend to proxy to (e.g. a quick demo, or protecting a plain static site), override `default.conf.template` to drop the `proxy_backend.conf` include and serve files directly instead. See [`examples/standalone-static`](examples/standalone-static) for a working `docker compose` setup.
+
 ## ServerName
 
 It is often convenient to set your server name (set to `localhost` by default). To do this simply use the `SERVER_NAME` environment variable.
