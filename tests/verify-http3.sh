@@ -21,8 +21,10 @@ fi
 
 cd "$(dirname "${0}")/.."
 
-# Unique per invocation, so that cleanup can only ever remove its own container
-container="${target}-http3-test-$$"
+# Unique per invocation, so that cleanup can only ever remove its own container.
+# The suffix is random, as a PID can repeat, for example after an unclean exit.
+suffix="$(mktemp -u XXXXXXXX)"
+container="${target}-http3-test-${suffix}"
 workdir="$(mktemp -d)"
 
 # cleanup: on failure, show what the container logged, then remove it and the

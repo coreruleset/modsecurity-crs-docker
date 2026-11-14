@@ -213,9 +213,12 @@ start_tls_redirect_containers() {
   if [ "${tls_redirect_trigger}" = "ssl-verify" ]; then
     redirect_env="SSL_VERIFY=optional_no_ca"
   fi
-  redirect_network="tls-redirect-net-$$"
-  redirect_backend="tls-redirect-backend-$$"
-  redirect_waf="tls-redirect-waf-$$"
+  # Random, as a PID can repeat, for example after an unclean exit
+  local suffix
+  suffix="$(mktemp -u XXXXXXXX)"
+  redirect_network="tls-redirect-net-${suffix}"
+  redirect_backend="tls-redirect-backend-${suffix}"
+  redirect_waf="tls-redirect-waf-${suffix}"
 
   docker network create "${redirect_network}" >/dev/null
   docker run -d --name "${redirect_backend}" --network "${redirect_network}" \

@@ -34,11 +34,13 @@ fi
 
 image="${target}-verification"
 # Unique per invocation: the server-side mTLS stack in tests/docker-compose.mtls.yml
-# also has an mtls-backend, and cleanup must only ever remove what this script made
-network="proxy-mtls-net-$$"
-backend="proxy-mtls-backend-$$"
-proxy="${target}-proxy-mtls-test-$$"
-missing="${target}-proxy-mtls-missing-test-$$"
+# also has an mtls-backend, and cleanup must only ever remove what this script made.
+# The suffix is random, as a PID can repeat, for example after an unclean exit.
+suffix="$(mktemp -u XXXXXXXX)"
+network="proxy-mtls-net-${suffix}"
+backend="proxy-mtls-backend-${suffix}"
+proxy="${target}-proxy-mtls-test-${suffix}"
+missing="${target}-proxy-mtls-missing-test-${suffix}"
 
 workdir="$(mktemp -d)"
 # The containers read the files through bind mounts
