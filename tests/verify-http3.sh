@@ -21,7 +21,8 @@ fi
 
 cd "$(dirname "${0}")/.."
 
-container="${target}-http3-test"
+# Unique per invocation, so that cleanup can only ever remove its own container
+container="${target}-http3-test-$$"
 workdir="$(mktemp -d)"
 
 # cleanup: on failure, show what the container logged, then remove it and the

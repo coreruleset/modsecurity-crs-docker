@@ -28,10 +28,24 @@ if [[ "${target}" == *apache* ]]; then
   backend="httpd"
 fi
 
+compose_file="./tests/docker-compose.yml"
+
+# cleanup: on failure, print the compose logs, then stop the stack on every exit
+# path, as both services publish host port 80. The log directories are bind
+# mounts and stay.
+cleanup() {
+  local status=$?
+  if [ "${status}" -ne 0 ]; then
+    docker compose -f "${compose_file}" logs || true
+  fi
+  docker compose -f "${compose_file}" down -t 0 || true
+}
+trap cleanup EXIT
+
 mkdir -p "tests/logs/${modsec_version}"/{nginx,apache2}
-docker compose -f ./tests/docker-compose.yml up -d "${modsec_version}"
+docker compose -f "${compose_file}" up -d "${modsec_version}"
 sleep 10
-docker compose -f ./tests/docker-compose.yml logs
+docker compose -f "${compose_file}" logs
 if ! [ "$(docker inspect "${modsec_version}" --format='{{.State.Running}}')" = "true" ]; then
   echo "Web server failed to start. Aborting."
   exit 1

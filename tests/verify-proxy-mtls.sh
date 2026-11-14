@@ -33,10 +33,12 @@ if [[ "${target}" == *nginx* ]]; then
 fi
 
 image="${target}-verification"
-network="mtls-net"
-backend="mtls-backend"
-proxy="${target}-mtls-test"
-missing="${target}-mtls-missing-test"
+# Unique per invocation: the server-side mTLS stack in tests/docker-compose.mtls.yml
+# also has an mtls-backend, and cleanup must only ever remove what this script made
+network="proxy-mtls-net-$$"
+backend="proxy-mtls-backend-$$"
+proxy="${target}-proxy-mtls-test-$$"
+missing="${target}-proxy-mtls-missing-test-$$"
 
 workdir="$(mktemp -d)"
 # The containers read the files through bind mounts
