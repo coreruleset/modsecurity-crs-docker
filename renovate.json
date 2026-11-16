@@ -7,6 +7,7 @@
   "enabledManagers": [
     "custom.regex"
   ],
+  "prCreation": "immediate",
   "packageRules": [
     {
       "matchDepNames": [
@@ -85,6 +86,25 @@
         "httpd"
       ],
       "minimumReleaseAge": "0 days"
+    },
+    {
+      "description": "Base images ship security fixes: keep them in their own PR and do not wait for the daily schedule",
+      "matchDepNames": [
+        "httpd",
+        "nginx/nginx-unprivileged"
+      ],
+      "groupName": "base images",
+      "groupSlug": "base-images",
+      "schedule": [
+        "at any time"
+      ]
+    },
+    {
+      "description": "Version lines in the README have no digest to pin",
+      "matchFileNames": [
+        "README.md"
+      ],
+      "pinDigests": false
     }
   ],
   "customManagers": [
