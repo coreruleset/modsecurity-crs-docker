@@ -25,10 +25,9 @@ fi
 
 cd "$(dirname "${0}")/.."
 
-variant="apache"
+variant="$(./tests/target-variant.sh "${target}")"
 cert_dir="/usr/local/apache2/conf"
-if [[ "${target}" == *nginx* ]]; then
-  variant="nginx"
+if [ "${variant}" = "nginx" ]; then
   cert_dir="/etc/nginx/conf"
 fi
 

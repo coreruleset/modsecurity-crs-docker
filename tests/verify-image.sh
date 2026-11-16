@@ -17,7 +17,9 @@ Options:
                          only apply to nginx.
   --target NAME          Build target under test, e.g. nginx-debian-writable-latest,
                          instead of --variant: targets with "nginx" in their name
-                         are the nginx variant, all others are apache.
+                         are the nginx variant, those with "apache" are apache,
+                         any other name is rejected. Given together with
+                         --variant, the two have to agree.
   --url URL              Plain HTTP base URL (default http://localhost:8080).
   --tls-url URL          HTTPS base URL (default https://localhost:8443).
   --expect-h3-port PORT  Require Alt-Svc to advertise h3 on PORT. Without it the
@@ -115,11 +117,13 @@ while [ ${#} -gt 0 ]; do
   esac
 done
 
-if [ -z "${variant}" ] && [ -n "${target}" ]; then
-  variant="apache"
-  if [[ "${target}" == *nginx* ]]; then
-    variant="nginx"
+if [ -n "${target}" ]; then
+  target_variant="$("$(dirname "${0}")/target-variant.sh" "${target}")"
+  if [ -n "${variant}" ] && [ "${variant}" != "${target_variant}" ]; then
+    printf -- '--variant %s contradicts --target %s (target variant: %s)\n' "${variant}" "${target}" "${target_variant}" >&2
+    exit 2
   fi
+  variant="${target_variant}"
 fi
 
 case "${variant}" in

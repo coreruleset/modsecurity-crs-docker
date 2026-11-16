@@ -21,15 +21,13 @@ fi
 
 cd "$(dirname "${0}")/../.."
 
-flavor="nginx"
-if [[ "${target}" == *apache* ]]; then
-  flavor="apache"
-fi
+flavor="$(./tests/target-variant.sh "${target}")"
 
 # Use the verification image instead of the published one, or the one an earlier
-# run for another target put there
+# run for another target of the same flavor put there. The other flavor's service
+# keeps its image.
 compose_file="crs/tests/docker-compose.yml"
 sed -e "s#image: owasp/modsecurity-crs:${flavor}.*#image: ${target}-verification#" \
-  -e "s#image: [^[:space:]]*-verification\$#image: ${target}-verification#" \
+  -e "s#image: [^[:space:]]*${flavor}[^[:space:]]*-verification\$#image: ${target}-verification#" \
   "${compose_file}" >"${compose_file}.new"
 mv "${compose_file}.new" "${compose_file}"

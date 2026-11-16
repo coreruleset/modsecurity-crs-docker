@@ -66,7 +66,7 @@ if [ -n "${target}" ]; then
   verify="on"
   disabled_verify="off"
   cert_dir="/etc/nginx/ssl"
-  if grep -q "apache" <<< "${target}"; then
+  if [ "$("${script_dir}/target-variant.sh" "${target}")" = "apache" ]; then
     verify="require"
     disabled_verify="none"
     cert_dir="/usr/local/apache2/conf"

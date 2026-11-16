@@ -28,6 +28,9 @@ trap 'rm -rf "${workdir}"' EXIT
 
 ./tests/write-target-env.sh "${target}" "${workdir}/target.env"
 
+# A container left over from an earlier run would keep the name and the ports
+docker rm -f "${target}-test" >/dev/null 2>&1 || true
+
 echo "Starting container ${target}-verification"
 # The backend is a dummy
 docker run \

@@ -19,11 +19,13 @@ if [ -z "${target}" ]; then
   exit 2
 fi
 
-cd "$(dirname "${0}")/../../crs"
+cd "$(dirname "${0}")/../.."
+variant="$(./tests/target-variant.sh "${target}")"
+cd crs
 
 modsec_version="modsec3-nginx"
 backend="nginx"
-if [[ "${target}" == *apache* ]]; then
+if [ "${variant}" = "apache" ]; then
   modsec_version="modsec2-apache"
   backend="httpd"
 fi
@@ -42,7 +44,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-mkdir -p "tests/logs/${modsec_version}"/{nginx,apache2}
+mkdir -p "tests/logs/${modsec_version}"
 docker compose -f "${compose_file}" up -d "${modsec_version}"
 sleep 10
 docker compose -f "${compose_file}" logs

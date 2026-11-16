@@ -31,7 +31,8 @@ cleanup() {
   if [ "${status}" -ne 0 ]; then
     docker compose -f "${compose_file}" logs || true
   fi
-  docker compose -f "${compose_file}" down -vt 0
+  # The stack may not resolve (setup-mtls.sh failed early); the secrets must go anyway
+  docker compose -f "${compose_file}" down -vt 0 || true
   rm -rf tests/mtls-certs tests/.env
 }
 trap cleanup EXIT

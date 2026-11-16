@@ -21,6 +21,11 @@ fi
 
 cd "$(dirname "${0}")/.."
 
+if [ "$(./tests/target-variant.sh "${target}")" != "nginx" ]; then
+  printf 'HTTP/3 is only available in the nginx images, not in %s\n' "${target}" >&2
+  exit 2
+fi
+
 # Unique per invocation, so that cleanup can only ever remove its own container.
 # The suffix is random, as a PID can repeat, for example after an unclean exit.
 suffix="$(mktemp -u XXXXXXXX)"
@@ -56,7 +61,7 @@ docker run \
   "${target}-verification"
 
 ./tests/verify-image.sh \
-  --variant nginx \
+  --target "${target}" \
   --url http://localhost:8081 \
   --tls-url https://localhost:8444 \
   --expect-h3-port 8444

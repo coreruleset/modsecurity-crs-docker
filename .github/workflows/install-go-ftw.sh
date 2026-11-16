@@ -22,9 +22,19 @@ fi
 
 cd "${directory}"
 
-# ftw runs on the runner, so its architecture decides the asset. Asking the
-# runner keeps this from drifting apart from the runs-on mapping, and an
-# architecture with no release fails here rather than on the first exec.
+# ftw runs on the runner, so its operating system and architecture decide the
+# asset. Asking the runner keeps this from drifting apart from the runs-on
+# mapping, and a platform with no release fails here rather than on the first
+# exec.
+case "$(uname -s)" in
+Linux) os="linux" ;;
+Darwin) os="darwin" ;;
+*)
+  echo "No go-ftw release for runner operating system $(uname -s)" >&2
+  exit 1
+  ;;
+esac
+
 case "$(uname -m)" in
 x86_64) arch="amd64" ;;
 aarch64 | arm64) arch="arm64" ;;
@@ -36,7 +46,7 @@ esac
 
 # The release CDN resets connections now and then. Download to a file so a
 # truncated transfer fails here instead of reaching tar, and retry it.
-archive="ftw_${GO_FTW_VERSION}_linux_${arch}.tar.gz"
+archive="ftw_${GO_FTW_VERSION}_${os}_${arch}.tar.gz"
 for attempt in 1 2 3; do
   if gh release download -R coreruleset/go-ftw "v${GO_FTW_VERSION}" \
     -p "${archive}" --clobber; then

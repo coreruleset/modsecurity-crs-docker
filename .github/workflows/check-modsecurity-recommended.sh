@@ -3,11 +3,12 @@
 # src/etc/modsecurity.d/modsecurity.conf was derived from, so that changes
 # upstream get noticed.
 #
-# MODSECURITY_RECOMMENDED holds the expected hash in sha256sum format:
-# <hash><space><format (space for text)><file name>
+# The expected hash is in modsecurity.conf-recommended.sha256 next to this
+# script, in sha256sum format: <hash><space><format (space for text)><file name>.
+# MODSECURITY_RECOMMENDED overrides it with such a line.
 set -euo pipefail
 
-: "${MODSECURITY_RECOMMENDED:?MODSECURITY_RECOMMENDED has to hold the expected sha256sum line}"
+: "${MODSECURITY_RECOMMENDED:=$(cat "$(dirname "${0}")/modsecurity.conf-recommended.sha256")}"
 
 # sha256sum only warns about a line it cannot parse and still succeeds, which
 # would let a mistyped hash pass, so insist on the exact format first
