@@ -50,12 +50,12 @@ variable "crs-versions" {
 # variant has its own variable. The value is "<tag>@<digest>".
 variable "nginx-debian-image" {
     # renovate: depName=nginx/nginx-unprivileged datasource=docker
-    default = "1.30.6@sha256:bf862988aa6e67f92cf0ddeeeb53c1e23023bc71132e444e7f6f7605f68dd8a5"
+    default = "1.30.7@sha256:18414dbd7b0e5664ff8774fdbc0a09446019b9a0ff3e451cf56e500bda74afdc"
 }
 
 variable "nginx-alpine-image" {
     # renovate: depName=nginx/nginx-unprivileged datasource=docker
-    default = "1.30.6-alpine@sha256:ea4fd7ab5a8dc6348c18240bd3546f355f8373cd8f112580f7d8bd8ff5a74772"
+    default = "1.30.7-alpine@sha256:0c53a1f2890c3526bfd201440f0fd3970e5b78f80630f58284aad0d34b5ec7bd"
 }
 
 variable "httpd-debian-image" {
