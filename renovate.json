@@ -93,11 +93,18 @@
         "httpd",
         "nginx/nginx-unprivileged"
       ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
       "groupName": "base images",
       "groupSlug": "base-images",
       "schedule": [
         "at any time"
-      ]
+      ],
+      "minimumReleaseAge": "6 hours",
+      "automerge": false,
+      "commitMessageSuffix": ""
     },
     {
       "description": "Version lines in the README have no digest to pin",
