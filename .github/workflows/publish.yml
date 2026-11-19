@@ -160,6 +160,8 @@ jobs:
       packages: write
       id-token: write # needed for signing the images with GitHub OIDC Token
     strategy:
+      # one target failing (e.g. a GHCR outage) must not cancel the others
+      fail-fast: false
       # cap concurrent merge jobs so they don't collectively burst past GHCR's
       # manifest-push rate limit (all 12 targets pushing at once has triggered
       # 429 Too Many Requests on ghcr.io)
@@ -247,4 +249,15 @@ jobs:
           while IFS= read -r tag; do
             images+=("${tag}@${DIGEST}")
           done < <(jq -r --arg t "${TARGET}" '.target[$t].tags[]' bake-metadata.json)
-          cosign sign --yes "${images[@]}"
+          max_attempts=5
+          attempt=1
+          until cosign sign --yes "${images[@]}"; do
+            if [ "${attempt}" -ge "${max_attempts}" ]; then
+              echo "cosign sign failed after ${max_attempts} attempts" >&2
+              exit 1
+            fi
+            sleep_seconds=$((attempt * 5))
+            echo "cosign sign failed (attempt ${attempt}/${max_attempts}); retrying in ${sleep_seconds}s" >&2
+            sleep "${sleep_seconds}"
+            attempt=$((attempt + 1))
+          done
