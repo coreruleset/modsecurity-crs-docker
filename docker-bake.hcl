@@ -28,7 +28,7 @@ variable "previous-lts-crs-version" {
 
 variable "major-crs-version" {
     # renovate: depName=coreruleset/coreruleset datasource=github-releases
-    default = "4.30.0"
+    default = "4.31.0"
 }
 
 variable "current-lts-crs-version" {
@@ -60,7 +60,7 @@ variable "nginx-alpine-image" {
 
 variable "httpd-debian-image" {
     # renovate: depName=httpd datasource=docker
-    default = "2.4.71@sha256:32e9403360ab2f1047523e72f256527fb9aee68b342abf6ad03f0d629157f3d9"
+    default = "2.4.71@sha256:eef26a140e2817b6d9fa9b9eba883eb79b5a40032ca988503c8f7e40f90d0959"
 }
 
 variable "httpd-alpine-image" {
