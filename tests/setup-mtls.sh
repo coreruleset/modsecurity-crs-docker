@@ -8,6 +8,13 @@ script_dir="$(cd "$(dirname "${0}")" && pwd)"
 certs_dir="${script_dir}/mtls-certs"
 target="${1:-${TARGET:-}}"
 
+# Classify the target first: a failure inside the test of an if would not stop
+# the script, and an invalid target must not leave certificates behind
+variant=""
+if [ -n "${target}" ]; then
+  variant="$("${script_dir}/target-variant.sh" "${target}")"
+fi
+
 rm -rf "${certs_dir}"
 mkdir -p "${certs_dir}/ca-db/newcerts"
 
@@ -66,17 +73,15 @@ if [ -n "${target}" ]; then
   verify="on"
   disabled_verify="off"
   cert_dir="/etc/nginx/ssl"
-  if grep -q "apache" <<< "${target}"; then
+  if [ "${variant}" = "apache" ]; then
     verify="require"
     disabled_verify="none"
     cert_dir="/usr/local/apache2/conf"
   fi
 
-  env_file="../${target}.env"
-  if [ ! -f "${script_dir}/${env_file}" ]; then
-    touch "${certs_dir}/empty.env"
-    env_file="./mtls-certs/empty.env"
-  fi
+  # Kept next to the certificates, which are removed together with it
+  "${script_dir}/write-target-env.sh" "${target}" "${certs_dir}/target.env"
+  env_file="./mtls-certs/target.env"
 
   cat > "${script_dir}/.env" <<EOF
 MTLS_IMAGE=${MTLS_IMAGE:-${target}-verification}

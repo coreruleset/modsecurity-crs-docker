@@ -10,11 +10,16 @@ set -euo pipefail
 
 usage() {
   cat <<'EOF'
-Usage: tests/verify-image.sh --variant <nginx|apache> [options]
+Usage: tests/verify-image.sh --variant <nginx|apache> | --target NAME [options]
 
 Options:
   --variant NAME         Image variant under test. The CORS and Alt-Svc checks
                          only apply to nginx.
+  --target NAME          Build target under test, e.g. nginx-debian-writable-latest,
+                         instead of --variant: targets with "nginx" in their name
+                         are the nginx variant, those with "apache" are apache,
+                         any other name is rejected. Given together with
+                         --variant, the two have to agree.
   --url URL              Plain HTTP base URL (default http://localhost:8080).
   --tls-url URL          HTTPS base URL (default https://localhost:8443).
   --expect-h3-port PORT  Require Alt-Svc to advertise h3 on PORT. Without it the
@@ -38,6 +43,7 @@ EOF
 }
 
 variant=""
+target=""
 url="http://localhost:8080"
 tls_url="https://localhost:8443"
 expect_h3_port=""
@@ -62,6 +68,11 @@ while [ ${#} -gt 0 ]; do
   --variant)
     need_value "${1}" "${#}"
     variant="${2}"
+    shift 2
+    ;;
+  --target)
+    need_value "${1}" "${#}"
+    target="${2}"
     shift 2
     ;;
   --url)
@@ -106,10 +117,19 @@ while [ ${#} -gt 0 ]; do
   esac
 done
 
+if [ -n "${target}" ]; then
+  target_variant="$("$(dirname "${0}")/target-variant.sh" "${target}")"
+  if [ -n "${variant}" ] && [ "${variant}" != "${target_variant}" ]; then
+    printf -- '--variant %s contradicts --target %s (target variant: %s)\n' "${variant}" "${target}" "${target_variant}" >&2
+    exit 2
+  fi
+  variant="${target_variant}"
+fi
+
 case "${variant}" in
 nginx | apache) ;;
 "")
-  printf -- '--variant is required\n\n' >&2
+  printf -- '--variant or --target is required\n\n' >&2
   usage >&2
   exit 2
   ;;
@@ -197,9 +217,12 @@ start_tls_redirect_containers() {
   if [ "${tls_redirect_trigger}" = "ssl-verify" ]; then
     redirect_env="SSL_VERIFY=optional_no_ca"
   fi
-  redirect_network="tls-redirect-net-$$"
-  redirect_backend="tls-redirect-backend-$$"
-  redirect_waf="tls-redirect-waf-$$"
+  # Random, as a PID can repeat, for example after an unclean exit
+  local suffix
+  suffix="$(mktemp -u XXXXXXXX)"
+  redirect_network="tls-redirect-net-${suffix}"
+  redirect_backend="tls-redirect-backend-${suffix}"
+  redirect_waf="tls-redirect-waf-${suffix}"
 
   docker network create "${redirect_network}" >/dev/null
   docker run -d --name "${redirect_backend}" --network "${redirect_network}" \

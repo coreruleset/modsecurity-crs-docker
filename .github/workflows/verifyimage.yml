@@ -9,8 +9,6 @@ permissions:
   contents: read
 
 env:
-  # sha256sum format: <hash><space><format (space for text)><file name>
-  MODSECURITY_RECOMMENDED: "a4b9bed9b27e9be225b76d3965b4237416aba62432c9824aca431dbac4e72f43  modsecurity.conf-recommended"
   GO_FTW_VERSION: '2.4.0'
 
 jobs:
@@ -30,10 +28,7 @@ jobs:
           target: default
           fields: platforms
       - name: Check modsecurity recommended
-        run: |
-          curl -sSL https://raw.githubusercontent.com/owasp-modsecurity/ModSecurity/v3/master/modsecurity.conf-recommended -o modsecurity.conf-recommended
-          echo '${{ env.MODSECURITY_RECOMMENDED }}' > sha256sum.txt
-          sha256sum -c sha256sum.txt
+        run: .github/workflows/check-modsecurity-recommended.sh
 
   build:
     runs-on: ${{ startsWith(matrix.platforms, 'linux/arm') && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
@@ -97,218 +92,42 @@ jobs:
       - name: Run ${{ matrix.target }}
         env:
           TARGET: ${{ matrix.target }}
-        run: |
-          # get the major CRS version from the matrix.target
-          # Targets ending with "previous" are v3; all others are v4.
-          CRS_VERSION="$([[ "${TARGET}" == *-previous ]] && echo v3 || echo v4)"
-          . .github/workflows/configure-rules-for-test.sh \
-            "src/opt/modsecurity/configure-rules.${CRS_VERSION}.conf" \
-            README.md \
-            "${TARGET}.env"
-          echo "Starting container ${TARGET}-verification"
-          # The backend is a dummy
-          docker run \
-            --pull "never" \
-            -d \
-            --name "${TARGET}-test" \
-            --env-file "${TARGET}.env" \
-            -p 8080:8080 \
-            -p 8443:8443 \
-            -e BACKEND=http://localhost:9999 \
-            "${TARGET}-verification"
+        run: ./tests/start-container.sh "${TARGET}"
 
       - name: Verify ${{ matrix.target }}
         env:
           TARGET: ${{ matrix.target }}
-        run: |
-          variant="apache"
-          if grep -q "nginx" <<< "${TARGET}"; then
-            variant="nginx"
-          fi
-          ./tests/verify-image.sh --variant "${variant}"
+        run: ./tests/verify-image.sh --target "${TARGET}"
 
       - name: Verify HTTP/3 opt-in
         if: ${{ matrix.target == 'nginx-debian-writable-latest' && matrix.platforms == 'linux/amd64' }}
         env:
           TARGET: ${{ matrix.target }}
-        run: |
-          echo "Starting container ${TARGET}-http3-test with HTTP3=on"
-          docker run \
-            --pull "never" \
-            -d \
-            --name "${TARGET}-http3-test" \
-            --env-file "${TARGET}.env" \
-            -e BACKEND=http://localhost:9999 \
-            -e HTTP3=on \
-            -e HTTP3_ALT_SVC_PORT=8444 \
-            -p 8081:8080 \
-            -p 8444:8443 \
-            -p 8444:8443/udp \
-            "${TARGET}-verification"
-
-          ./tests/verify-image.sh \
-            --variant nginx \
-            --url http://localhost:8081 \
-            --tls-url https://localhost:8444 \
-            --expect-h3-port 8444
-
-          docker rm -f "${TARGET}-http3-test"
+        run: ./tests/verify-http3.sh "${TARGET}"
 
       - name: Verify proxy mTLS
         if: ${{ (matrix.target == 'apache-debian-latest' || matrix.target == 'nginx-debian-writable-latest') && matrix.platforms == 'linux/amd64' }}
         env:
           TARGET: ${{ matrix.target }}
-        run: |
-          variant="apache"
-          cert_dir="/usr/local/apache2/conf"
-          if grep -q "nginx" <<< "${TARGET}"; then
-            variant="nginx"
-            cert_dir="/etc/nginx/conf"
-          fi
-
-          # Client certificate signed by the test CA. Apache expects only the
-          # leaf certificate in PROXY_SSL_CERT_FILE (see the README), so the
-          # same files work for both variants.
-          openssl req -x509 -newkey rsa:2048 -nodes \
-            -keyout ca.key -out ca.crt -days 1 -subj "/CN=test-ca" \
-            -addext "basicConstraints=critical,CA:TRUE" \
-            -addext "keyUsage=critical,keyCertSign,cRLSign"
-          openssl req -newkey rsa:2048 -nodes \
-            -keyout proxy.key -out proxy.csr -subj "/CN=proxy"
-          openssl x509 -req -in proxy.csr -CA ca.crt -CAkey ca.key -CAcreateserial \
-            -days 1 -out proxy.crt
-          # Strip the trailing newline from the certificate to verify PEM concatenation
-          head -c -1 proxy.crt > proxy-no-nl.crt
-          mv proxy-no-nl.crt proxy.crt
-          chmod 644 proxy.crt proxy.key
-
-          # Self-signed server certificate for the backend; the WAF does not
-          # verify the backend certificate (PROXY_SSL_VERIFY stays at its default).
-          openssl req -x509 -newkey rsa:2048 -nodes \
-            -keyout backend.key -out backend.crt -days 1 -subj "/CN=backend"
-          chmod 644 backend.crt backend.key
-
-          # Backend that aborts the TLS handshake unless the client presents a
-          # certificate chaining up to ca.crt. An allowed request returning the
-          # s_server page below therefore proves that the client certificate
-          # was presented and accepted.
-          docker network create mtls-net
-          docker run \
-            --pull "never" \
-            -d \
-            --name mtls-backend \
-            --network mtls-net \
-            -v "${PWD}/backend.crt:/tls/backend.crt:ro" \
-            -v "${PWD}/backend.key:/tls/backend.key:ro" \
-            -v "${PWD}/ca.crt:/tls/ca.crt:ro" \
-            -p 9443:9443 \
-            --entrypoint openssl \
-            "${TARGET}-verification" \
-            s_server -accept 9443 -cert /tls/backend.crt -key /tls/backend.key \
-              -Verify 1 -CAfile /tls/ca.crt -www
-
-          echo "Starting container ${TARGET}-mtls-test with PROXY_SSL=on"
-          docker run \
-            --pull "never" \
-            -d \
-            --name "${TARGET}-mtls-test" \
-            --network mtls-net \
-            --env-file "${TARGET}.env" \
-            -e BACKEND=https://mtls-backend:9443 \
-            -e PROXY_SSL=on \
-            -v "${PWD}/proxy.crt:${cert_dir}/proxy.crt:ro" \
-            -v "${PWD}/proxy.key:${cert_dir}/proxy.key:ro" \
-            -p 8081:8080 \
-            -p 8444:8443 \
-            "${TARGET}-verification"
-
-          ./tests/verify-image.sh \
-            --variant "${variant}" \
-            --url http://localhost:8081 \
-            --tls-url https://localhost:8444
-
-          docker logs "${TARGET}-mtls-test" 2>&1 | grep -q "using proxy client certificate"
-
-          # An allowed request has to reach the mTLS backend and come back with its page
-          curl -sS --fail --retry 8 --retry-delay 2 --retry-all-errors \
-            http://localhost:8081/ | grep -q "s_server"
-
-          # Negative control: the backend rejects connections without a client certificate
-          if curl -sk --max-time 5 https://localhost:9443/ > /dev/null 2>&1; then
-            echo "the mTLS backend accepted a connection without a client certificate"
-            exit 1
-          fi
-
-          # A configured path that does not hold both files has to stop the container
-          docker run \
-            --pull "never" \
-            -d \
-            --name "${TARGET}-mtls-missing-test" \
-            --env-file "${TARGET}.env" \
-            -e PROXY_SSL=on \
-            -e PROXY_SSL_CERT_FILE=/nonexistent/proxy.crt \
-            -e PROXY_SSL_CERT_KEY_FILE=/nonexistent/proxy.key \
-            "${TARGET}-verification"
-          sleep 5
-          test "$(docker inspect -f '{{.State.Running}}' "${TARGET}-mtls-missing-test")" = "false"
-          test "$(docker inspect -f '{{.State.ExitCode}}' "${TARGET}-mtls-missing-test")" != "0"
-          docker logs "${TARGET}-mtls-missing-test" 2>&1 | grep -q "does not point to both existing files"
-
-          docker rm -f "${TARGET}-mtls-test" "${TARGET}-mtls-missing-test" mtls-backend
-          docker network rm mtls-net
-          rm -f proxy.crt proxy.key proxy.csr backend.crt backend.key ca.crt ca.key ca.srl
+        run: ./tests/verify-proxy-mtls.sh "${TARGET}"
 
       - name: Verify server-side mTLS opt-in
         if: ${{ (matrix.target == 'apache-debian-latest' || matrix.target == 'nginx-debian-writable-latest') && matrix.platforms == 'linux/amd64' }}
         env:
           TARGET: ${{ matrix.target }}
-        run: |
-          # Print the compose logs before tearing the stack down so a failing
-          # assertion still leaves diagnostics in the job output.
-          trap '_rc=$?; if [ "${_rc}" -ne 0 ]; then docker compose -f tests/docker-compose.mtls.yml logs || true; fi; docker compose -f tests/docker-compose.mtls.yml down -vt 0; rm -rf tests/mtls-certs tests/.env' EXIT
-          ./tests/setup-mtls.sh "${TARGET}"
-          docker compose -f tests/docker-compose.mtls.yml up -d
-          ./tests/verify-mtls.sh
+        run: ./tests/verify-server-mtls.sh "${TARGET}"
 
       - name: Verify TLS redirect for ${{ matrix.target }}
         if: ${{ matrix.platforms == 'linux/amd64' }}
         env:
           TARGET: ${{ matrix.target }}
-        run: |
-          variant="apache"
-          if grep -q "nginx" <<< "${TARGET}"; then
-            variant="nginx"
-          fi
-          ./tests/verify-image.sh \
-            --variant "${variant}" \
-            --tls-redirect-image "$(docker image inspect -f '{{.Id}}' "${TARGET}-verification")"
-          # The redirect that SSL_VERIFY turns on has to exempt ACME challenges too
-          ./tests/verify-image.sh \
-            --variant "${variant}" \
-            --tls-redirect-image "$(docker image inspect -f '{{.Id}}' "${TARGET}-verification")" \
-            --tls-redirect-trigger ssl-verify
+        run: ./tests/verify-tls-redirect.sh "${TARGET}"
 
       - name: Container logs
         if: failure()
         env:
           TARGET: ${{ matrix.target }}
-        run: |
-          docker logs "${TARGET}-test" || true
-          docker logs "${TARGET}-http3-test" || true
-          docker logs "${TARGET}-mtls-test" || true
-          docker logs "${TARGET}-mtls-missing-test" || true
-          docker logs mtls-backend || true
-
-      - name: Clean up proxy mTLS containers
-        if: ${{ always() && (matrix.target == 'apache-debian-latest' || matrix.target == 'nginx-debian-writable-latest') && matrix.platforms == 'linux/amd64' }}
-        env:
-          TARGET: ${{ matrix.target }}
-        run: |
-          # The containers are kept around for the failure log step above (and
-          # for debugging), so remove them and the network unconditionally.
-          docker rm -f "${TARGET}-mtls-test" "${TARGET}-mtls-missing-test" mtls-backend 2>/dev/null || true
-          docker network rm mtls-net 2>/dev/null || true
-          rm -f proxy.crt proxy.key proxy.csr backend.crt backend.key ca.crt ca.key ca.srl
+        run: docker logs "${TARGET}-test" || true
 
       - name: Checkout CRS
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # ratchet:actions/checkout@v7.0.0
@@ -320,73 +139,17 @@ jobs:
       - name: "Install go-ftw"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          cd crs
-          # ftw runs on the runner, so its architecture decides the asset. Asking the
-          # runner keeps this from drifting apart from the runs-on mapping, and an
-          # architecture with no release fails here rather than on the first exec.
-          case "$(uname -m)" in
-            x86_64) arch="amd64" ;;
-            aarch64 | arm64) arch="arm64" ;;
-            *) echo "No go-ftw release for runner architecture $(uname -m)" >&2; exit 1 ;;
-          esac
-          # The release CDN resets connections now and then. Download to a file so a
-          # truncated transfer fails here instead of reaching tar, and retry it.
-          archive="ftw_${GO_FTW_VERSION}_linux_${arch}.tar.gz"
-          for attempt in 1 2 3; do
-            if gh release download -R coreruleset/go-ftw "v${GO_FTW_VERSION}" \
-                 -p "${archive}" --clobber; then
-              break
-            fi
-            if [ "${attempt}" -eq 3 ]; then
-              echo "Giving up on ${archive} after ${attempt} attempts"
-              exit 1
-            fi
-            delay=$((attempt * 5))
-            echo "Download failed, retrying in ${delay} seconds"
-            sleep "${delay}"
-          done
-          tar -xzf "${archive}" ftw
-          rm "${archive}"
-      - name: Patch CRS compose file to use verification image
-        run: |
-          sed -i \
-            's#image: owasp/modsecurity-crs:${{ contains(matrix.target, 'apache') && 'apache' || 'nginx' }}.*#image: ${{ matrix.target }}-verification#' \
-            crs/tests/docker-compose.yml
-      - name: Patch nginx overrides for nginx 1.30.0 (920100-4 now returns 405)
-        run: |
-          yq e -i '(.test_overrides[] | select(.rule_id == 920100 and .test_ids[0] == 4 and (.test_ids | length) == 1) | .output.status) = 405' \
-            crs/tests/regression/nginx-overrides.yaml
-      - name: Pin the CRS test container to a single nginx worker
-        # go-ftw bounds the log output of a request with markers. Several workers
-        # flush their buffers independently, so lines interleave and tests such as
-        # 956100 fail at random (https://github.com/coreruleset/go-ftw/issues/473).
-        # This applies to the test setup only; the images still default to "auto".
-        run: |
-          yq e -i '.services.modsec3-nginx.environment.NGINX_WORKER_PROCESSES = "1"' \
-            crs/tests/docker-compose.yml
+        run: .github/workflows/install-go-ftw.sh crs
+      - name: Prepare the CRS tests for ${{ matrix.target }}
+        env:
+          TARGET: ${{ matrix.target }}
+        run: .github/workflows/prepare-crs-tests.sh "${TARGET}"
       - name: Run CRS tests for ${{ matrix.target }}
         # Log flushing isn't reliable enough for go-ftw (https://github.com/coreruleset/go-ftw/issues/473)
         if: ${{!contains(matrix.target, 'nginx-alpine')}}
-        run: |
-          cd crs
-          modsec_version="${{ contains(matrix.target, 'apache') && 'modsec2-apache' || 'modsec3-nginx' }}"
-          backend="${{ contains(matrix.target, 'apache') && 'httpd' || 'nginx' }}"
-          mkdir -p "tests/logs/${modsec_version}/{nginx,apache2}"
-          docker compose -f ./tests/docker-compose.yml up -d "${modsec_version}"
-          sleep 10
-          docker compose -f ./tests/docker-compose.yml logs
-          if ! [ "$(docker inspect ${modsec_version} --format='{{.State.Running}}')" = "true" ]; then
-            echo "Web server failed to start. Aborting."
-            exit 1
-          fi
-
-          ./ftw check -d tests/regression/tests
-          ./ftw run \
-            -d tests/regression/tests \
-            --log-file "tests/logs/${modsec_version}/error.log" \
-            --overrides "tests/regression/${backend}-overrides.yaml" \
-            --show-failures-only
+        env:
+          TARGET: ${{ matrix.target }}
+        run: .github/workflows/run-crs-tests.sh "${TARGET}"
 
       - name: Upload logs
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # ratchet:actions/upload-artifact@v7.0.1
